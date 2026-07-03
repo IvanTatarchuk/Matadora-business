@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Workflow, Plus, Play, Pause, Clock, CheckCircle2, AlertCircle, X } from "lucide-react";
+import { Workflow, Plus, Play, Pause, Clock, CheckCircle2, AlertCircle, X, Search, Filter } from "lucide-react";
 import {
   createWorkflowDefinition, toggleWorkflow, triggerWorkflow,
   type WorkflowDefinition, type WorkflowExecution, type WorkflowTrigger,
@@ -37,6 +37,8 @@ export function WorkflowsClient({ initialWorkflows, initialExecutions, initialSt
     triggerType: "manual" as WorkflowTrigger,
     triggerConfig: {},
   });
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filterStatus, setFilterStatus] = useState<"all" | "active" | "inactive">("all");
 
   function handleCreateWorkflow() {
     if (!workflowForm.name) { setError("Назва є обов'язковою"); return; }
@@ -73,6 +75,14 @@ export function WorkflowsClient({ initialWorkflows, initialExecutions, initialSt
       setExecutions(newExecutions);
     });
   }
+
+  const filteredWorkflows = workflows.filter((w) => {
+    const matchesSearch = !searchQuery || w.name.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesStatus = filterStatus === "all" || 
+      (filterStatus === "active" && w.is_active) ||
+      (filterStatus === "inactive" && !w.is_active);
+    return matchesSearch && matchesStatus;
+  });
 
   return (
     <div className="space-y-6">
@@ -127,11 +137,33 @@ export function WorkflowsClient({ initialWorkflows, initialExecutions, initialSt
       </div>
 
       {/* Actions */}
-      <div className="flex gap-2">
+      <div className="flex gap-2 flex-wrap">
         <Button onClick={() => setShowWorkflowForm(true)}>
           <Plus className="h-4 w-4 mr-2" />
           Новий workflow
         </Button>
+      </div>
+
+      {/* Filters */}
+      <div className="flex gap-3 flex-wrap">
+        <div className="relative flex-1 max-w-sm">
+          <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Шукати workflow..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-9"
+          />
+        </div>
+        <select
+          value={filterStatus}
+          onChange={(e) => setFilterStatus(e.target.value as "all" | "active" | "inactive")}
+          className="rounded-md border bg-background px-3 py-2 text-sm"
+        >
+          <option value="all">Всі статуси</option>
+          <option value="active">Активні</option>
+          <option value="inactive">Неактивні</option>
+        </select>
       </div>
 
       {/* Workflow Form */}
@@ -183,13 +215,13 @@ export function WorkflowsClient({ initialWorkflows, initialExecutions, initialSt
           <CardTitle>Workflow</CardTitle>
         </CardHeader>
         <CardContent>
-          {workflows.length === 0 ? (
+          {filteredWorkflows.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
               Немає workflow
             </div>
           ) : (
             <div className="space-y-2">
-              {workflows.map((workflow) => (
+              {filteredWorkflows.map((workflow) => (
                 <div key={workflow.id} className="flex items-center justify-between p-3 rounded-lg border">
                   <div className="flex-1">
                     <div className="flex items-center gap-2">

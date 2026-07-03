@@ -184,7 +184,7 @@ export function BackupsClient({ initialBackupJobs, initialSchedules, initialRest
       </div>
 
       {/* Actions */}
-      <div className="flex gap-2">
+      <div className="flex gap-2 flex-wrap">
         <Button onClick={() => setShowBackupForm(true)}>
           <Plus className="h-4 w-4 mr-2" />
           Створити бекап
@@ -197,6 +197,29 @@ export function BackupsClient({ initialBackupJobs, initialSchedules, initialRest
           <RefreshCw className="h-4 w-4 mr-2" />
           Відновити
         </Button>
+      </div>
+
+      {/* Filters */}
+      <div className="flex gap-3 flex-wrap">
+        <div className="relative flex-1 max-w-sm">
+          <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Шукати бекапи..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-9"
+          />
+        </div>
+        <select
+          value={filterStatus}
+          onChange={(e) => setFilterStatus(e.target.value as "all" | "completed" | "running" | "failed")}
+          className="rounded-md border bg-background px-3 py-2 text-sm"
+        >
+          <option value="all">Всі статуси</option>
+          <option value="completed">Завершені</option>
+          <option value="running">Виконуються</option>
+          <option value="failed">Помилки</option>
+        </select>
       </div>
 
       {/* Backup Form */}
@@ -352,13 +375,13 @@ export function BackupsClient({ initialBackupJobs, initialSchedules, initialRest
           <CardTitle>Бекапи</CardTitle>
         </CardHeader>
         <CardContent>
-          {backupJobs.length === 0 ? (
+          {filteredBackupJobs.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
               Немає бекапів
             </div>
           ) : (
             <div className="space-y-2">
-              {backupJobs.map((job) => (
+              {filteredBackupJobs.map((job) => (
                 <div key={job.id} className="flex items-center justify-between p-3 rounded-lg border">
                   <div className="flex-1">
                     <div className="flex items-center gap-2">

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Key, Webhook, Activity, Plus, Copy, X, RefreshCw, CheckCircle2, AlertCircle, Clock } from "lucide-react";
+import { Key, Webhook, Activity, Plus, Copy, X, RefreshCw, CheckCircle2, AlertCircle, Clock, Search, Filter } from "lucide-react";
 import {
   createApiKey, revokeApiKey, createApiWebhook, toggleApiWebhook,
   type ApiKey, type ApiWebhook, type ApiScope,
@@ -43,6 +43,8 @@ export function ApiClient({ initialKeys, initialWebhooks, initialLogs, initialSt
   const [showWebhookForm, setShowWebhookForm] = useState(false);
   const [newKey, setNewKey] = useState<string | null>(null);
   const [newWebhookSecret, setNewWebhookSecret] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filterStatus, setFilterStatus] = useState<"all" | "active" | "inactive">("all");
 
   const [keyForm, setKeyForm] = useState({
     name: "",
@@ -114,6 +116,22 @@ export function ApiClient({ initialKeys, initialWebhooks, initialLogs, initialSt
   function copyToClipboard(text: string) {
     navigator.clipboard.writeText(text);
   }
+
+  const filteredKeys = keys.filter((k) => {
+    const matchesSearch = !searchQuery || k.name.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesStatus = filterStatus === "all" || 
+      (filterStatus === "active" && k.is_active) ||
+      (filterStatus === "inactive" && !k.is_active);
+    return matchesSearch && matchesStatus;
+  });
+
+  const filteredWebhooks = webhooks.filter((w) => {
+    const matchesSearch = !searchQuery || w.name.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesStatus = filterStatus === "all" || 
+      (filterStatus === "active" && w.is_active) ||
+      (filterStatus === "inactive" && !w.is_active);
+    return matchesSearch && matchesStatus;
+  });
 
   return (
     <div className="space-y-6">
@@ -216,7 +234,7 @@ export function ApiClient({ initialKeys, initialWebhooks, initialLogs, initialSt
       )}
 
       {/* Actions */}
-      <div className="flex gap-2">
+      <div className="flex gap-2 flex-wrap">
         <Button onClick={() => setShowKeyForm(true)}>
           <Plus className="h-4 w-4 mr-2" />
           Новий API ключ
@@ -225,6 +243,28 @@ export function ApiClient({ initialKeys, initialWebhooks, initialLogs, initialSt
           <Webhook className="h-4 w-4 mr-2" />
           Новий вебхук
         </Button>
+      </div>
+
+      {/* Filters */}
+      <div className="flex gap-3 flex-wrap">
+        <div className="relative flex-1 max-w-sm">
+          <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Шукати..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-9"
+          />
+        </div>
+        <select
+          value={filterStatus}
+          onChange={(e) => setFilterStatus(e.target.value as "all" | "active" | "inactive")}
+          className="rounded-md border bg-background px-3 py-2 text-sm"
+        >
+          <option value="all">Всі статуси</option>
+          <option value="active">Активні</option>
+          <option value="inactive">Неактивні</option>
+        </select>
       </div>
 
       {/* API Key Form */}
@@ -327,13 +367,13 @@ export function ApiClient({ initialKeys, initialWebhooks, initialLogs, initialSt
           <CardTitle>API ключі</CardTitle>
         </CardHeader>
         <CardContent>
-          {keys.length === 0 ? (
+          {filteredKeys.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
               Немає API ключів
             </div>
           ) : (
             <div className="space-y-2">
-              {keys.map((key) => (
+              {filteredKeys.map((key) => (
                 <div key={key.id} className="flex items-center justify-between p-3 rounded-lg border">
                   <div className="flex items-center gap-3">
                     <div className={`w-2 h-2 rounded-full ${key.is_active ? "bg-green-500" : "bg-gray-300"}`} />
@@ -361,13 +401,13 @@ export function ApiClient({ initialKeys, initialWebhooks, initialLogs, initialSt
           <CardTitle>Вебхуки</CardTitle>
         </CardHeader>
         <CardContent>
-          {webhooks.length === 0 ? (
+          {filteredWebhooks.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
               Немає вебхуків
             </div>
           ) : (
             <div className="space-y-2">
-              {webhooks.map((webhook) => (
+              {filteredWebhooks.map((webhook) => (
                 <div key={webhook.id} className="flex items-center justify-between p-3 rounded-lg border">
                   <div className="flex-1">
                     <div className="flex items-center gap-2">

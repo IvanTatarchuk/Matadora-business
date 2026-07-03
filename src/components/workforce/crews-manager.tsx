@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Trash2, Plus, ArrowRight } from "lucide-react";
+import { Trash2, Plus, ArrowRight, Search, Filter } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -33,6 +33,8 @@ export function CrewsManager({
   const [name, setName] = useState("");
   const [foreman, setForeman] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filterStatus, setFilterStatus] = useState<"all" | "with_members" | "without_members">("all");
 
   const workerName = (id: string) =>
     workers.find((w) => w.id === id)?.full_name ?? "—";
@@ -71,6 +73,14 @@ export function CrewsManager({
       router.refresh();
     });
   }
+
+  const filteredCrews = crews.filter((c) => {
+    const matchesSearch = !searchQuery || c.name.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesStatus = filterStatus === "all" || 
+      (filterStatus === "with_members" && c.memberIds.length > 0) ||
+      (filterStatus === "without_members" && c.memberIds.length === 0);
+    return matchesSearch && matchesStatus;
+  });
 
   return (
     <div className="space-y-6">
@@ -114,11 +124,33 @@ export function CrewsManager({
         </CardContent>
       </Card>
 
-      {crews.length === 0 ? (
+      {/* Filters */}
+      <div className="flex gap-3 flex-wrap">
+        <div className="relative flex-1 max-w-sm">
+          <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Шукати бригади..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-9"
+          />
+        </div>
+        <select
+          value={filterStatus}
+          onChange={(e) => setFilterStatus(e.target.value as "all" | "with_members" | "without_members")}
+          className="rounded-md border bg-background px-3 py-2 text-sm"
+        >
+          <option value="all">Всі статуси</option>
+          <option value="with_members">З членами</option>
+          <option value="without_members">Без членів</option>
+        </select>
+      </div>
+
+      {filteredCrews.length === 0 ? (
         <p className="text-sm text-muted-foreground">No crews yet.</p>
       ) : (
         <div className="grid gap-4 md:grid-cols-2">
-          {crews.map((crew) => (
+          {filteredCrews.map((crew) => (
             <Card key={crew.id}>
               <CardHeader className="flex flex-row items-center justify-between space-y-0">
                 <div className="flex-1">

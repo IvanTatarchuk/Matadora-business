@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Calendar, Plus, RefreshCw, X, CheckCircle2, Clock, AlertCircle, Trash2 } from "lucide-react";
+import { Calendar, Plus, RefreshCw, X, CheckCircle2, Clock, AlertCircle, Trash2, Search, Filter } from "lucide-react";
 import {
   createCalendarConnection, toggleCalendarSync, deleteCalendarConnection, triggerSync,
   type CalendarConnection, type CalendarSyncLog, type CalendarProvider,
@@ -36,6 +36,8 @@ export function CalendarIntegrationClient({ initialConnections, initialSyncLogs,
     refreshToken: "",
     syncDirection: "bidirectional" as "bidirectional" | "to_platform" | "from_platform",
   });
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filterStatus, setFilterStatus] = useState<"all" | "active" | "inactive">("all");
 
   function handleCreateConnection() {
     if (!connectionForm.email || !connectionForm.accessToken) {
@@ -86,6 +88,14 @@ export function CalendarIntegrationClient({ initialConnections, initialSyncLogs,
       setSyncLogs(newLogs);
     });
   }
+
+  const filteredConnections = connections.filter((c) => {
+    const matchesSearch = !searchQuery || c.email.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesStatus = filterStatus === "all" || 
+      (filterStatus === "active" && c.sync_enabled) ||
+      (filterStatus === "inactive" && !c.sync_enabled);
+    return matchesSearch && matchesStatus;
+  });
 
   const activeConnections = connections.filter((c) => c.sync_enabled);
 
@@ -142,11 +152,33 @@ export function CalendarIntegrationClient({ initialConnections, initialSyncLogs,
       </div>
 
       {/* Actions */}
-      <div className="flex gap-2">
+      <div className="flex gap-2 flex-wrap">
         <Button onClick={() => setShowConnectionForm(true)}>
           <Plus className="h-4 w-4 mr-2" />
           Підключити календар
         </Button>
+      </div>
+
+      {/* Filters */}
+      <div className="flex gap-3 flex-wrap">
+        <div className="relative flex-1 max-w-sm">
+          <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Шукати календарі..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-9"
+          />
+        </div>
+        <select
+          value={filterStatus}
+          onChange={(e) => setFilterStatus(e.target.value as "all" | "active" | "inactive")}
+          className="rounded-md border bg-background px-3 py-2 text-sm"
+        >
+          <option value="all">Всі статуси</option>
+          <option value="active">Активні</option>
+          <option value="inactive">Неактивні</option>
+        </select>
       </div>
 
       {/* Connection Form */}
@@ -214,13 +246,13 @@ export function CalendarIntegrationClient({ initialConnections, initialSyncLogs,
           <CardTitle>Підключення календарів</CardTitle>
         </CardHeader>
         <CardContent>
-          {connections.length === 0 ? (
+          {filteredConnections.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
               Немає підключених календарів
             </div>
           ) : (
             <div className="space-y-2">
-              {connections.map((connection) => (
+              {filteredConnections.map((connection) => (
                 <div key={connection.id} className="flex items-center justify-between p-3 rounded-lg border">
                   <div className="flex-1">
                     <div className="flex items-center gap-2">

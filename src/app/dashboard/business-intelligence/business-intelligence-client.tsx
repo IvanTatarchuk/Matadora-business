@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { BarChart3, Plus, Database, FileText, Layers, X, RefreshCw } from "lucide-react";
+import { BarChart3, Plus, Database, FileText, Layers, X, RefreshCw, Search, Filter } from "lucide-react";
 import {
   createBIDashboard, createBIWidget, createBIReport, createBIDataSource,
   type BIDashboard, type BIReport, type BIDataSource, type WidgetType, type ReportType, type SourceType,
@@ -33,6 +33,8 @@ export function BusinessIntelligenceClient({ initialDashboards, initialReports, 
   const [showDashboardForm, setShowDashboardForm] = useState(false);
   const [showReportForm, setShowReportForm] = useState(false);
   const [showDataSourceForm, setShowDataSourceForm] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filterType, setFilterType] = useState<"all" | "public" | "private">("all");
 
   const [dashboardForm, setDashboardForm] = useState({
     name: "",
@@ -99,6 +101,14 @@ export function BusinessIntelligenceClient({ initialDashboards, initialReports, 
     });
   }
 
+  const filteredDashboards = dashboards.filter((d) => {
+    const matchesSearch = !searchQuery || d.name.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesType = filterType === "all" || 
+      (filterType === "public" && d.is_public) ||
+      (filterType === "private" && !d.is_public);
+    return matchesSearch && matchesType;
+  });
+
   return (
     <div className="space-y-6">
       <div>
@@ -152,7 +162,7 @@ export function BusinessIntelligenceClient({ initialDashboards, initialReports, 
       </div>
 
       {/* Actions */}
-      <div className="flex gap-2">
+      <div className="flex gap-2 flex-wrap">
         <Button onClick={() => setShowDashboardForm(true)}>
           <Plus className="h-4 w-4 mr-2" />
           Новий дашборд
@@ -165,6 +175,28 @@ export function BusinessIntelligenceClient({ initialDashboards, initialReports, 
           <Database className="h-4 w-4 mr-2" />
           Джерело даних
         </Button>
+      </div>
+
+      {/* Filters */}
+      <div className="flex gap-3 flex-wrap">
+        <div className="relative flex-1 max-w-sm">
+          <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Шукати дашборди..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-9"
+          />
+        </div>
+        <select
+          value={filterType}
+          onChange={(e) => setFilterType(e.target.value as "all" | "public" | "private")}
+          className="rounded-md border bg-background px-3 py-2 text-sm"
+        >
+          <option value="all">Всі типи</option>
+          <option value="public">Публічні</option>
+          <option value="private">Приватні</option>
+        </select>
       </div>
 
       {/* Dashboard Form */}
@@ -301,13 +333,13 @@ export function BusinessIntelligenceClient({ initialDashboards, initialReports, 
           <CardTitle>Дашборди</CardTitle>
         </CardHeader>
         <CardContent>
-          {dashboards.length === 0 ? (
+          {filteredDashboards.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
               Немає дашбордів
             </div>
           ) : (
             <div className="space-y-2">
-              {dashboards.map((dashboard) => (
+              {filteredDashboards.map((dashboard) => (
                 <div key={dashboard.id} className="flex items-center justify-between p-3 rounded-lg border">
                   <div className="flex-1">
                     <p className="font-medium">{dashboard.name}</p>

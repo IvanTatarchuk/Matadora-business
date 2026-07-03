@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Users, Plus, RefreshCw, X, CheckCircle2, Clock, AlertCircle, Trash2 } from "lucide-react";
+import { Users, Plus, RefreshCw, X, CheckCircle2, Clock, AlertCircle, Trash2, Search, Filter } from "lucide-react";
 import {
   createCRMConnection, toggleCRMSync, deleteCRMConnection, triggerCRMSync,
   type CRMConnection, type CRMSyncLog, type CRMProvider,
@@ -35,6 +35,8 @@ export function CRMIntegrationClient({ initialConnections, initialSyncLogs, init
     apiUrl: "",
     syncDirection: "bidirectional" as "bidirectional" | "to_crm" | "from_crm",
   });
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filterStatus, setFilterStatus] = useState<"all" | "active" | "inactive">("all");
 
   function handleCreateConnection() {
     if (!connectionForm.apiKey) {
@@ -85,6 +87,14 @@ export function CRMIntegrationClient({ initialConnections, initialSyncLogs, init
       setSyncLogs(newLogs);
     });
   }
+
+  const filteredConnections = connections.filter((c) => {
+    const matchesSearch = !searchQuery || c.provider.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesStatus = filterStatus === "all" || 
+      (filterStatus === "active" && c.sync_enabled) ||
+      (filterStatus === "inactive" && !c.sync_enabled);
+    return matchesSearch && matchesStatus;
+  });
 
   const activeConnections = connections.filter((c) => c.sync_enabled);
 
@@ -141,11 +151,33 @@ export function CRMIntegrationClient({ initialConnections, initialSyncLogs, init
       </div>
 
       {/* Actions */}
-      <div className="flex gap-2">
+      <div className="flex gap-2 flex-wrap">
         <Button onClick={() => setShowConnectionForm(true)}>
           <Plus className="h-4 w-4 mr-2" />
           Підключити CRM
         </Button>
+      </div>
+
+      {/* Filters */}
+      <div className="flex gap-3 flex-wrap">
+        <div className="relative flex-1 max-w-sm">
+          <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Шукати CRM..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-9"
+          />
+        </div>
+        <select
+          value={filterStatus}
+          onChange={(e) => setFilterStatus(e.target.value as "all" | "active" | "inactive")}
+          className="rounded-md border bg-background px-3 py-2 text-sm"
+        >
+          <option value="all">Всі статуси</option>
+          <option value="active">Активні</option>
+          <option value="inactive">Неактивні</option>
+        </select>
       </div>
 
       {/* Connection Form */}
@@ -211,13 +243,13 @@ export function CRMIntegrationClient({ initialConnections, initialSyncLogs, init
           <CardTitle>Підключення CRM</CardTitle>
         </CardHeader>
         <CardContent>
-          {connections.length === 0 ? (
+          {filteredConnections.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
               Немає підключених CRM
             </div>
           ) : (
             <div className="space-y-2">
-              {connections.map((connection) => (
+              {filteredConnections.map((connection) => (
                 <div key={connection.id} className="flex items-center justify-between p-3 rounded-lg border">
                   <div className="flex-1">
                     <div className="flex items-center gap-2">

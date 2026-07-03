@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Trash2, Copy, Check, ArrowRight } from "lucide-react";
+import { Trash2, Copy, Check, ArrowRight, Search, Filter } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -61,6 +61,8 @@ export function TeamManager({
   const [role, setRole] = useState<OrgMemberRole>("member");
   const [inviteError, setInviteError] = useState<string | null>(null);
   const [copied, setCopied] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filterRole, setFilterRole] = useState<"all" | "owner" | "admin" | "manager" | "member">("all");
 
   const inviteLink = (token: string) =>
     typeof window !== "undefined"
@@ -94,6 +96,12 @@ export function TeamManager({
       router.refresh();
     });
   }
+
+  const filteredMembers = members.filter((m) => {
+    const matchesSearch = !searchQuery || m.name.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesRole = filterRole === "all" || m.role === filterRole;
+    return matchesSearch && matchesRole;
+  });
 
   return (
     <div className="grid gap-6 lg:grid-cols-2">
