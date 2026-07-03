@@ -295,12 +295,29 @@ export default function KosztorysPage() {
               Kosztorys online zgodny z KNR — bezpłatnie, bez instalacji
             </div>
             <h1 className="text-3xl font-extrabold sm:text-4xl">
-              Stwórz profesjonalny kosztorys
+              Wycena kosztów remontu w kilka minut
             </h1>
             <p className="mt-2 text-white/70">
               Normy KNR, stawki SEKOCENBUD, eksport PDF — wszystko w przeglądarce.
-              Zastąp Norma PRO bez instalacji.
+              Dla generalnych wykonawców, architektów, zarządców nieruchomości
+              i projektantów wnętrz — przygotuj wiarygodną wycenę dla klienta
+              bez instalowania Norma PRO.
             </p>
+            <div className="mt-3 flex flex-wrap gap-2">
+              {[
+                "Generalni wykonawcy",
+                "Architekci",
+                "Zarządcy nieruchomości",
+                "Projektanci wnętrz",
+              ].map((audience) => (
+                <span
+                  key={audience}
+                  className="rounded-full border border-white/20 bg-white/10 px-2.5 py-1 text-xs text-white/80"
+                >
+                  {audience}
+                </span>
+              ))}
+            </div>
           </div>
         </section>
 
