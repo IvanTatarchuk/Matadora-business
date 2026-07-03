@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import {
   Package, Plus, AlertTriangle, TrendingUp, Search,
-  ArrowUpRight, ArrowDownRight, MoreVertical, Edit, Trash2,
+  ArrowUpRight, ArrowDownRight, MoreVertical, Edit, Trash2, ArrowRight,
 } from "lucide-react";
 import {
   createInventoryItem, createInventoryTransaction, updateInventoryItem,
@@ -343,9 +343,18 @@ export function InventoryClient({ initialItems, initialLowStock, initialTransact
                       min: {item.min_stock_level} • wartość: {item.total_value.toLocaleString("pl-PL")} PLN
                     </p>
                   </div>
-                  <Button variant="ghost" size="sm">
-                    <MoreVertical className="h-4 w-4" />
-                  </Button>
+                  <div className="flex gap-1">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => window.location.href = `/dashboard/inventory/${item.id}`}
+                    >
+                      <ArrowRight className="h-4 w-4" />
+                    </Button>
+                    <Button variant="ghost" size="sm">
+                      <MoreVertical className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </div>
               ))}
             </div>

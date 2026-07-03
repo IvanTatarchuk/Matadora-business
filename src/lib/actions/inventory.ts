@@ -224,3 +224,19 @@ export async function getLowStockItems(): Promise<InventoryItem[]> {
   if (error) return [];
   return (data ?? []) as InventoryItem[];
 }
+
+export async function getInventoryItemById(id: string): Promise<InventoryItem | null> {
+  const supabase = createClient();
+  const { data, error } = await db(supabase)
+    .from("inventory_items")
+    .select("*")
+    .eq("id", id)
+    .single();
+
+  if (error) return null;
+  return data as InventoryItem;
+}
+
+export async function getInventoryTransactions(itemId: string): Promise<InventoryTransaction[]> {
+  return listInventoryTransactions(itemId);
+}

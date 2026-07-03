@@ -80,6 +80,16 @@ export async function deleteWorker(id: string): Promise<ActionResult> {
   return { ok: true };
 }
 
+export async function getWorkerById(workerId: string): Promise<Worker | null> {
+  const supabase = createClient();
+  const { data } = await supabase
+    .from("workers")
+    .select("*")
+    .eq("id", workerId)
+    .single();
+  return data ?? null;
+}
+
 // ----------------------------------------------------------------------------
 // Crews
 // ----------------------------------------------------------------------------
@@ -382,4 +392,58 @@ export async function getCrewProductivityStats(crewId: string): Promise<{
     averageEfficiency,
     averageQuality,
   };
+}
+
+// ----------------------------------------------------------------------------
+// Worker History
+// ----------------------------------------------------------------------------
+
+export async function createWorkerHistory(input: {
+  workerId: string;
+  orgId: string;
+  projectId?: string;
+  crewId?: string;
+  startDate: string;
+  endDate?: string;
+  role?: string;
+  notes?: string;
+}): Promise<ActionResult> {
+  const supabase = createClient();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data, error } = await (supabase.from("worker_history") as any).insert({
+    worker_id: input.workerId,
+    org_id: input.orgId,
+    project_id: input.projectId || null,
+    crew_id: input.crewId || null,
+    start_date: input.startDate,
+    end_date: input.endDate || null,
+    role: input.role || null,
+    notes: input.notes || null,
+  }).select("id").single();
+  if (error) return { ok: false, error: error.message };
+  revalidatePath(WORKERS_PATH);
+  return { ok: true, id: data.id };
+}
+
+export async function listWorkerHistory(workerId: string): Promise<any[]> {
+  const supabase = createClient();
+  const { data } = await supabase
+    .from("worker_history")
+    .select(`
+      *,
+      projects (id, name),
+      crews (id, name)
+    `)
+    .eq("worker_id", workerId)
+    .order("start_date", { ascending: false });
+  return data ?? [];
+}
+
+export async function deleteWorkerHistory(id: string): Promise<ActionResult> {
+  const supabase = createClient();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { error } = await (supabase.from("worker_history") as any).delete().eq("id", id);
+  if (error) return { ok: false, error: error.message };
+  revalidatePath(WORKERS_PATH);
+  return { ok: true };
 }

@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Trash2, Copy, Check } from "lucide-react";
+import { Trash2, Copy, Check, ArrowRight } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -179,21 +179,31 @@ export function TeamManager({
                   {m.name}{" "}
                   <span className="text-muted-foreground">· {m.role}</span>
                 </span>
-                {canManage && m.role !== "owner" && (
+                <div className="flex shrink-0 items-center gap-1">
                   <Button
                     variant="ghost"
                     size="sm"
+                    onClick={() => router.push(`/dashboard/team/${m.userId}`)}
                     disabled={pending}
-                    onClick={() =>
-                      startTransition(async () => {
-                        await removeMember(org.id, m.userId);
-                        router.refresh();
-                      })
-                    }
                   >
-                    <Trash2 className="h-4 w-4 text-destructive" />
+                    <ArrowRight className="h-4 w-4" />
                   </Button>
-                )}
+                  {canManage && m.role !== "owner" && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      disabled={pending}
+                      onClick={() =>
+                        startTransition(async () => {
+                          await removeMember(org.id, m.userId);
+                          router.refresh();
+                        })
+                      }
+                    >
+                      <Trash2 className="h-4 w-4 text-destructive" />
+                    </Button>
+                  )}
+                </div>
               </div>
             ))}
           </CardContent>
