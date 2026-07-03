@@ -23,6 +23,7 @@ export default function NewProtokolPage() {
 
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [form, setForm] = useState({
     project_id: "",
     client_phone: "",
@@ -52,28 +53,38 @@ export default function NewProtokolPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    setError(null);
     setLoading(true);
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        setError("Nie udało się zweryfikować użytkownika. Zaloguj się ponownie.");
+        return;
+      }
 
-    const { data, error } = await supabase
-      .from("protokoly_odbioru")
-      .insert({
-        contractor_id: user.id,
-        project_id: form.project_id || null,
-        title: form.title,
-        description: form.description,
-        work_scope: form.work_scope,
-        amount_net: net,
-        vat_rate: parseFloat(form.vat_rate),
-        status: "draft",
-      })
-      .select("id")
-      .single();
+      const { data, error: insertError } = await supabase
+        .from("protokoly_odbioru")
+        .insert({
+          contractor_id: user.id,
+          project_id: form.project_id || null,
+          title: form.title,
+          description: form.description,
+          work_scope: form.work_scope,
+          amount_net: net,
+          vat_rate: parseFloat(form.vat_rate),
+          status: "draft",
+        })
+        .select("id")
+        .single();
 
-    setLoading(false);
-    if (!error && data) {
+      if (insertError || !data) {
+        setError(insertError?.message ?? "Nie udało się utworzyć protokołu.");
+        return;
+      }
+
       router.push(`/dashboard/contractor/protokoly/${data.id}`);
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -193,6 +204,8 @@ export default function NewProtokolPage() {
             )}
           </CardContent>
         </Card>
+
+        {error && <p className="text-sm text-destructive">{error}</p>}
 
         <div className="flex gap-3">
           <Button type="submit" disabled={loading} className="flex-1">
