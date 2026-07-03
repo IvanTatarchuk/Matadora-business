@@ -1,0 +1,146 @@
+"use client";
+
+import { useState, useTransition } from "react";
+import Link from "next/link";
+import {
+  Bell, CheckCheck, Info, AlertTriangle, CheckCircle2, XCircle,
+  FileText, ClipboardCheck, ShieldAlert, DollarSign, GraduationCap,
+  Shield, Upload, Receipt,
+} from "lucide-react";
+import {
+  markNotificationRead, markAllNotificationsRead,
+  type Notification, type NotificationType,
+} from "@/lib/actions/notifications";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import React from "react";
+
+const TYPE_CONFIG: Record<NotificationType, { label: string; icon: React.ElementType; color: string }> = {
+  info:                   { label: "Informacja",       icon: Info,           color: "text-blue-500" },
+  warning:                { label: "Ostrzeżenie",      icon: AlertTriangle,  color: "text-yellow-500" },
+  error:                  { label: "Błąd",             icon: XCircle,        color: "text-red-500" },
+  success:                { label: "Sukces",            icon: CheckCircle2,   color: "text-green-500" },
+  rfi_new:                { label: "Nowe RFI",         icon: FileText,       color: "text-blue-600" },
+  rfi_answered:           { label: "RFI — odpowiedź",  icon: FileText,       color: "text-green-600" },
+  punch_opened:           { label: "Nowa usterka",     icon: ClipboardCheck, color: "text-orange-500" },
+  punch_closed:           { label: "Usterka zamknięta",icon: ClipboardCheck, color: "text-green-500" },
+  inspection_completed:   { label: "Inspekcja",        icon: ClipboardCheck, color: "text-purple-500" },
+  risk_high:              { label: "Wysokie ryzyko",   icon: ShieldAlert,    color: "text-red-600" },
+  budget_alert:           { label: "Alert budżetowy",  icon: DollarSign,     color: "text-orange-600" },
+  cert_expiring:          { label: "Cert. wygasa",     icon: GraduationCap,  color: "text-yellow-600" },
+  warranty_expiring:      { label: "Gwarancja wygasa", icon: Shield,         color: "text-yellow-600" },
+  document_uploaded:      { label: "Dokument",         icon: Upload,         color: "text-blue-500" },
+  payment_due:            { label: "Płatność",         icon: Receipt,        color: "text-orange-600" },
+  daily_report_submitted: { label: "Raport dzienny",   icon: FileText,       color: "text-teal-500" },
+};
+
+function timeAgo(dateStr: string): string {
+  const ms = Date.now() - new Date(dateStr).getTime();
+  const mins = Math.floor(ms / 60000);
+  if (mins < 1) return "przed chwilą";
+  if (mins < 60) return `${mins} min temu`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `${hours}h temu`;
+  const days = Math.floor(hours / 24);
+  return `${days} dni temu`;
+}
+
+export function PowiadomieniaClient({ initialNotifications }: { initialNotifications: Notification[] }) {
+  const [notifs, setNotifs] = useState<Notification[]>(initialNotifications);
+  const [pending, startTransition] = useTransition();
+  const [filter, setFilter] = useState<"all" | "unread">("all");
+
+  const unreadCount = notifs.filter((n) => !n.is_read).length;
+  const displayed = filter === "unread" ? notifs.filter((n) => !n.is_read) : notifs;
+
+  function handleMarkRead(id: string) {
+    startTransition(async () => {
+      await markNotificationRead(id);
+      setNotifs((prev) => prev.map((n) => n.id === id ? { ...n, is_read: true, read_at: new Date().toISOString() } : n));
+    });
+  }
+
+  function handleMarkAllRead() {
+    startTransition(async () => {
+      await markAllNotificationsRead();
+      setNotifs((prev) => prev.map((n) => ({ ...n, is_read: true, read_at: new Date().toISOString() })));
+    });
+  }
+
+  return (
+    <div className="space-y-6 max-w-2xl">
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-bold flex items-center gap-2">
+            <Bell className="h-6 w-6" />Powiadomienia
+            {unreadCount > 0 && (
+              <span className="ml-1 rounded-full bg-primary text-primary-foreground text-xs font-bold px-1.5 py-0.5">{unreadCount}</span>
+            )}
+          </h1>
+          <p className="text-sm text-muted-foreground">{notifs.length} powiadomień łącznie</p>
+        </div>
+        <div className="flex gap-2">
+          <div className="flex rounded-md border overflow-hidden text-sm">
+            <button onClick={() => setFilter("all")} className={`px-3 py-1.5 ${filter === "all" ? "bg-primary text-primary-foreground" : "bg-background hover:bg-muted"}`}>Wszystkie</button>
+            <button onClick={() => setFilter("unread")} className={`px-3 py-1.5 ${filter === "unread" ? "bg-primary text-primary-foreground" : "bg-background hover:bg-muted"}`}>Nieprzeczytane ({unreadCount})</button>
+          </div>
+          {unreadCount > 0 && (
+            <Button variant="outline" size="sm" onClick={handleMarkAllRead} disabled={pending}>
+              <CheckCheck className="mr-1.5 h-3.5 w-3.5" />Oznacz wszystkie
+            </Button>
+          )}
+        </div>
+      </div>
+
+      {displayed.length === 0 ? (
+        <Card className="border-dashed">
+          <CardContent className="p-12 text-center text-muted-foreground">
+            <Bell className="mx-auto h-12 w-12 opacity-20 mb-3" />
+            <p className="font-medium">{filter === "unread" ? "Brak nieprzeczytanych powiadomień" : "Brak powiadomień"}</p>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="space-y-1">
+          {displayed.map((n) => {
+            const cfg = TYPE_CONFIG[n.type] ?? TYPE_CONFIG.info;
+            const Icon = cfg.icon;
+            const Wrapper = n.href ? Link : "div";
+            const wrapperProps = n.href ? { href: n.href } : {};
+            return (
+              <Card key={n.id} className={`transition-colors ${!n.is_read ? "bg-blue-50/40 border-blue-100" : ""} hover:bg-muted/30`}>
+                <CardContent className="p-3">
+                  <div className="flex items-start gap-3">
+                    <div className={`mt-0.5 shrink-0 ${cfg.color}`}>
+                      <Icon className="h-5 w-5" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      {/* @ts-expect-error dynamic wrapper */}
+                      <Wrapper {...wrapperProps} className="block" onClick={() => !n.is_read && handleMarkRead(n.id)}>
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex-1 min-w-0">
+                            <p className={`text-sm ${!n.is_read ? "font-semibold" : "font-medium"}`}>{n.title}</p>
+                            {n.body && <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{n.body}</p>}
+                          </div>
+                          <div className="flex items-center gap-2 shrink-0">
+                            <span className="text-xs text-muted-foreground whitespace-nowrap">{timeAgo(n.created_at)}</span>
+                            {!n.is_read && <span className="h-2 w-2 rounded-full bg-blue-500 shrink-0" />}
+                          </div>
+                        </div>
+                      </Wrapper>
+                    </div>
+                    {!n.is_read && (
+                      <button onClick={() => handleMarkRead(n.id)} disabled={pending}
+                        className="shrink-0 text-muted-foreground hover:text-foreground" title="Oznacz jako przeczytane">
+                        <CheckCheck className="h-4 w-4" />
+                      </button>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}

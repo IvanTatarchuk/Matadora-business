@@ -1,0 +1,10 @@
+Packages needing (re)install: 7
+[1/7] OK @supabase/supabase-js@2.106.2 -> node_modules/@supabase/supabase-js
+[2/7] OK @supabase/auth-js@2.106.2 -> node_modules/@supabase/supabase-js/node_modules/@supabase/auth-js
+[3/7] OK @supabase/functions-js@2.106.2 -> node_modules/@supabase/supabase-js/node_modules/@supabase/functions-js
+[4/7] OK @supabase/phoenix@0.4.2 -> node_modules/@supabase/supabase-js/node_modules/@supabase/phoenix
+[5/7] OK @supabase/realtime-js@2.106.2 -> node_modules/@supabase/supabase-js/node_modules/@supabase/realtime-js
+[6/7] OK caniuse-lite@1.0.30001793 -> node_modules/caniuse-lite
+[7/7] OK next@14.2.21 -> node_modules/next
+
+DONE. extracted=7 failed=0 total=7

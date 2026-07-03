@@ -1,0 +1,13 @@
+-- =============================================================================
+-- Optional seed data. Run AFTER you have created auth users for each role and
+-- replaced the UUIDs below with the real `auth.users.id` values.
+-- (Profiles are auto-created by the on_auth_user_created trigger.)
+-- =============================================================================
+
+-- Example wholesaler catalog (replace :wholesaler_id with a real profile id).
+-- insert into public.materials_catalog (wholesaler_id, product_name, sku, price_net, unit, stock_status)
+-- values
+--   (':wholesaler_id', 'Gładź gipsowa 20kg',        'GG-20',  45.00, 'szt', 'in_stock'),
+--   (':wholesaler_id', 'Płyta GK 12,5mm 1200x2600', 'GK-125', 38.50, 'szt', 'in_stock'),
+--   (':wholesaler_id', 'Profil CD60 3m',            'CD60-3', 12.90, 'szt', 'low_stock'),
+--   (':wholesaler_id', 'Wełna mineralna 100mm',     'WM-100', 89.00, 'm2',  'in_stock');

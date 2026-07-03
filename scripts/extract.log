@@ -1,0 +1,190 @@
+Total packages: 187
+[1/187] OK @alloc/quick-lru@5.2.0 -> node_modules/@alloc/quick-lru
+[2/187] OK @floating-ui/core@1.7.5 -> node_modules/@floating-ui/core
+[3/187] OK @floating-ui/utils@0.2.11 -> node_modules/@floating-ui/core/node_modules/@floating-ui/utils
+[4/187] OK @floating-ui/dom@1.7.6 -> node_modules/@floating-ui/dom
+[5/187] OK @floating-ui/utils@0.2.11 -> node_modules/@floating-ui/dom/node_modules/@floating-ui/utils
+[6/187] OK @floating-ui/react-dom@2.1.8 -> node_modules/@floating-ui/react-dom
+[7/187] OK @hookform/resolvers@3.10.0 -> node_modules/@hookform/resolvers
+[8/187] OK @jridgewell/gen-mapping@0.3.13 -> node_modules/@jridgewell/gen-mapping
+[9/187] OK @jridgewell/sourcemap-codec@1.5.5 -> node_modules/@jridgewell/sourcemap-codec
+[10/187] OK @next/env@14.2.21 -> node_modules/@next/env
+[11/187] OK @next/swc-darwin-arm64@14.2.21 -> node_modules/@next/swc-darwin-arm64
+[12/187] OK @next/swc-darwin-x64@14.2.21 -> node_modules/@next/swc-darwin-x64
+[13/187] OK @next/swc-linux-arm64-gnu@14.2.21 -> node_modules/@next/swc-linux-arm64-gnu
+[14/187] OK @next/swc-linux-arm64-musl@14.2.21 -> node_modules/@next/swc-linux-arm64-musl
+[15/187] OK @next/swc-linux-x64-gnu@14.2.21 -> node_modules/@next/swc-linux-x64-gnu
+[16/187] OK @next/swc-linux-x64-musl@14.2.21 -> node_modules/@next/swc-linux-x64-musl
+[17/187] OK @next/swc-win32-arm64-msvc@14.2.21 -> node_modules/@next/swc-win32-arm64-msvc
+[18/187] OK @next/swc-win32-ia32-msvc@14.2.21 -> node_modules/@next/swc-win32-ia32-msvc
+[19/187] OK @next/swc-win32-x64-msvc@14.2.21 -> node_modules/@next/swc-win32-x64-msvc
+[20/187] OK @radix-ui/number@1.1.1 -> node_modules/@radix-ui/number
+[21/187] OK @radix-ui/primitive@1.1.3 -> node_modules/@radix-ui/primitive
+[22/187] OK @radix-ui/react-arrow@1.1.7 -> node_modules/@radix-ui/react-arrow
+[23/187] OK @radix-ui/react-collection@1.1.7 -> node_modules/@radix-ui/react-collection
+[24/187] OK @radix-ui/react-context@1.1.2 -> node_modules/@radix-ui/react-collection/node_modules/@radix-ui/react-context
+[25/187] OK @radix-ui/react-slot@1.2.3 -> node_modules/@radix-ui/react-collection/node_modules/@radix-ui/react-slot
+[26/187] OK @radix-ui/react-compose-refs@1.1.2 -> node_modules/@radix-ui/react-compose-refs
+[27/187] OK @radix-ui/react-dialog@1.1.15 -> node_modules/@radix-ui/react-dialog
+[28/187] OK @radix-ui/react-context@1.1.2 -> node_modules/@radix-ui/react-dialog/node_modules/@radix-ui/react-context
+[29/187] OK @radix-ui/react-slot@1.2.3 -> node_modules/@radix-ui/react-dialog/node_modules/@radix-ui/react-slot
+[30/187] OK react-remove-scroll@2.7.2 -> node_modules/@radix-ui/react-dialog/node_modules/react-remove-scroll
+[31/187] OK react-remove-scroll-bar@2.3.8 -> node_modules/@radix-ui/react-dialog/node_modules/react-remove-scroll-bar
+[32/187] OK react-style-singleton@2.2.3 -> node_modules/@radix-ui/react-dialog/node_modules/react-style-singleton
+[33/187] OK use-callback-ref@1.3.3 -> node_modules/@radix-ui/react-dialog/node_modules/use-callback-ref
+[34/187] OK use-sidecar@1.1.3 -> node_modules/@radix-ui/react-dialog/node_modules/use-sidecar
+[35/187] OK @radix-ui/react-direction@1.1.1 -> node_modules/@radix-ui/react-direction
+[36/187] OK @radix-ui/react-dismissable-layer@1.1.11 -> node_modules/@radix-ui/react-dismissable-layer
+[37/187] OK @radix-ui/react-focus-guards@1.1.3 -> node_modules/@radix-ui/react-focus-guards
+[38/187] OK @radix-ui/react-focus-scope@1.1.7 -> node_modules/@radix-ui/react-focus-scope
+[39/187] OK @radix-ui/react-id@1.1.1 -> node_modules/@radix-ui/react-id
+[40/187] OK @radix-ui/react-label@2.1.8 -> node_modules/@radix-ui/react-label
+[41/187] OK @radix-ui/react-primitive@2.1.4 -> node_modules/@radix-ui/react-label/node_modules/@radix-ui/react-primitive
+[42/187] OK @radix-ui/react-popper@1.2.8 -> node_modules/@radix-ui/react-popper
+[43/187] OK @radix-ui/react-context@1.1.2 -> node_modules/@radix-ui/react-popper/node_modules/@radix-ui/react-context
+[44/187] OK @radix-ui/react-portal@1.1.9 -> node_modules/@radix-ui/react-portal
+[45/187] OK @radix-ui/react-presence@1.1.5 -> node_modules/@radix-ui/react-presence
+[46/187] OK @radix-ui/react-primitive@2.1.3 -> node_modules/@radix-ui/react-primitive
+[47/187] OK @radix-ui/react-slot@1.2.3 -> node_modules/@radix-ui/react-primitive/node_modules/@radix-ui/react-slot
+[48/187] OK @radix-ui/react-progress@1.1.8 -> node_modules/@radix-ui/react-progress
+[49/187] OK @radix-ui/react-context@1.1.3 -> node_modules/@radix-ui/react-progress/node_modules/@radix-ui/react-context
+[50/187] OK @radix-ui/react-primitive@2.1.4 -> node_modules/@radix-ui/react-progress/node_modules/@radix-ui/react-primitive
+[51/187] OK @radix-ui/react-select@2.2.6 -> node_modules/@radix-ui/react-select
+[52/187] OK @radix-ui/react-context@1.1.2 -> node_modules/@radix-ui/react-select/node_modules/@radix-ui/react-context
+[53/187] OK @radix-ui/react-slot@1.2.3 -> node_modules/@radix-ui/react-select/node_modules/@radix-ui/react-slot
+[54/187] OK react-remove-scroll@2.7.2 -> node_modules/@radix-ui/react-select/node_modules/react-remove-scroll
+[55/187] OK react-remove-scroll-bar@2.3.8 -> node_modules/@radix-ui/react-select/node_modules/react-remove-scroll-bar
+[56/187] OK react-style-singleton@2.2.3 -> node_modules/@radix-ui/react-select/node_modules/react-style-singleton
+[57/187] OK use-callback-ref@1.3.3 -> node_modules/@radix-ui/react-select/node_modules/use-callback-ref
+[58/187] OK use-sidecar@1.1.3 -> node_modules/@radix-ui/react-select/node_modules/use-sidecar
+[59/187] OK @radix-ui/react-slot@1.2.4 -> node_modules/@radix-ui/react-slot
+[60/187] OK @radix-ui/react-toast@1.2.15 -> node_modules/@radix-ui/react-toast
+[61/187] OK @radix-ui/react-context@1.1.2 -> node_modules/@radix-ui/react-toast/node_modules/@radix-ui/react-context
+[62/187] OK @radix-ui/react-use-callback-ref@1.1.1 -> node_modules/@radix-ui/react-use-callback-ref
+[63/187] OK @radix-ui/react-use-controllable-state@1.2.2 -> node_modules/@radix-ui/react-use-controllable-state
+[64/187] OK @radix-ui/react-use-effect-event@0.0.2 -> node_modules/@radix-ui/react-use-effect-event
+[65/187] OK @radix-ui/react-use-escape-keydown@1.1.1 -> node_modules/@radix-ui/react-use-escape-keydown
+[66/187] OK @radix-ui/react-use-layout-effect@1.1.1 -> node_modules/@radix-ui/react-use-layout-effect
+[67/187] OK @radix-ui/react-use-previous@1.1.1 -> node_modules/@radix-ui/react-use-previous
+[68/187] OK @radix-ui/react-use-rect@1.1.1 -> node_modules/@radix-ui/react-use-rect
+[69/187] OK @radix-ui/react-use-size@1.1.1 -> node_modules/@radix-ui/react-use-size
+[70/187] OK @radix-ui/react-visually-hidden@1.2.3 -> node_modules/@radix-ui/react-visually-hidden
+[71/187] OK @radix-ui/rect@1.1.1 -> node_modules/@radix-ui/rect
+[72/187] FAIL @supabase/postgrest-js@2.106.2: Command failed: npm.cmd pack @supabase/postgrest-js@2.106.2 --prefer-offline --no-audit --no-fund --pack-destination E:\Matadora-business\.tmp_pkgs --fetch-timeout=900000 --fetch-retries=5
+[73/187] OK @supabase/ssr@0.5.2 -> node_modules/@supabase/ssr
+[74/187] FAIL @supabase/storage-js@2.106.2: Command failed: npm.cmd pack @supabase/storage-js@2.106.2 --prefer-offline --no-audit --no-fund --pack-destination E:\Matadora-business\.tmp_pkgs --fetch-timeout=900000 --fetch-retries=5
+[75/187] FAIL @supabase/supabase-js@2.106.2: Command failed: npm.cmd pack @supabase/supabase-js@2.106.2 --prefer-offline --no-audit --no-fund --pack-destination E:\Matadora-business\.tmp_pkgs --fetch-timeout=900000 --fetch-retries=5
+[76/187] FAIL @supabase/auth-js@2.106.2: Command failed: npm.cmd pack @supabase/auth-js@2.106.2 --prefer-offline --no-audit --no-fund --pack-destination E:\Matadora-business\.tmp_pkgs --fetch-timeout=900000 --fetch-retries=5
+[77/187] FAIL @supabase/functions-js@2.106.2: Command failed: npm.cmd pack @supabase/functions-js@2.106.2 --prefer-offline --no-audit --no-fund --pack-destination E:\Matadora-business\.tmp_pkgs --fetch-timeout=900000 --fetch-retries=5
+[78/187] FAIL @supabase/phoenix@0.4.2: Command failed: npm.cmd pack @supabase/phoenix@0.4.2 --prefer-offline --no-audit --no-fund --pack-destination E:\Matadora-business\.tmp_pkgs --fetch-timeout=900000 --fetch-retries=5
+[79/187] FAIL @supabase/realtime-js@2.106.2: Command failed: npm.cmd pack @supabase/realtime-js@2.106.2 --prefer-offline --no-audit --no-fund --pack-destination E:\Matadora-business\.tmp_pkgs --fetch-timeout=900000 --fetch-retries=5
+[80/187] OK @swc/counter@0.1.3 -> node_modules/@swc/counter
+[81/187] OK @swc/helpers@0.5.5 -> node_modules/@swc/helpers
+[82/187] OK @types/cookie@0.6.0 -> node_modules/@types/cookie
+[83/187] OK @types/node@20.19.41 -> node_modules/@types/node
+[84/187] OK @types/prop-types@15.7.15 -> node_modules/@types/prop-types
+[85/187] OK @types/react@18.3.29 -> node_modules/@types/react
+[86/187] OK @types/react-dom@18.3.7 -> node_modules/@types/react-dom
+[87/187] OK any-promise@1.3.0 -> node_modules/any-promise
+[88/187] FAIL anymatch@3.1.3: Command failed: npm.cmd pack anymatch@3.1.3 --prefer-offline --no-audit --no-fund --pack-destination E:\Matadora-business\.tmp_pkgs --fetch-timeout=900000 --fetch-retries=5
+[89/187] FAIL arg@5.0.2: Command failed: npm.cmd pack arg@5.0.2 --prefer-offline --no-audit --no-fund --pack-destination E:\Matadora-business\.tmp_pkgs --fetch-timeout=900000 --fetch-retries=5
+[90/187] OK aria-hidden@1.2.6 -> node_modules/aria-hidden
+[91/187] OK autoprefixer@10.5.0 -> node_modules/autoprefixer
+[92/187] FAIL baseline-browser-mapping@2.10.32: Command failed: npm.cmd pack baseline-browser-mapping@2.10.32 --prefer-offline --no-audit --no-fund --pack-destination E:\Matadora-business\.tmp_pkgs --fetch-timeout=900000 --fetch-retries=5
+[93/187] OK binary-extensions@2.3.0 -> node_modules/binary-extensions
+[94/187] OK browserslist@4.28.2 -> node_modules/browserslist
+[95/187] OK busboy@1.6.0 -> node_modules/busboy
+[96/187] OK camelcase-css@2.0.1 -> node_modules/camelcase-css
+[97/187] FAIL caniuse-lite@1.0.30001793: Command failed: npm.cmd pack caniuse-lite@1.0.30001793 --prefer-offline --no-audit --no-fund --pack-destination E:\Matadora-business\.tmp_pkgs --fetch-timeout=900000 --fetch-retries=5
+[98/187] OK chokidar@3.6.0 -> node_modules/chokidar
+[99/187] OK glob-parent@5.1.2 -> node_modules/chokidar/node_modules/glob-parent
+[100/187] OK class-variance-authority@0.7.1 -> node_modules/class-variance-authority
+[101/187] OK client-only@0.0.1 -> node_modules/client-only
+[102/187] OK clsx@2.1.1 -> node_modules/clsx
+[103/187] OK commander@4.1.1 -> node_modules/commander
+[104/187] OK cookie@0.7.2 -> node_modules/cookie
+[105/187] OK cssesc@3.0.0 -> node_modules/cssesc
+[106/187] OK csstype@3.2.3 -> node_modules/csstype
+[107/187] OK detect-node-es@1.1.0 -> node_modules/detect-node-es
+[108/187] OK didyoumean@1.2.2 -> node_modules/didyoumean
+[109/187] OK dlv@1.1.3 -> node_modules/dlv
+[110/187] OK es-errors@1.3.0 -> node_modules/es-errors
+[111/187] OK escalade@3.2.0 -> node_modules/escalade
+[112/187] OK fast-glob@3.3.3 -> node_modules/fast-glob
+[113/187] OK @nodelib/fs.scandir@2.1.5 -> node_modules/fast-glob/node_modules/@nodelib/fs.scandir
+[114/187] OK @nodelib/fs.stat@2.0.5 -> node_modules/fast-glob/node_modules/@nodelib/fs.stat
+[115/187] OK @nodelib/fs.walk@1.2.8 -> node_modules/fast-glob/node_modules/@nodelib/fs.walk
+[116/187] OK glob-parent@5.1.2 -> node_modules/fast-glob/node_modules/glob-parent
+[117/187] OK fastq@1.20.1 -> node_modules/fastq
+[118/187] OK fraction.js@5.3.4 -> node_modules/fraction.js
+[119/187] OK function-bind@1.1.2 -> node_modules/function-bind
+[120/187] OK get-nonce@1.0.1 -> node_modules/get-nonce
+[121/187] OK glob-parent@6.0.2 -> node_modules/glob-parent
+[122/187] OK graceful-fs@4.2.11 -> node_modules/graceful-fs
+[123/187] FAIL hasown@2.0.4: Command failed: npm.cmd pack hasown@2.0.4 --prefer-offline --no-audit --no-fund --pack-destination E:\Matadora-business\.tmp_pkgs --fetch-timeout=900000 --fetch-retries=5
+[124/187] OK iceberg-js@0.8.1 -> node_modules/iceberg-js
+[125/187] FAIL is-binary-path@2.1.0: Command failed: npm.cmd pack is-binary-path@2.1.0 --prefer-offline --no-audit --no-fund --pack-destination E:\Matadora-business\.tmp_pkgs --fetch-timeout=900000 --fetch-retries=5
+[126/187] OK is-core-module@2.16.2 -> node_modules/is-core-module
+[127/187] OK is-extglob@2.1.1 -> node_modules/is-extglob
+[128/187] OK is-glob@4.0.3 -> node_modules/is-glob
+[129/187] OK jiti@1.21.7 -> node_modules/jiti
+[130/187] OK js-tokens@4.0.0 -> node_modules/js-tokens
+[131/187] OK lilconfig@3.1.3 -> node_modules/lilconfig
+[132/187] OK lines-and-columns@1.2.4 -> node_modules/lines-and-columns
+[133/187] OK loose-envify@1.4.0 -> node_modules/loose-envify
+[134/187] OK lucide-react@0.469.0 -> node_modules/lucide-react
+[135/187] OK merge2@1.4.1 -> node_modules/merge2
+[136/187] OK micromatch@4.0.8 -> node_modules/micromatch
+[137/187] OK mz@2.7.0 -> node_modules/mz
+[138/187] FAIL next@14.2.21: spawnSync tar ETIMEDOUT
+[139/187] OK nanoid@3.3.12 -> node_modules/next/node_modules/nanoid
+[140/187] OK postcss@8.4.31 -> node_modules/next/node_modules/postcss
+[141/187] OK source-map-js@1.2.1 -> node_modules/next/node_modules/source-map-js
+[142/187] OK node-releases@2.0.46 -> node_modules/node-releases
+[143/187] OK normalize-path@3.0.0 -> node_modules/normalize-path
+[144/187] OK object-assign@4.1.1 -> node_modules/object-assign
+[145/187] OK object-hash@3.0.0 -> node_modules/object-hash
+[146/187] OK path-parse@1.0.7 -> node_modules/path-parse
+[147/187] OK picocolors@1.1.1 -> node_modules/picocolors
+[148/187] OK picomatch@2.3.2 -> node_modules/picomatch
+[149/187] OK pify@2.3.0 -> node_modules/pify
+[150/187] OK pirates@4.0.7 -> node_modules/pirates
+[151/187] OK postcss@8.5.15 -> node_modules/postcss
+[152/187] OK postcss-import@15.1.0 -> node_modules/postcss-import
+[153/187] OK postcss-js@4.1.0 -> node_modules/postcss-js
+[154/187] OK postcss-load-config@6.0.1 -> node_modules/postcss-load-config
+[155/187] OK postcss-nested@6.2.0 -> node_modules/postcss-nested
+[156/187] OK postcss-selector-parser@6.1.2 -> node_modules/postcss-selector-parser
+[157/187] OK postcss-value-parser@4.2.0 -> node_modules/postcss-value-parser
+[158/187] OK nanoid@3.3.12 -> node_modules/postcss/node_modules/nanoid
+[159/187] OK source-map-js@1.2.1 -> node_modules/postcss/node_modules/source-map-js
+[160/187] OK queue-microtask@1.2.3 -> node_modules/queue-microtask
+[161/187] OK react@18.3.1 -> node_modules/react
+[162/187] OK react-dom@18.3.1 -> node_modules/react-dom
+[163/187] OK scheduler@0.23.2 -> node_modules/react-dom/node_modules/scheduler
+[164/187] OK react-hook-form@7.76.1 -> node_modules/react-hook-form
+[165/187] OK read-cache@1.0.0 -> node_modules/read-cache
+[166/187] OK readdirp@3.6.0 -> node_modules/readdirp
+[167/187] OK resolve@1.22.12 -> node_modules/resolve
+[168/187] OK reusify@1.1.0 -> node_modules/reusify
+[169/187] OK run-parallel@1.2.0 -> node_modules/run-parallel
+[170/187] OK streamsearch@1.1.0 -> node_modules/streamsearch
+[171/187] OK styled-jsx@5.1.1 -> node_modules/styled-jsx
+[172/187] OK sucrase@3.35.1 -> node_modules/sucrase
+[173/187] FAIL supports-preserve-symlinks-flag@1.0.0: Command failed: npm.cmd pack supports-preserve-symlinks-flag@1.0.0 --prefer-offline --no-audit --no-fund --pack-destination E:\Matadora-business\.tmp_pkgs --fetch-timeout=900000 --fetch-retries=5
+[174/187] OK tailwind-merge@2.6.1 -> node_modules/tailwind-merge
+[175/187] OK tailwindcss@3.4.19 -> node_modules/tailwindcss
+[176/187] OK tailwindcss-animate@1.0.7 -> node_modules/tailwindcss-animate
+[177/187] OK thenify@3.3.1 -> node_modules/thenify
+[178/187] OK thenify-all@1.6.0 -> node_modules/thenify-all
+[179/187] OK tinyglobby@0.2.16 -> node_modules/tinyglobby
+[180/187] OK fdir@6.5.0 -> node_modules/tinyglobby/node_modules/fdir
+[181/187] OK ts-interface-checker@0.1.13 -> node_modules/ts-interface-checker
+[182/187] OK tslib@2.8.1 -> node_modules/tslib
+[183/187] OK typescript@5.9.3 -> node_modules/typescript
+[184/187] OK undici-types@6.21.0 -> node_modules/undici-types
+[185/187] OK update-browserslist-db@1.2.3 -> node_modules/update-browserslist-db
+[186/187] OK util-deprecate@1.0.2 -> node_modules/util-deprecate
+[187/187] OK zod@3.25.76 -> node_modules/zod
+
+DONE. extracted=172 failed=15 total=187

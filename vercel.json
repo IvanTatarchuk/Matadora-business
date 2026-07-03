@@ -1,0 +1,6 @@
+{
+  "buildCommand": "node -r ./scripts/patch-readlink.js node_modules/next/dist/bin/next build",
+  "framework": "nextjs",
+  "installCommand": "npm install",
+  "devCommand": "npm run dev"
+}
