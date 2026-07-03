@@ -5,7 +5,7 @@ import Link from "next/link";
 import {
   Bell, Check, CheckCheck, X, Info, AlertTriangle,
   AlertCircle, CheckCircle2, FileText, ShieldAlert,
-  Calendar, CreditCard, Upload, ClipboardCheck,
+  Calendar, CreditCard, Upload, ClipboardCheck, Trash2, Search, Filter,
 } from "lucide-react";
 import {
   markNotificationRead, markAllNotificationsRead,
@@ -13,6 +13,7 @@ import {
 } from "@/lib/actions/notifications";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 
 const TYPE_CONFIG: Record<NotificationType, { label: string; icon: React.ElementType; color: string }> = {
   offer_sent: { label: "Oferta wysłana", icon: FileText, color: "bg-blue-100 text-blue-700" },
@@ -40,6 +41,9 @@ export function NotificationsClient({
   const [notifications, setNotifications] = useState<Notification[]>(initialNotifications);
   const [unreadCount, setUnreadCount] = useState(initialUnreadCount);
   const [pending, startTransition] = useTransition();
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filterType, setFilterType] = useState<NotificationType | "all">("all");
+  const [showUnreadOnly, setShowUnreadOnly] = useState(false);
 
   function handleMarkRead(id: string) {
     startTransition(async () => {
@@ -57,8 +61,17 @@ export function NotificationsClient({
     });
   }
 
-  const unread = notifications.filter((n) => !n.read_at);
-  const read = notifications.filter((n) => n.read_at);
+  const filteredNotifications = notifications.filter((n) => {
+    const matchesSearch = !searchQuery || 
+      n.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (n.message && n.message.toLowerCase().includes(searchQuery.toLowerCase()));
+    const matchesType = filterType === "all" || n.type === filterType;
+    const matchesUnread = !showUnreadOnly || !n.read_at;
+    return matchesSearch && matchesType && matchesUnread;
+  });
+
+  const unread = filteredNotifications.filter((n) => !n.read_at);
+  const read = filteredNotifications.filter((n) => n.read_at);
 
   return (
     <div className="space-y-6">
@@ -70,12 +83,45 @@ export function NotificationsClient({
             {unreadCount > 0 ? `${unreadCount} nieprzeczytanych` : "Wszystkie przeczytane"}
           </p>
         </div>
-        {unreadCount > 0 && (
-          <Button onClick={handleMarkAllRead} disabled={pending} variant="outline" className="gap-2">
-            <CheckCheck className="h-4 w-4" />
-            Oznacz wszystkie jako przeczytane
-          </Button>
-        )}
+        <div className="flex gap-2">
+          {unreadCount > 0 && (
+            <Button onClick={handleMarkAllRead} disabled={pending} variant="outline" className="gap-2">
+              <CheckCheck className="h-4 w-4" />
+              Oznacz wszystkie jako przeczytane
+            </Button>
+          )}
+        </div>
+      </div>
+
+      {/* Filters */}
+      <div className="flex gap-3 flex-wrap">
+        <div className="relative flex-1 max-w-sm">
+          <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Szukaj powiadomień..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-9"
+          />
+        </div>
+        <select
+          value={filterType}
+          onChange={(e) => setFilterType(e.target.value as NotificationType | "all")}
+          className="rounded-md border bg-background px-3 py-2 text-sm"
+        >
+          <option value="all">Wszystkie typy</option>
+          {Object.entries(TYPE_CONFIG).map(([key, cfg]) => (
+            <option key={key} value={key}>{cfg.label}</option>
+          ))}
+        </select>
+        <Button
+          variant={showUnreadOnly ? "default" : "outline"}
+          size="sm"
+          onClick={() => setShowUnreadOnly(!showUnreadOnly)}
+        >
+          <Filter className="h-4 w-4 mr-2" />
+          Tylko nieprzeczytane
+        </Button>
       </div>
 
       {/* Unread */}

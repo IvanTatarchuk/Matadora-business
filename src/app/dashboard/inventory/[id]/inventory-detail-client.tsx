@@ -53,8 +53,8 @@ export function InventoryDetailClient({ item, transactions }: Props) {
         category: editForm.category,
         unit: editForm.unit,
         min_stock_level: editForm.minStockLevel,
-        max_stock_level: editForm.maxStockLevel ? parseFloat(editForm.maxStockLevel) : undefined,
-        unit_cost: editForm.unitCost ? parseFloat(editForm.unitCost) : undefined,
+        max_stock_level: editForm.maxStockLevel ? Number(editForm.maxStockLevel) : undefined,
+        unit_cost: editForm.unitCost ? Number(editForm.unitCost) : undefined,
         location: editForm.location,
       });
       if (!res.ok) { setError(res.error ?? "Помилка"); return; }
@@ -74,7 +74,7 @@ export function InventoryDetailClient({ item, transactions }: Props) {
         itemId: item.id,
         type: transactionForm.type,
         quantity: transactionForm.quantity,
-        unitCost: transactionForm.unitCost ? parseFloat(transactionForm.unitCost) : undefined,
+        unitCost: transactionForm.unitCost ? Number(transactionForm.unitCost) : undefined,
         notes: transactionForm.notes || undefined,
       });
       if (!res.ok) { setError(res.error ?? "Помилка"); return; }
