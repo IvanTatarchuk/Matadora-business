@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Star, MessageSquare, CheckCircle2, Clock } from "lucide-react";
+import { Star, MessageSquare, CheckCircle2, Clock, Search, Filter, TrendingUp, Award } from "lucide-react";
 import { createReview, type ReviewableProject } from "@/lib/actions/reviews";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -18,9 +18,26 @@ export function ReviewsClient({ initialReviewableProjects }: Props) {
   const [reviewing, setReviewing] = useState<string | null>(null);
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filterStatus, setFilterStatus] = useState<"all" | "pending" | "completed">("all");
 
-  const pendingProjects = reviewableProjects.filter((p) => !p.alreadyReviewed);
-  const completedProjects = reviewableProjects.filter((p) => p.alreadyReviewed);
+  const filteredProjects = reviewableProjects.filter((p) => {
+    const matchesSearch = !searchQuery || 
+      p.revieweeName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      p.projectTitle.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesStatus = filterStatus === "all" || 
+      (filterStatus === "pending" && !p.alreadyReviewed) ||
+      (filterStatus === "completed" && p.alreadyReviewed);
+    return matchesSearch && matchesStatus;
+  });
+
+  const pendingProjects = filteredProjects.filter((p) => !p.alreadyReviewed);
+  const completedProjects = filteredProjects.filter((p) => p.alreadyReviewed);
+
+  // Calculate stats
+  const totalReviews = reviewableProjects.filter((p) => p.alreadyReviewed).length;
+  const pendingCount = reviewableProjects.filter((p) => !p.alreadyReviewed).length;
+  const averageRating = 0; // Would need to fetch actual ratings
 
   function handleStartReview(projectId: string) {
     setReviewing(projectId);
@@ -60,6 +77,65 @@ export function ReviewsClient({ initialReviewableProjects }: Props) {
       <div>
         <h1 className="text-2xl font-bold">Opinie i recenzje</h1>
         <p className="text-sm text-muted-foreground mt-1">Oceń współpracę z kontrahentami</p>
+      </div>
+
+      {/* Stats */}
+      <div className="grid gap-4 sm:grid-cols-3">
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center gap-3">
+              <Award className="h-8 w-8 text-yellow-500" />
+              <div>
+                <p className="text-xs text-muted-foreground">Wysłane opinie</p>
+                <p className="text-2xl font-bold">{totalReviews}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center gap-3">
+              <Clock className="h-8 w-8 text-orange-500" />
+              <div>
+                <p className="text-xs text-muted-foreground">Oczekujące</p>
+                <p className="text-2xl font-bold">{pendingCount}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center gap-3">
+              <TrendingUp className="h-8 w-8 text-green-500" />
+              <div>
+                <p className="text-xs text-muted-foreground">Śr. ocena</p>
+                <p className="text-2xl font-bold">{averageRating > 0 ? averageRating.toFixed(1) : "-"}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Filters */}
+      <div className="flex gap-3 flex-wrap">
+        <div className="relative flex-1 max-w-sm">
+          <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Szukaj projektów..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-9"
+          />
+        </div>
+        <select
+          value={filterStatus}
+          onChange={(e) => setFilterStatus(e.target.value as "all" | "pending" | "completed")}
+          className="rounded-md border bg-background px-3 py-2 text-sm"
+        >
+          <option value="all">Wszystkie</option>
+          <option value="pending">Oczekujące</option>
+          <option value="completed">Wysłane</option>
+        </select>
       </div>
 
       {/* Pending Reviews */}

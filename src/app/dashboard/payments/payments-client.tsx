@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { CreditCard, Plus, DollarSign, Clock, CheckCircle2, AlertCircle, RefreshCw, X } from "lucide-react";
+import { CreditCard, Plus, DollarSign, Clock, CheckCircle2, AlertCircle, RefreshCw, X, Search, Filter, Download } from "lucide-react";
 import {
   createPaymentMethod, createPaymentTransaction, updatePaymentStatus,
   type PaymentMethod, type PaymentTransaction, type PaymentProvider,
@@ -25,6 +25,8 @@ export function PaymentsClient({ initialMethods, initialTransactions, initialSta
 
   const [showMethodForm, setShowMethodForm] = useState(false);
   const [showTransactionForm, setShowTransactionForm] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filterStatus, setFilterStatus] = useState<"all" | "pending" | "completed" | "failed">("all");
 
   const [methodForm, setMethodForm] = useState({
     type: "stripe" as PaymentProvider,
@@ -85,6 +87,14 @@ export function PaymentsClient({ initialMethods, initialTransactions, initialSta
     });
   }
 
+  const filteredTransactions = transactions.filter((tx) => {
+    const matchesSearch = !searchQuery || 
+      tx.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      tx.provider?.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesStatus = filterStatus === "all" || tx.status === filterStatus;
+    return matchesSearch && matchesStatus;
+  });
+
   return (
     <div className="space-y-6">
       <div>
@@ -138,7 +148,7 @@ export function PaymentsClient({ initialMethods, initialTransactions, initialSta
       </div>
 
       {/* Actions */}
-      <div className="flex gap-2">
+      <div className="flex gap-2 flex-wrap">
         <Button onClick={() => setShowMethodForm(true)}>
           <Plus className="h-4 w-4 mr-2" />
           Dodaj metodę płatności
@@ -147,6 +157,33 @@ export function PaymentsClient({ initialMethods, initialTransactions, initialSta
           <DollarSign className="h-4 w-4 mr-2" />
           Nowa transakcja
         </Button>
+        <Button variant="outline" size="sm">
+          <Download className="h-4 w-4 mr-2" />
+          Eksport CSV
+        </Button>
+      </div>
+
+      {/* Filters */}
+      <div className="flex gap-3 flex-wrap">
+        <div className="relative flex-1 max-w-sm">
+          <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Szukaj transakcji..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-9"
+          />
+        </div>
+        <select
+          value={filterStatus}
+          onChange={(e) => setFilterStatus(e.target.value as "all" | "pending" | "completed" | "failed")}
+          className="rounded-md border bg-background px-3 py-2 text-sm"
+        >
+          <option value="all">Wszystkie statusy</option>
+          <option value="pending">Oczekujące</option>
+          <option value="completed">Zakończone</option>
+          <option value="failed">Bębne</option>
+        </select>
       </div>
 
       {/* Payment Method Form */}
@@ -297,13 +334,13 @@ export function PaymentsClient({ initialMethods, initialTransactions, initialSta
           <CardTitle>Transakcje</CardTitle>
         </CardHeader>
         <CardContent>
-          {transactions.length === 0 ? (
+          {filteredTransactions.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
               Brak transakcji
             </div>
           ) : (
             <div className="space-y-2">
-              {transactions.map((tx) => (
+              {filteredTransactions.map((tx) => (
                 <div key={tx.id} className="flex items-center justify-between p-3 rounded-lg border">
                   <div className="flex-1">
                     <div className="flex items-center gap-2">

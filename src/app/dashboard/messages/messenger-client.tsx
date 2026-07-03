@@ -3,7 +3,7 @@
 import { useState, useTransition, useEffect } from "react";
 import {
   MessageSquare, Plus, Send, Search, MoreVertical, Users,
-  Clock, CheckCircle2, XCircle, Paperclip,
+  Clock, CheckCircle2, XCircle, Paperclip, Filter, Trash2, Reply,
 } from "lucide-react";
 import {
   createConversation, sendMessage, markAsRead,
@@ -29,10 +29,13 @@ export function MessengerClient({ initialConversations, initialUnreadCount }: Pr
   const [newMessage, setNewMessage] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [showNewChat, setShowNewChat] = useState(false);
+  const [filterType, setFilterType] = useState<"all" | "project" | "offer" | "direct">("all");
 
-  const filteredConversations = conversations.filter((c) =>
-    c.title?.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredConversations = conversations.filter((c) => {
+    const matchesSearch = !searchQuery || c.title?.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesType = filterType === "all" || c.type === filterType;
+    return matchesSearch && matchesType;
+  });
 
   useEffect(() => {
     if (selectedConversation) {
@@ -98,6 +101,16 @@ export function MessengerClient({ initialConversations, initialUnreadCount }: Pr
             onChange={(e) => setSearchQuery(e.target.value)}
             className="mt-2"
           />
+          <select
+            value={filterType}
+            onChange={(e) => setFilterType(e.target.value as "all" | "project" | "offer" | "direct")}
+            className="mt-2 w-full rounded-md border bg-background px-3 py-2 text-sm"
+          >
+            <option value="all">Wszystkie typy</option>
+            <option value="project">Projekty</option>
+            <option value="offer">Oferty</option>
+            <option value="direct">Bezpośrednie</option>
+          </select>
         </CardHeader>
         <CardContent className="flex-1 overflow-y-auto space-y-2">
           {filteredConversations.length === 0 ? (

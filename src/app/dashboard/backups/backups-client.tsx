@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Database, Clock, CheckCircle2, AlertCircle, Plus, RefreshCw, X, Calendar, Download } from "lucide-react";
+import { Database, Clock, CheckCircle2, AlertCircle, Plus, RefreshCw, X, Calendar, Download, Search, Filter } from "lucide-react";
 import {
   createBackupJob, createBackupSchedule, toggleBackupSchedule, createRestoreJob,
   type BackupJob, type BackupSchedule, type RestoreJob, type BackupType,
@@ -34,6 +34,8 @@ export function BackupsClient({ initialBackupJobs, initialSchedules, initialRest
   const [showBackupForm, setShowBackupForm] = useState(false);
   const [showScheduleForm, setShowScheduleForm] = useState(false);
   const [showRestoreForm, setShowRestoreForm] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filterStatus, setFilterStatus] = useState<"all" | "completed" | "running" | "failed">("all");
 
   const [backupForm, setBackupForm] = useState({
     name: "",
@@ -122,6 +124,12 @@ export function BackupsClient({ initialBackupJobs, initialSchedules, initialRest
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
   };
+
+  const filteredBackupJobs = backupJobs.filter((job) => {
+    const matchesSearch = !searchQuery || job.name.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesStatus = filterStatus === "all" || job.status === filterStatus;
+    return matchesSearch && matchesStatus;
+  });
 
   return (
     <div className="space-y-6">

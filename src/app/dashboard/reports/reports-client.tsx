@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { FileText, Download, Calendar, DollarSign, Users, Package, BarChart3, CheckCircle2, Clock } from "lucide-react";
+import { FileText, Download, Calendar, DollarSign, Users, Package, BarChart3, CheckCircle2, Clock, Filter, History, FileDown, Printer } from "lucide-react";
 import { generateReport, exportReportAsCSV, exportToCSV, type ReportType, type ReportConfig } from "@/lib/actions/reports";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -25,6 +25,8 @@ export function ReportsClient() {
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [reportData, setReportData] = useState<any>(null);
+  const [reportHistory, setReportHistory] = useState<any[]>([]);
+  const [showHistory, setShowHistory] = useState(false);
 
   function handleGenerate() {
     if (!selectedType) return;
@@ -39,10 +41,23 @@ export function ReportsClient() {
         };
         const report = await generateReport(config);
         setReportData(report);
+        // Add to history
+        setReportHistory((prev) => [
+          { ...report, config, generatedAt: new Date().toISOString() },
+          ...prev.slice(0, 9), // Keep last 10
+        ]);
       } catch (err) {
         setError(err instanceof Error ? err.message : "Błąd generowania raportu");
       }
     });
+  }
+
+  function setQuickDateRange(days: number) {
+    const end = new Date();
+    const start = new Date();
+    start.setDate(start.getDate() - days);
+    setStartDate(start.toISOString().slice(0, 10));
+    setEndDate(end.toISOString().slice(0, 10));
   }
 
   function handleExportCSV() {
@@ -115,12 +130,43 @@ export function ReportsClient() {
       {selectedType && (
         <Card className="border-primary">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Icon className="h-5 w-5" />
-              {selectedReport?.label}
+            <CardTitle className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Icon className="h-5 w-5" />
+                {selectedReport?.label}
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowHistory(!showHistory)}
+              >
+                <History className="h-4 w-4 mr-2" />
+                Historia
+              </Button>
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
+            {/* Quick Date Range */}
+            <div>
+              <label className="text-sm font-medium mb-2 block">Szybki wybór dat</label>
+              <div className="flex gap-2 flex-wrap">
+                <Button variant="outline" size="sm" onClick={() => setQuickDateRange(7)}>
+                  Ostatnie 7 dni
+                </Button>
+                <Button variant="outline" size="sm" onClick={() => setQuickDateRange(30)}>
+                  Ostatnie 30 dni
+                </Button>
+                <Button variant="outline" size="sm" onClick={() => setQuickDateRange(90)}>
+                  Ostatnie 90 dni
+                </Button>
+                <Button variant="outline" size="sm" onClick={() => {
+                  setStartDate("");
+                  setEndDate("");
+                }}>
+                  Wyczyść
+                </Button>
+              </div>
+            </div>
             <div className="grid gap-4 sm:grid-cols-3">
               <div>
                 <label className="text-sm font-medium">ID projektu (opcjonalne)</label>
@@ -144,8 +190,41 @@ export function ReportsClient() {
                 <Download className="h-4 w-4 mr-2" />
                 Eksport CSV
               </Button>
+              <Button variant="outline" size="sm" disabled={!reportData}>
+                <Printer className="h-4 w-4 mr-2" />
+                Drukuj
+              </Button>
             </div>
             {error && <p className="text-sm text-destructive">{error}</p>}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Report History */}
+      {showHistory && reportHistory.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <History className="h-5 w-5" />
+              Historia raportów
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              {reportHistory.map((report, idx) => (
+                <div key={idx} className="flex items-center justify-between p-3 rounded bg-muted">
+                  <div>
+                    <p className="font-medium text-sm">{report.title}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {new Date(report.generatedAt).toLocaleString("pl-PL")}
+                    </p>
+                  </div>
+                  <Button variant="ghost" size="sm">
+                    <FileDown className="h-4 w-4" />
+                  </Button>
+                </div>
+              ))}
+            </div>
           </CardContent>
         </Card>
       )}
