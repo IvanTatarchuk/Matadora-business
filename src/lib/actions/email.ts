@@ -158,3 +158,64 @@ export async function retryEmail(emailId: string): Promise<{ ok: boolean; error?
   if (error) return { ok: false, error: error.message };
   return { ok: true };
 }
+
+export async function getEmailPreferences(): Promise<any> {
+  const supabase = createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return null;
+
+  const { data } = await db(supabase)
+    .from("email_preferences")
+    .select("*")
+    .eq("user_id", user.id)
+    .single();
+
+  if (!data) {
+    // Create default preferences
+    const { data: newPrefs } = await db(supabase)
+      .from("email_preferences")
+      .insert({
+        user_id: user.id,
+        email_enabled: true,
+        daily_digest: true,
+        instant_notifications: true,
+        offer_updates: true,
+        task_assignments: true,
+        payment_updates: true,
+      })
+      .select("*")
+      .single();
+    return newPrefs;
+  }
+
+  return data;
+}
+
+export async function updateEmailPreferences(preferences: {
+  emailEnabled?: boolean;
+  dailyDigest?: boolean;
+  instantNotifications?: boolean;
+  offerUpdates?: boolean;
+  taskAssignments?: boolean;
+  paymentUpdates?: boolean;
+}): Promise<{ ok: boolean; error?: string }> {
+  const supabase = createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { ok: false, error: "Nie zалогowано" };
+
+  const { error } = await db(supabase)
+    .from("email_preferences")
+    .upsert({
+      user_id: user.id,
+      email_enabled: preferences.emailEnabled ?? true,
+      daily_digest: preferences.dailyDigest ?? true,
+      instant_notifications: preferences.instantNotifications ?? true,
+      offer_updates: preferences.offerUpdates ?? true,
+      task_assignments: preferences.taskAssignments ?? true,
+      payment_updates: preferences.paymentUpdates ?? true,
+      updated_at: new Date().toISOString(),
+    }, { onConflict: "user_id" });
+
+  if (error) return { ok: false, error: error.message };
+  return { ok: true };
+}
