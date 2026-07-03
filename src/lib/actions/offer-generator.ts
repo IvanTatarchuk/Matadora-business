@@ -186,3 +186,24 @@ export async function deleteGeneratedOffer(id: string, projectId: string): Promi
   revalidatePath(`/dashboard/contractor/projects/${projectId}/oferty`);
   return { ok: true };
 }
+
+export async function signOffer(
+  id: string, projectId: string, signatureData: string
+): Promise<{ ok: boolean; error?: string }> {
+  const supabase = createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { ok: false, error: "Nie zalogowano" };
+
+  const { error } = await db(supabase)
+    .from("generated_offers")
+    .update({ 
+      signature_data: signatureData,
+      signed_at: new Date().toISOString(),
+      signed_by: user.id,
+      status: "accepted"
+    })
+    .eq("id", id);
+  if (error) return { ok: false, error: error.message };
+  revalidatePath(`/dashboard/contractor/projects/${projectId}/oferty`);
+  return { ok: true };
+}
