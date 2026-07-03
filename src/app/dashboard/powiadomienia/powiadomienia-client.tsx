@@ -16,22 +16,19 @@ import { Card, CardContent } from "@/components/ui/card";
 import React from "react";
 
 const TYPE_CONFIG: Record<NotificationType, { label: string; icon: React.ElementType; color: string }> = {
-  info:                   { label: "Informacja",       icon: Info,           color: "text-blue-500" },
-  warning:                { label: "Ostrzeżenie",      icon: AlertTriangle,  color: "text-yellow-500" },
-  error:                  { label: "Błąd",             icon: XCircle,        color: "text-red-500" },
-  success:                { label: "Sukces",            icon: CheckCircle2,   color: "text-green-500" },
-  rfi_new:                { label: "Nowe RFI",         icon: FileText,       color: "text-blue-600" },
-  rfi_answered:           { label: "RFI — odpowiedź",  icon: FileText,       color: "text-green-600" },
-  punch_opened:           { label: "Nowa usterka",     icon: ClipboardCheck, color: "text-orange-500" },
-  punch_closed:           { label: "Usterka zamknięta",icon: ClipboardCheck, color: "text-green-500" },
-  inspection_completed:   { label: "Inspekcja",        icon: ClipboardCheck, color: "text-purple-500" },
-  risk_high:              { label: "Wysokie ryzyko",   icon: ShieldAlert,    color: "text-red-600" },
-  budget_alert:           { label: "Alert budżetowy",  icon: DollarSign,     color: "text-orange-600" },
-  cert_expiring:          { label: "Cert. wygasa",     icon: GraduationCap,  color: "text-yellow-600" },
-  warranty_expiring:      { label: "Gwarancja wygasa", icon: Shield,         color: "text-yellow-600" },
-  document_uploaded:      { label: "Dokument",         icon: Upload,         color: "text-blue-500" },
-  payment_due:            { label: "Płatność",         icon: Receipt,        color: "text-orange-600" },
-  daily_report_submitted: { label: "Raport dzienny",   icon: FileText,       color: "text-teal-500" },
+  offer_sent: { label: "Oferta wysłana", icon: FileText, color: "text-blue-600" },
+  offer_accepted: { label: "Oferta zaakceptowana", icon: CheckCircle2, color: "text-green-600" },
+  offer_rejected: { label: "Oferta odrzucona", icon: XCircle, color: "text-red-600" },
+  message_received: { label: "Wiadomość", icon: Bell, color: "text-purple-600" },
+  payment_released: { label: "Płatność zwolniona", icon: Receipt, color: "text-green-600" },
+  task_assigned: { label: "Zadanie przypisane", icon: ClipboardCheck, color: "text-blue-600" },
+  project_update: { label: "Aktualizacja projektu", icon: FileText, color: "text-blue-600" },
+  review_received: { label: "Opinia otrzymana", icon: CheckCircle2, color: "text-green-600" },
+  milestone_ready: { label: "Etap gotowy", icon: CheckCircle2, color: "text-orange-600" },
+  info: { label: "Informacja", icon: Info, color: "text-blue-500" },
+  warning: { label: "Ostrzeżenie", icon: AlertTriangle, color: "text-yellow-500" },
+  error: { label: "Błąd", icon: XCircle, color: "text-red-500" },
+  success: { label: "Sukces", icon: CheckCircle2, color: "text-green-500" },
 };
 
 function timeAgo(dateStr: string): string {
@@ -50,20 +47,20 @@ export function PowiadomieniaClient({ initialNotifications }: { initialNotificat
   const [pending, startTransition] = useTransition();
   const [filter, setFilter] = useState<"all" | "unread">("all");
 
-  const unreadCount = notifs.filter((n) => !n.is_read).length;
-  const displayed = filter === "unread" ? notifs.filter((n) => !n.is_read) : notifs;
+  const unreadCount = notifs.filter((n) => !n.read_at).length;
+  const displayed = filter === "unread" ? notifs.filter((n) => !n.read_at) : notifs;
 
   function handleMarkRead(id: string) {
     startTransition(async () => {
       await markNotificationRead(id);
-      setNotifs((prev) => prev.map((n) => n.id === id ? { ...n, is_read: true, read_at: new Date().toISOString() } : n));
+      setNotifs((prev) => prev.map((n) => n.id === id ? { ...n, read_at: new Date().toISOString() } : n));
     });
   }
 
   function handleMarkAllRead() {
     startTransition(async () => {
       await markAllNotificationsRead();
-      setNotifs((prev) => prev.map((n) => ({ ...n, is_read: true, read_at: new Date().toISOString() })));
+      setNotifs((prev) => prev.map((n) => ({ ...n, read_at: new Date().toISOString() })));
     });
   }
 
@@ -104,10 +101,10 @@ export function PowiadomieniaClient({ initialNotifications }: { initialNotificat
           {displayed.map((n) => {
             const cfg = TYPE_CONFIG[n.type] ?? TYPE_CONFIG.info;
             const Icon = cfg.icon;
-            const Wrapper = n.href ? Link : "div";
-            const wrapperProps = n.href ? { href: n.href } : {};
+            const Wrapper = n.link ? Link : "div";
+            const wrapperProps = n.link ? { href: n.link } : {};
             return (
-              <Card key={n.id} className={`transition-colors ${!n.is_read ? "bg-blue-50/40 border-blue-100" : ""} hover:bg-muted/30`}>
+              <Card key={n.id} className={`transition-colors ${!n.read_at ? "bg-blue-50/40 border-blue-100" : ""} hover:bg-muted/30`}>
                 <CardContent className="p-3">
                   <div className="flex items-start gap-3">
                     <div className={`mt-0.5 shrink-0 ${cfg.color}`}>
@@ -115,20 +112,20 @@ export function PowiadomieniaClient({ initialNotifications }: { initialNotificat
                     </div>
                     <div className="flex-1 min-w-0">
                       {/* @ts-expect-error dynamic wrapper */}
-                      <Wrapper {...wrapperProps} className="block" onClick={() => !n.is_read && handleMarkRead(n.id)}>
+                      <Wrapper {...wrapperProps} className="block" onClick={() => !n.read_at && handleMarkRead(n.id)}>
                         <div className="flex items-start justify-between gap-2">
                           <div className="flex-1 min-w-0">
-                            <p className={`text-sm ${!n.is_read ? "font-semibold" : "font-medium"}`}>{n.title}</p>
-                            {n.body && <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{n.body}</p>}
+                            <p className={`text-sm ${!n.read_at ? "font-semibold" : "font-medium"}`}>{n.title}</p>
+                            {n.message && <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{n.message}</p>}
                           </div>
                           <div className="flex items-center gap-2 shrink-0">
                             <span className="text-xs text-muted-foreground whitespace-nowrap">{timeAgo(n.created_at)}</span>
-                            {!n.is_read && <span className="h-2 w-2 rounded-full bg-blue-500 shrink-0" />}
+                            {!n.read_at && <span className="h-2 w-2 rounded-full bg-blue-500 shrink-0" />}
                           </div>
                         </div>
                       </Wrapper>
                     </div>
-                    {!n.is_read && (
+                    {!n.read_at && (
                       <button onClick={() => handleMarkRead(n.id)} disabled={pending}
                         className="shrink-0 text-muted-foreground hover:text-foreground" title="Oznacz jako przeczytane">
                         <CheckCheck className="h-4 w-4" />

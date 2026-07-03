@@ -15,22 +15,19 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 const TYPE_CONFIG: Record<NotificationType, { label: string; icon: React.ElementType; color: string }> = {
+  offer_sent: { label: "Oferta wysłana", icon: FileText, color: "bg-blue-100 text-blue-700" },
+  offer_accepted: { label: "Oferta zaakceptowana", icon: CheckCircle2, color: "bg-green-100 text-green-700" },
+  offer_rejected: { label: "Oferta odrzucona", icon: X, color: "bg-red-100 text-red-700" },
+  message_received: { label: "Wiadomość", icon: Bell, color: "bg-purple-100 text-purple-700" },
+  payment_released: { label: "Płatność zwolniona", icon: CreditCard, color: "bg-green-100 text-green-700" },
+  task_assigned: { label: "Zadanie przypisane", icon: ClipboardCheck, color: "bg-blue-100 text-blue-700" },
+  project_update: { label: "Aktualizacja projektu", icon: FileText, color: "bg-blue-100 text-blue-700" },
+  review_received: { label: "Opinia otrzymana", icon: CheckCircle2, color: "bg-green-100 text-green-700" },
+  milestone_ready: { label: "Etap gotowy", icon: CheckCircle2, color: "bg-orange-100 text-orange-700" },
   info: { label: "Informacja", icon: Info, color: "bg-blue-100 text-blue-700" },
   warning: { label: "Ostrzeżenie", icon: AlertTriangle, color: "bg-yellow-100 text-yellow-700" },
   error: { label: "Błąd", icon: AlertCircle, color: "bg-red-100 text-red-700" },
   success: { label: "Sukces", icon: CheckCircle2, color: "bg-green-100 text-green-700" },
-  rfi_new: { label: "Nowe RFI", icon: FileText, color: "bg-purple-100 text-purple-700" },
-  rfi_answered: { label: "RFI odpowiedziane", icon: FileText, color: "bg-purple-100 text-purple-700" },
-  punch_opened: { label: "Punch list otwarta", icon: ClipboardCheck, color: "bg-orange-100 text-orange-700" },
-  punch_closed: { label: "Punch list zamknięta", icon: ClipboardCheck, color: "bg-green-100 text-green-700" },
-  inspection_completed: { label: "Inspekcja zakończona", icon: CheckCircle2, color: "bg-green-100 text-green-700" },
-  risk_high: { label: "Wysokie ryzyko", icon: ShieldAlert, color: "bg-red-100 text-red-700" },
-  budget_alert: { label: "Alert budżetowy", icon: AlertTriangle, color: "bg-orange-100 text-orange-700" },
-  cert_expiring: { label: "Certyfikat wygasa", icon: ShieldAlert, color: "bg-yellow-100 text-yellow-700" },
-  warranty_expiring: { label: "Gwarancja wygasa", icon: Calendar, color: "bg-yellow-100 text-yellow-700" },
-  document_uploaded: { label: "Dokument wgrany", icon: Upload, color: "bg-blue-100 text-blue-700" },
-  payment_due: { label: "Płatność należna", icon: CreditCard, color: "bg-orange-100 text-orange-700" },
-  daily_report_submitted: { label: "Raport dzienny", icon: FileText, color: "bg-blue-100 text-blue-700" },
 };
 
 export function NotificationsClient({
@@ -47,7 +44,7 @@ export function NotificationsClient({
   function handleMarkRead(id: string) {
     startTransition(async () => {
       await markNotificationRead(id);
-      setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, is_read: true, read_at: new Date().toISOString() } : n)));
+      setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, read_at: new Date().toISOString() } : n)));
       setUnreadCount((prev) => Math.max(0, prev - 1));
     });
   }
@@ -55,13 +52,13 @@ export function NotificationsClient({
   function handleMarkAllRead() {
     startTransition(async () => {
       await markAllNotificationsRead();
-      setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true, read_at: new Date().toISOString() })));
+      setNotifications((prev) => prev.map((n) => ({ ...n, read_at: new Date().toISOString() })));
       setUnreadCount(0);
     });
   }
 
-  const unread = notifications.filter((n) => !n.is_read);
-  const read = notifications.filter((n) => n.is_read);
+  const unread = notifications.filter((n) => !n.read_at);
+  const read = notifications.filter((n) => n.read_at);
 
   return (
     <div className="space-y-6">
@@ -106,9 +103,9 @@ export function NotificationsClient({
                           </span>
                         </div>
                         <p className="font-medium">{n.title}</p>
-                        {n.body && <p className="text-sm text-muted-foreground mt-1">{n.body}</p>}
-                        {n.href && (
-                          <Link href={n.href} className="text-sm text-primary hover:underline mt-2 inline-block">
+                        {n.message && <p className="text-sm text-muted-foreground mt-1">{n.message}</p>}
+                        {n.link && (
+                          <Link href={n.link} className="text-sm text-primary hover:underline mt-2 inline-block">
                             Przejdź →
                           </Link>
                         )}
@@ -156,9 +153,9 @@ export function NotificationsClient({
                           </span>
                         </div>
                         <p className="font-medium">{n.title}</p>
-                        {n.body && <p className="text-sm text-muted-foreground mt-1">{n.body}</p>}
-                        {n.href && (
-                          <Link href={n.href} className="text-sm text-primary hover:underline mt-2 inline-block">
+                        {n.message && <p className="text-sm text-muted-foreground mt-1">{n.message}</p>}
+                        {n.link && (
+                          <Link href={n.link} className="text-sm text-primary hover:underline mt-2 inline-block">
                             Przejdź →
                           </Link>
                         )}
