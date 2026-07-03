@@ -2,13 +2,14 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Users, Calendar, Settings, Trash2, Save, Plus, FolderOpen } from "lucide-react";
+import { ArrowLeft, Users, Calendar, Settings, Trash2, Save, Plus, FolderOpen, Clock, BarChart3 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
   updateCrew, deleteCrew, setCrewMembers, assignCrewToProject, deleteCrewAssignment,
+  createCrewSchedule, deleteCrewSchedule, type ShiftType,
   type CrewWithMembers,
 } from "@/lib/actions/workforce";
 import type { Worker } from "@/types/database";
@@ -16,9 +17,17 @@ import type { Worker } from "@/types/database";
 type Props = {
   crew: CrewWithMembers;
   initialAssignments: any[];
+  initialSchedules: any[];
+  initialProductivityStats: {
+    totalHoursWorked: number;
+    totalTasksCompleted: number;
+    totalTasksTotal: number;
+    averageEfficiency: number;
+    averageQuality: number;
+  };
 };
 
-export function CrewDetailClient({ crew, initialAssignments }: Props) {
+export function CrewDetailClient({ crew, initialAssignments, initialSchedules, initialProductivityStats }: Props) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
@@ -27,12 +36,24 @@ export function CrewDetailClient({ crew, initialAssignments }: Props) {
   const [editForeman, setEditForeman] = useState(crew.foreman_worker_id || "");
   const [selectedMembers, setSelectedMembers] = useState<string[]>(crew.memberIds);
   const [assignments, setAssignments] = useState(initialAssignments);
+  const [schedules, setSchedules] = useState(initialSchedules);
+  const [productivityStats, setProductivityStats] = useState(initialProductivityStats);
   const [showAssignForm, setShowAssignForm] = useState(false);
+  const [showScheduleForm, setShowScheduleForm] = useState(false);
   const [assignForm, setAssignForm] = useState({
     projectId: "",
     startDate: "",
     endDate: "",
     note: "",
+  });
+  const [scheduleForm, setScheduleForm] = useState({
+    shiftDate: "",
+    shiftType: "morning" as ShiftType,
+    startTime: "08:00",
+    endTime: "16:00",
+    breakDuration: 60,
+    location: "",
+    notes: "",
   });
 
   function handleSave() {
@@ -80,7 +101,7 @@ export function CrewDetailClient({ crew, initialAssignments }: Props) {
         projectId: assignForm.projectId,
         startDate: assignForm.startDate || null,
         endDate: assignForm.endDate || null,
-        note: assignForm.note || undefined,
+        note: assignForm.note || null,
       });
       if (!res.ok) { setError(res.error ?? "Помилка"); return; }
       setShowAssignForm(false);
@@ -100,6 +121,58 @@ export function CrewDetailClient({ crew, initialAssignments }: Props) {
     });
   }
 
+  function handleCreateSchedule() {
+    setError(null);
+    if (!scheduleForm.shiftDate) {
+      setError("Дата зміни є обов'язковою");
+      return;
+    }
+    startTransition(async () => {
+      const res = await createCrewSchedule({
+        crewId: crew.id,
+        orgId: crew.org_id,
+        shiftDate: scheduleForm.shiftDate,
+        shiftType: scheduleForm.shiftType,
+        startTime: scheduleForm.startTime,
+        endTime: scheduleForm.endTime,
+        breakDuration: scheduleForm.breakDuration,
+        location: scheduleForm.location || undefined,
+        notes: scheduleForm.notes || undefined,
+      });
+      if (!res.ok) { setError(res.error ?? "Помилка"); return; }
+      setShowScheduleForm(false);
+      setScheduleForm({
+        shiftDate: "",
+        shiftType: "morning",
+        startTime: "08:00",
+        endTime: "16:00",
+        breakDuration: 60,
+        location: "",
+        notes: "",
+      });
+      // Reload schedules
+      const newSchedules = await fetch(`/api/crews/${crew.id}/schedules`).then(r => r.json());
+      setSchedules(newSchedules);
+    });
+  }
+
+  function handleDeleteSchedule(scheduleId: string) {
+    setError(null);
+    startTransition(async () => {
+      const res = await deleteCrewSchedule(scheduleId);
+      if (!res.ok) { setError(res.error ?? "Помилка"); return; }
+      setSchedules(schedules.filter((s) => s.id !== scheduleId));
+    });
+  }
+
+  const shiftTypeLabels: Record<ShiftType, string> = {
+    morning: "Ранкова",
+    afternoon: "Денна",
+    evening: "Вечірня",
+    night: "Нічна",
+    full_day: "Повний день",
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -110,7 +183,7 @@ export function CrewDetailClient({ crew, initialAssignments }: Props) {
           <div>
             <h1 className="text-2xl font-bold">{crew.name}</h1>
             <p className="text-sm text-muted-foreground">
-              {crew.memberIds.length} членів · {assignments.length} призначень
+              {crew.memberIds.length} членів · {assignments.length} призначень · {schedules.length} змін
             </p>
           </div>
         </div>
@@ -273,27 +346,153 @@ export function CrewDetailClient({ crew, initialAssignments }: Props) {
       </div>
 
       <Card>
-        <CardHeader>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0">
           <CardTitle className="flex items-center gap-2">
-            <Calendar className="h-5 w-5" />
+            <Clock className="h-5 w-5" />
             Розклад роботи
           </CardTitle>
+          <Button variant="outline" size="sm" onClick={() => setShowScheduleForm(!showScheduleForm)}>
+            <Plus className="h-4 w-4" />
+          </Button>
         </CardHeader>
         <CardContent>
-          <p className="text-sm text-muted-foreground">
-            Розклад роботи бригади скоро буде доступний
-          </p>
+          {showScheduleForm && (
+            <div className="space-y-3 mb-4 p-3 bg-muted rounded">
+              <div>
+                <Label>Дата зміни</Label>
+                <Input
+                  type="date"
+                  value={scheduleForm.shiftDate}
+                  onChange={(e) => setScheduleForm({ ...scheduleForm, shiftDate: e.target.value })}
+                  className="mt-1"
+                />
+              </div>
+              <div>
+                <Label>Тип зміни</Label>
+                <select
+                  className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm mt-1"
+                  value={scheduleForm.shiftType}
+                  onChange={(e) => setScheduleForm({ ...scheduleForm, shiftType: e.target.value as ShiftType })}
+                >
+                  <option value="morning">Ранкова</option>
+                  <option value="afternoon">Денна</option>
+                  <option value="evening">Вечірня</option>
+                  <option value="night">Нічна</option>
+                  <option value="full_day">Повний день</option>
+                </select>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label>Час початку</Label>
+                  <Input
+                    type="time"
+                    value={scheduleForm.startTime}
+                    onChange={(e) => setScheduleForm({ ...scheduleForm, startTime: e.target.value })}
+                    className="mt-1"
+                  />
+                </div>
+                <div>
+                  <Label>Час завершення</Label>
+                  <Input
+                    type="time"
+                    value={scheduleForm.endTime}
+                    onChange={(e) => setScheduleForm({ ...scheduleForm, endTime: e.target.value })}
+                    className="mt-1"
+                  />
+                </div>
+              </div>
+              <div>
+                <Label>Перерва (хвилин)</Label>
+                <Input
+                  type="number"
+                  value={scheduleForm.breakDuration}
+                  onChange={(e) => setScheduleForm({ ...scheduleForm, breakDuration: parseInt(e.target.value) || 0 })}
+                  className="mt-1"
+                />
+              </div>
+              <div>
+                <Label>Локація</Label>
+                <Input
+                  value={scheduleForm.location}
+                  onChange={(e) => setScheduleForm({ ...scheduleForm, location: e.target.value })}
+                  className="mt-1"
+                />
+              </div>
+              <div>
+                <Label>Примітки</Label>
+                <Input
+                  value={scheduleForm.notes}
+                  onChange={(e) => setScheduleForm({ ...scheduleForm, notes: e.target.value })}
+                  className="mt-1"
+                />
+              </div>
+              <div className="flex gap-2">
+                <Button size="sm" onClick={handleCreateSchedule} disabled={pending}>
+                  Додати зміну
+                </Button>
+    <Button variant="outline" size="sm" onClick={() => setShowScheduleForm(false)}>
+                  Скасувати
+                </Button>
+              </div>
+            </div>
+          )}
+          {schedules.length === 0 ? (
+            <p className="text-sm text-muted-foreground">Немає розкладу</p>
+          ) : (
+            <div className="space-y-2">
+              {schedules.map((schedule) => (
+                <div key={schedule.id} className="flex items-center justify-between p-3 rounded bg-muted">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                      <p className="text-sm font-medium">{schedule.shift_date}</p>
+                      <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded">
+                        {shiftTypeLabels[schedule.shift_type as ShiftType]}
+                      </span>
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      {schedule.start_time} - {schedule.end_time}
+                      {schedule.break_duration > 0 && ` · ${schedule.break_duration} хв перерва`}
+                    </p>
+                    {schedule.location && (
+                      <p className="text-xs text-muted-foreground">📍 {schedule.location}</p>
+                    )}
+                  </div>
+                  <Button variant="ghost" size="sm" onClick={() => handleDeleteSchedule(schedule.id)}>
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              ))}
+            </div>
+          )}
         </CardContent>
       </Card>
 
       <Card>
         <CardHeader>
-          <CardTitle>Статистика продуктивності</CardTitle>
+          <CardTitle className="flex items-center gap-2">
+            <BarChart3 className="h-5 w-5" />
+            Статистика продуктивності
+          </CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-sm text-muted-foreground">
-            Статистика продуктивності бригади скоро буде доступна
-          </p>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="p-3 bg-muted rounded">
+              <p className="text-sm text-muted-foreground">Всього годин роботи</p>
+              <p className="text-2xl font-bold">{productivityStats.totalHoursWorked.toFixed(1)}</p>
+            </div>
+            <div className="p-3 bg-muted rounded">
+              <p className="text-sm text-muted-foreground">Завдань виконано</p>
+              <p className="text-2xl font-bold">{productivityStats.totalTasksCompleted} / {productivityStats.totalTasksTotal}</p>
+            </div>
+            <div className="p-3 bg-muted rounded">
+              <p className="text-sm text-muted-foreground">Середня ефективність</p>
+              <p className="text-2xl font-bold">{productivityStats.averageEfficiency.toFixed(1)}%</p>
+            </div>
+            <div className="p-3 bg-muted rounded">
+              <p className="text-sm text-muted-foreground">Середня якість</p>
+              <p className="text-2xl font-bold">{productivityStats.averageQuality.toFixed(1)}%</p>
+            </div>
+          </div>
         </CardContent>
       </Card>
     </div>

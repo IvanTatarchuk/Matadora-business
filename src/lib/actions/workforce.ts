@@ -233,3 +233,153 @@ export async function deleteCrewAssignment(assignmentId: string): Promise<Action
   revalidatePath(CREWS_PATH);
   return { ok: true };
 }
+
+// ----------------------------------------------------------------------------
+// Crew Schedules
+// ----------------------------------------------------------------------------
+
+export type ShiftType = "morning" | "afternoon" | "evening" | "night" | "full_day";
+
+export async function createCrewSchedule(input: {
+  crewId: string;
+  orgId: string;
+  shiftDate: string;
+  shiftType: ShiftType;
+  startTime: string;
+  endTime: string;
+  breakDuration?: number;
+  location?: string;
+  notes?: string;
+}): Promise<ActionResult> {
+  const supabase = createClient();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data, error } = await (supabase.from("crew_schedules") as any).insert({
+    crew_id: input.crewId,
+    org_id: input.orgId,
+    shift_date: input.shiftDate,
+    shift_type: input.shiftType,
+    start_time: input.startTime,
+    end_time: input.endTime,
+    break_duration: input.breakDuration ?? 0,
+    location: input.location ?? null,
+    notes: input.notes ?? null,
+  }).select("id").single();
+  if (error) return { ok: false, error: error.message };
+  revalidatePath(CREWS_PATH);
+  return { ok: true, id: data.id };
+}
+
+export async function listCrewSchedules(crewId: string): Promise<any[]> {
+  const supabase = createClient();
+  const { data } = await supabase
+    .from("crew_schedules")
+    .select("*")
+    .eq("crew_id", crewId)
+    .order("shift_date", { ascending: true });
+  return data ?? [];
+}
+
+export async function updateCrewSchedule(
+  id: string,
+  patch: {
+    shift_type?: ShiftType;
+    start_time?: string;
+    end_time?: string;
+    break_duration?: number;
+    location?: string | null;
+    notes?: string | null;
+    is_active?: boolean;
+  }
+): Promise<ActionResult> {
+  const supabase = createClient();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { error } = await (supabase.from("crew_schedules") as any).update(patch).eq("id", id);
+  if (error) return { ok: false, error: error.message };
+  revalidatePath(CREWS_PATH);
+  return { ok: true };
+}
+
+export async function deleteCrewSchedule(id: string): Promise<ActionResult> {
+  const supabase = createClient();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { error } = await (supabase.from("crew_schedules") as any).delete().eq("id", id);
+  if (error) return { ok: false, error: error.message };
+  revalidatePath(CREWS_PATH);
+  return { ok: true };
+}
+
+// ----------------------------------------------------------------------------
+// Crew Productivity
+// ----------------------------------------------------------------------------
+
+export async function createCrewProductivity(input: {
+  crewId: string;
+  orgId: string;
+  periodStart: string;
+  periodEnd: string;
+  totalHoursWorked?: number;
+  tasksCompleted?: number;
+  tasksTotal?: number;
+  efficiencyScore?: number;
+  qualityScore?: number;
+  notes?: string;
+}): Promise<ActionResult> {
+  const supabase = createClient();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data, error } = await (supabase.from("crew_productivity") as any).insert({
+    crew_id: input.crewId,
+    org_id: input.orgId,
+    period_start: input.periodStart,
+    period_end: input.periodEnd,
+    total_hours_worked: input.totalHoursWorked ?? 0,
+    tasks_completed: input.tasksCompleted ?? 0,
+    tasks_total: input.tasksTotal ?? 0,
+    efficiency_score: input.efficiencyScore ?? null,
+    quality_score: input.qualityScore ?? null,
+    notes: input.notes ?? null,
+  }).select("id").single();
+  if (error) return { ok: false, error: error.message };
+  revalidatePath(CREWS_PATH);
+  return { ok: true, id: data.id };
+}
+
+export async function listCrewProductivity(crewId: string): Promise<any[]> {
+  const supabase = createClient();
+  const { data } = await supabase
+    .from("crew_productivity")
+    .select("*")
+    .eq("crew_id", crewId)
+    .order("period_start", { ascending: false });
+  return data ?? [];
+}
+
+export async function getCrewProductivityStats(crewId: string): Promise<{
+  totalHoursWorked: number;
+  totalTasksCompleted: number;
+  totalTasksTotal: number;
+  averageEfficiency: number;
+  averageQuality: number;
+}> {
+  const productivity = await listCrewProductivity(crewId);
+  const totalHoursWorked = productivity.reduce((sum, p) => sum + (p.total_hours_worked || 0), 0);
+  const totalTasksCompleted = productivity.reduce((sum, p) => sum + (p.tasks_completed || 0), 0);
+  const totalTasksTotal = productivity.reduce((sum, p) => sum + (p.tasks_total || 0), 0);
+  
+  const efficiencyScores = productivity.filter(p => p.efficiency_score !== null).map(p => p.efficiency_score);
+  const averageEfficiency = efficiencyScores.length > 0 
+    ? efficiencyScores.reduce((sum, s) => sum + s, 0) / efficiencyScores.length 
+    : 0;
+  
+  const qualityScores = productivity.filter(p => p.quality_score !== null).map(p => p.quality_score);
+  const averageQuality = qualityScores.length > 0 
+    ? qualityScores.reduce((sum, s) => sum + s, 0) / qualityScores.length 
+    : 0;
+
+  return {
+    totalHoursWorked,
+    totalTasksCompleted,
+    totalTasksTotal,
+    averageEfficiency,
+    averageQuality,
+  };
+}
