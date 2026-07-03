@@ -173,12 +173,32 @@ export async function setCrewMembers(
   return { ok: true };
 }
 
+export async function getCrewById(crewId: string): Promise<CrewWithMembers | null> {
+  const supabase = createClient();
+  const { data: crew } = await supabase
+    .from("crews")
+    .select("*")
+    .eq("id", crewId)
+    .single();
+  if (!crew) return null;
+
+  const { data: members } = await supabase
+    .from("crew_members")
+    .select("worker_id")
+    .eq("crew_id", crewId);
+
+  return {
+    ...crew,
+    memberIds: members?.map((m) => m.worker_id) ?? [],
+  };
+}
+
 export async function assignCrewToProject(input: {
   crewId: string;
   projectId: string;
   startDate?: string | null;
   endDate?: string | null;
-  note?: string;
+  note?: string | null;
 }): Promise<ActionResult> {
   const supabase = createClient();
   const { error } = await supabase.from("crew_assignments").insert({
@@ -188,6 +208,27 @@ export async function assignCrewToProject(input: {
     end_date: input.endDate || null,
     note: input.note?.trim() || null,
   });
+  if (error) return { ok: false, error: error.message };
+  revalidatePath(CREWS_PATH);
+  return { ok: true };
+}
+
+export async function listCrewAssignments(crewId: string): Promise<any[]> {
+  const supabase = createClient();
+  const { data } = await supabase
+    .from("crew_assignments")
+    .select(`
+      *,
+      projects (id, name, status)
+    `)
+    .eq("crew_id", crewId)
+    .order("created_at", { ascending: false });
+  return data ?? [];
+}
+
+export async function deleteCrewAssignment(assignmentId: string): Promise<ActionResult> {
+  const supabase = createClient();
+  const { error } = await supabase.from("crew_assignments").delete().eq("id", assignmentId);
   if (error) return { ok: false, error: error.message };
   revalidatePath(CREWS_PATH);
   return { ok: true };

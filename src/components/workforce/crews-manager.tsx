@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Trash2, Plus } from "lucide-react";
+import { Trash2, Plus, ArrowRight } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -78,7 +78,7 @@ export function CrewsManager({
         <CardHeader>
           <CardTitle>Create crew</CardTitle>
         </CardHeader>
-        <CardContent className="grid gap-3 sm:grid-cols-[1fr_1fr_auto] sm:items-end">
+        <CardContent className="grid gap-3 sm:grid-cols-[1fr_1fr_auto_auto] sm:items-end">
           <div className="space-y-1">
             <Label>Crew name</Label>
             <Input
@@ -105,8 +105,11 @@ export function CrewsManager({
           <Button onClick={add} disabled={pending}>
             <Plus className="mr-1 h-4 w-4" /> Create
           </Button>
+          <Button variant="outline" onClick={() => router.push("/dashboard/crews/new")} disabled={pending}>
+            <Plus className="mr-1 h-4 w-4" /> New
+          </Button>
           {error && (
-            <p className="text-sm text-destructive sm:col-span-3">{error}</p>
+            <p className="text-sm text-destructive sm:col-span-4">{error}</p>
           )}
         </CardContent>
       </Card>
@@ -118,7 +121,7 @@ export function CrewsManager({
           {crews.map((crew) => (
             <Card key={crew.id}>
               <CardHeader className="flex flex-row items-center justify-between space-y-0">
-                <div>
+                <div className="flex-1">
                   <CardTitle>{crew.name}</CardTitle>
                   {crew.foreman_worker_id && (
                     <p className="text-xs text-muted-foreground">
@@ -126,14 +129,24 @@ export function CrewsManager({
                     </p>
                   )}
                 </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => remove(crew.id)}
-                  disabled={pending}
-                >
-                  <Trash2 className="h-4 w-4 text-destructive" />
-                </Button>
+                <div className="flex gap-1">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => router.push(`/dashboard/crews/${crew.id}`)}
+                    disabled={pending}
+                  >
+                    <ArrowRight className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => remove(crew.id)}
+                    disabled={pending}
+                  >
+                    <Trash2 className="h-4 w-4 text-destructive" />
+                  </Button>
+                </div>
               </CardHeader>
               <CardContent>
                 <p className="mb-2 text-sm font-medium">
