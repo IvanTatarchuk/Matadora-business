@@ -221,11 +221,10 @@ export class OrchestratorAgent {
       agent.capabilities.includes(taskType)
     );
 
-    if (capableAgents.length === 0) {
+    const selectedAgent = capableAgents.sort((a, b) => b.priority - a.priority)[0];
+    if (!selectedAgent) {
       throw new Error(`No agent capable of handling task: ${taskType}`);
     }
-
-    const selectedAgent = capableAgents.sort((a, b) => b.priority - a.priority)[0];
 
     return this.addTask({
       agentId: selectedAgent.id,
@@ -306,7 +305,12 @@ export class OrchestratorAgent {
     result?: Record<string, unknown>,
     error?: string
   ): Promise<void> {
-    const patch: Record<string, unknown> = { status };
+    const patch: {
+      status: AgentStatus;
+      result?: Record<string, unknown>;
+      error?: string;
+      completed_at?: string;
+    } = { status };
     if (result) patch.result = result;
     if (error) patch.error = error;
     if (status === "completed" || status === "error") {
