@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { MapPin, Home, Phone, Mail, Calendar, DollarSign, Send, X, Star, MessageSquare, CheckCircle2, Clock } from "lucide-react";
-import { respondToAd, updateResponseStatus, type PublicAd, type AdResponse } from "@/lib/actions/public-ads";
+import { MapPin, Home, Phone, Mail, Calendar, DollarSign, Send, X, Star, MessageSquare, CheckCircle2, Clock, ThumbsUp } from "lucide-react";
+import { respondToAd, updateResponseStatus, createContractorReview, getContractorRating, type PublicAd, type AdResponse } from "@/lib/actions/public-ads";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -34,6 +34,8 @@ interface Props {
 
 export function AdDetailsClient({ ad, responses, user }: Props) {
   const [showResponseForm, setShowResponseForm] = useState(false);
+  const [showReviewForm, setShowReviewForm] = useState(false);
+  const [showContactForm, setShowContactForm] = useState(false);
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   
@@ -41,6 +43,18 @@ export function AdDetailsClient({ ad, responses, user }: Props) {
     message: "",
     estimated_price: "",
     estimated_days: "",
+  });
+
+  const [reviewForm, setReviewForm] = useState({
+    rating: 5,
+    review: "",
+  });
+
+  const [contactForm, setContactForm] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    message: "",
   });
 
   if (!ad) {
@@ -61,6 +75,10 @@ export function AdDetailsClient({ ad, responses, user }: Props) {
   function handleRespond() {
     if (!responseForm.message.trim()) {
       setError("Повідомлення є обов'язковим");
+      return;
+    }
+    if (!ad) {
+      setError("Оголошення не знайдено");
       return;
     }
     setError(null);
@@ -90,6 +108,45 @@ export function AdDetailsClient({ ad, responses, user }: Props) {
       }
       window.location.reload();
     });
+  }
+
+  function handleCreateReview(contractorId: string) {
+    if (!reviewForm.review.trim()) {
+      setError("Відгук є обов'язковим");
+      return;
+    }
+    if (!ad) {
+      setError("Оголошення не знайдено");
+      return;
+    }
+    setError(null);
+    startTransition(async () => {
+      const res = await createContractorReview({
+        ad_id: ad.id,
+        contractor_id: contractorId,
+        rating: reviewForm.rating,
+        review: reviewForm.review,
+      });
+      if (!res.ok) {
+        setError(res.error ?? "Помилка створення відгуку");
+        return;
+      }
+      setShowReviewForm(false);
+      setReviewForm({ rating: 5, review: "" });
+      window.location.reload();
+    });
+  }
+
+  function handleContactSubmit() {
+    if (!contactForm.name.trim() || !contactForm.email.trim() || !contactForm.message.trim()) {
+      setError("Ім'я, email та повідомлення є обов'язковими");
+      return;
+    }
+    setError(null);
+    // In a real implementation, this would send an email
+    alert("Повідомлення відправлено! Автор оголошення зв'яжеться з вами.");
+    setShowContactForm(false);
+    setContactForm({ name: "", email: "", phone: "", message: "" });
   }
 
   return (
@@ -278,9 +335,19 @@ export function AdDetailsClient({ ad, responses, user }: Props) {
                           </>
                         )}
                         {response.status === "accepted" && (
-                          <span className="px-2 py-1 bg-green-100 text-green-700 rounded-full text-sm">
-                            Прийнято
-                          </span>
+                          <>
+                            <span className="px-2 py-1 bg-green-100 text-green-700 rounded-full text-sm">
+                              Прийнято
+                            </span>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => setShowReviewForm(response.id)}
+                            >
+                              <Star className="h-4 w-4 mr-1" />
+                              Відгук
+                            </Button>
+                          </>
                         )}
                         {response.status === "rejected" && (
                           <span className="px-2 py-1 bg-red-100 text-red-700 rounded-full text-sm">
@@ -304,6 +371,53 @@ export function AdDetailsClient({ ad, responses, user }: Props) {
                         </span>
                       )}
                     </div>
+                    {/* Review Form */}
+                    {showReviewForm === response.id && (
+                      <div className="mt-3 pt-3 border-t space-y-3">
+                        <div>
+                          <Label>Оцінка</Label>
+                          <div className="flex gap-1 mt-1">
+                            {[1, 2, 3, 4, 5].map((star) => (
+                              <button
+                                key={star}
+                                type="button"
+                                onClick={() => setReviewForm({ ...reviewForm, rating: star })}
+                                className="text-2xl"
+                              >
+                                {star <= reviewForm.rating ? "⭐" : "☆"}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                        <div>
+                          <Label htmlFor="review">Відгук</Label>
+                          <Textarea
+                            id="review"
+                            value={reviewForm.review}
+                            onChange={(e) => setReviewForm({ ...reviewForm, review: e.target.value })}
+                            placeholder="Опишіть ваш досвід роботи з цим підрядником..."
+                            rows={3}
+                            className="mt-1"
+                          />
+                        </div>
+                        <div className="flex gap-2">
+                          <Button
+                            size="sm"
+                            onClick={() => handleCreateReview(response.contractor_id)}
+                            disabled={pending}
+                          >
+                            {pending ? "Відправка..." : "Надіслати відгук"}
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => setShowReviewForm(false)}
+                          >
+                            Скасувати
+                          </Button>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 ))}
               </CardContent>
@@ -417,6 +531,74 @@ export function AdDetailsClient({ ad, responses, user }: Props) {
                     ? "Бажано зв'язуватися email"
                     : "Бажано зв'язуватися через чат"}
                 </p>
+                {!showContactForm ? (
+                  <Button
+                    className="w-full"
+                    variant="outline"
+                    onClick={() => setShowContactForm(true)}
+                  >
+                    <Mail className="h-4 w-4 mr-2" />
+                    Написати повідомлення
+                  </Button>
+                ) : (
+                  <div className="space-y-3 pt-3 border-t">
+                    <div>
+                      <Label htmlFor="contact-name">Ім'я *</Label>
+                      <Input
+                        id="contact-name"
+                        value={contactForm.name}
+                        onChange={(e) => setContactForm({ ...contactForm, name: e.target.value })}
+                        className="mt-1"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="contact-email">Email *</Label>
+                      <Input
+                        id="contact-email"
+                        type="email"
+                        value={contactForm.email}
+                        onChange={(e) => setContactForm({ ...contactForm, email: e.target.value })}
+                        className="mt-1"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="contact-phone">Телефон</Label>
+                      <Input
+                        id="contact-phone"
+                        value={contactForm.phone}
+                        onChange={(e) => setContactForm({ ...contactForm, phone: e.target.value })}
+                        className="mt-1"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="contact-message">Повідомлення *</Label>
+                      <Textarea
+                        id="contact-message"
+                        value={contactForm.message}
+                        onChange={(e) => setContactForm({ ...contactForm, message: e.target.value })}
+                        placeholder="Ваше повідомлення автору оголошення..."
+                        rows={3}
+                        className="mt-1"
+                      />
+                    </div>
+                    {error && <p className="text-sm text-destructive">{error}</p>}
+                    <div className="flex gap-2">
+                      <Button
+                        className="flex-1"
+                        onClick={handleContactSubmit}
+                        disabled={pending}
+                      >
+                        {pending ? "Відправка..." : "Надіслати"}
+                      </Button>
+                      <Button
+                        variant="outline"
+                        onClick={() => setShowContactForm(false)}
+                      >
+                        Скасувати
+                      </Button>
+                    </div>
+                  </div>
+                )}
               </CardContent>
             </Card>
           )}

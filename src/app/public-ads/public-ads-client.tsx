@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Plus, Search, MapPin, Home, Phone, Mail, Image as ImageIcon, Filter, X, Calendar, DollarSign } from "lucide-react";
-import { createPublicAd, type PublicAd, type CreateAdInput } from "@/lib/actions/public-ads";
+import { Plus, Search, MapPin, Home, Phone, Mail, Image as ImageIcon, Filter, X, Calendar, DollarSign, Upload, Trash2 } from "lucide-react";
+import { createPublicAd, uploadAdPhoto, deleteAdPhoto, type PublicAd, type CreateAdInput } from "@/lib/actions/public-ads";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -36,6 +36,8 @@ export function PublicAdsClient({ initialAds, user }: Props) {
   const [showForm, setShowForm] = useState(false);
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [tempAdId, setTempAdId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [filterCity, setFilterCity] = useState("");
   const [filterPropertyType, setFilterPropertyType] = useState<string>("all");
@@ -111,6 +113,76 @@ export function PublicAdsClient({ initialAds, user }: Props) {
         ? prev.work_type.filter((wt) => wt !== workType)
         : [...(prev.work_type || []), workType],
     }));
+  }
+
+  async function handlePhotoUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    const file = files[0];
+    if (!file) return;
+    
+    // Перевірка кількості фото
+    if (form.photos && form.photos.length >= 10) {
+      setError("Максимум 10 фото");
+      return;
+    }
+
+    // Перевірка розміру
+    if (file.size > 5 * 1024 * 1024) {
+      setError("Файл занадто великий (макс 5MB)");
+      return;
+    }
+
+    // Перевірка типу
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+    if (!allowedTypes.includes(file.type)) {
+      setError("Непідтримуваний формат (тільки JPG, PNG, WEBP)");
+      return;
+    }
+
+    setUploadingPhoto(true);
+    setError(null);
+
+    try {
+      // Створюємо тимчасовий ID для завантаження
+      const tempId = tempAdId || crypto.randomUUID();
+      setTempAdId(tempId);
+
+      const res = await uploadAdPhoto(file, tempId);
+      if (!res.ok) {
+        setError(res.error ?? "Помилка завантаження");
+        return;
+      }
+
+      setForm((prev) => ({
+        ...prev,
+        photos: [...(prev.photos || []), res.url!],
+      }));
+    } catch (err) {
+      setError("Помилка завантаження фото");
+    } finally {
+      setUploadingPhoto(false);
+    }
+  }
+
+  async function handlePhotoDelete(photoUrl: string) {
+    setError(null);
+    
+    try {
+      const res = await deleteAdPhoto(photoUrl);
+      if (!res.ok) {
+        setError(res.error ?? "Помилка видалення");
+        return;
+      }
+
+      setForm((prev) => ({
+        ...prev,
+        photos: prev.photos?.filter((p) => p !== photoUrl) || [],
+      }));
+    } catch (err) {
+      setError("Помилка видалення фото");
+    }
   }
 
   return (
@@ -309,14 +381,54 @@ export function PublicAdsClient({ initialAds, user }: Props) {
               </div>
               <div className="md:col-span-2">
                 <Label htmlFor="photos">Фото (до 10 шт.)</Label>
-                <div className="mt-2 border-2 border-dashed rounded-lg p-6 text-center">
-                  <ImageIcon className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
-                  <p className="text-sm text-muted-foreground">
-                    Перетягніть фото сюди або натисніть для вибору
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    JPG, PNG, WEBP до 5MB
-                  </p>
+                <div className="mt-2 space-y-3">
+                  {/* Uploaded photos preview */}
+                  {form.photos && form.photos.length > 0 && (
+                    <div className="grid grid-cols-3 gap-2">
+                      {form.photos.map((photo, index) => (
+                        <div key={index} className="relative group">
+                          <img
+                            src={photo}
+                            alt={`Фото ${index + 1}`}
+                            className="w-full h-24 object-cover rounded-lg"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => handlePhotoDelete(photo)}
+                            className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                          >
+                            <Trash2 className="h-3 w-3" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  
+                  {/* Upload button */}
+                  {(!form.photos || form.photos.length < 10) && (
+                    <div className="border-2 border-dashed rounded-lg p-6 text-center cursor-pointer hover:bg-muted/50 transition-colors">
+                      <input
+                        type="file"
+                        id="photos"
+                        accept="image/jpeg,image/png,image/webp"
+                        onChange={handlePhotoUpload}
+                        disabled={uploadingPhoto}
+                        className="hidden"
+                      />
+                      <label htmlFor="photos" className="cursor-pointer">
+                        <Upload className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
+                        <p className="text-sm text-muted-foreground">
+                          {uploadingPhoto ? "Завантаження..." : "Натисніть для вибору фото"}
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          JPG, PNG, WEBP до 5MB
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {form.photos?.length || 0}/10 фото
+                        </p>
+                      </label>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

@@ -16,8 +16,8 @@ export default async function AdDetailsPage({
   return (
     <div className="min-h-screen bg-background">
       <AdDetailsClient 
-        ad={ok ? ad : null} 
-        responses={okResponses ? responses : []}
+        ad={ok && ad ? ad : null} 
+        responses={okResponses && responses ? responses : []}
         user={user}
       />
     </div>
