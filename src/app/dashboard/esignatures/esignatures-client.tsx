@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition, useRef, useEffect } from "react";
-import { FileText, PenTool, Send, X, CheckCircle2, Clock, AlertCircle, Download } from "lucide-react";
+import { FileText, PenTool, Send, X, CheckCircle2, Clock, AlertCircle, Download, Search, Filter } from "lucide-react";
 import {
   createSignature, createSignatureRequest, declineSignatureRequest, cancelSignatureRequest,
   type DocumentSignature, type SignatureRequest,
@@ -20,6 +20,9 @@ export function EsignaturesClient({ initialSignatures, initialRequests }: Props)
   const [requests, setRequests] = useState<SignatureRequest[]>(initialRequests);
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filterStatus, setFilterStatus] = useState<"all" | "pending" | "signed" | "declined">("all");
+  const [filterType, setFilterType] = useState<"all" | "offer" | "contract" | "change_order" | "invoice" | "other">("all");
 
   const [showSignForm, setShowSignForm] = useState(false);
   const [showRequestForm, setShowRequestForm] = useState(false);
@@ -132,8 +135,25 @@ export function EsignaturesClient({ initialSignatures, initialRequests }: Props)
     });
   }
 
-  const pendingRequests = requests.filter((r) => r.status === "pending");
-  const signedRequests = requests.filter((r) => r.status === "signed");
+  const filteredRequests = requests.filter((r) => {
+    const matchesSearch = !searchQuery || 
+      (r.requested_to_email && r.requested_to_email.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      r.document_type.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesStatus = filterStatus === "all" || r.status === filterStatus;
+    const matchesType = filterType === "all" || r.document_type === filterType;
+    return matchesSearch && matchesStatus && matchesType;
+  });
+
+  const filteredSignatures = signatures.filter((s) => {
+    const matchesSearch = !searchQuery || 
+      s.signer_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      s.document_type.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesType = filterType === "all" || s.document_type === filterType;
+    return matchesSearch && matchesType;
+  });
+
+  const pendingRequests = filteredRequests.filter((r) => r.status === "pending");
+  const signedRequests = filteredRequests.filter((r) => r.status === "signed");
 
   return (
     <div className="space-y-6">
@@ -179,7 +199,7 @@ export function EsignaturesClient({ initialSignatures, initialRequests }: Props)
       </div>
 
       {/* Actions */}
-      <div className="flex gap-2">
+      <div className="flex gap-2 flex-wrap">
         <Button onClick={() => setShowSignForm(true)}>
           <PenTool className="h-4 w-4 mr-2" />
           Podpisz dokument
@@ -188,6 +208,41 @@ export function EsignaturesClient({ initialSignatures, initialRequests }: Props)
           <Send className="h-4 w-4 mr-2" />
           Zażądaj podpisu
         </Button>
+      </div>
+
+      {/* Filters */}
+      <div className="flex gap-3 flex-wrap">
+        <div className="relative flex-1 max-w-sm">
+          <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Шукати підписи..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-9"
+          />
+        </div>
+        <select
+          value={filterStatus}
+          onChange={(e) => setFilterStatus(e.target.value as "all" | "pending" | "signed" | "declined")}
+          className="rounded-md border bg-background px-3 py-2 text-sm"
+        >
+          <option value="all">Всі статуси</option>
+          <option value="pending">Очікуючі</option>
+          <option value="signed">Підписані</option>
+          <option value="declined">Відхилені</option>
+        </select>
+        <select
+          value={filterType}
+          onChange={(e) => setFilterType(e.target.value as "all" | "offer" | "contract" | "change_order" | "invoice" | "other")}
+          className="rounded-md border bg-background px-3 py-2 text-sm"
+        >
+          <option value="all">Всі типи</option>
+          <option value="offer">Оферта</option>
+          <option value="contract">Контракт</option>
+          <option value="change_order">Ане</option>
+          <option value="invoice">Інвойс</option>
+          <option value="other">Інше</option>
+        </select>
       </div>
 
       {/* Sign Form */}
@@ -331,13 +386,13 @@ export function EsignaturesClient({ initialSignatures, initialRequests }: Props)
           <CardTitle>Żądania podpisów</CardTitle>
         </CardHeader>
         <CardContent>
-          {requests.length === 0 ? (
+          {filteredRequests.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
               Brak żądań podpisów
             </div>
           ) : (
             <div className="space-y-2">
-              {requests.map((req) => (
+              {filteredRequests.map((req) => (
                 <div key={req.id} className="flex items-center justify-between p-3 rounded-lg border">
                   <div className="flex-1">
                     <div className="flex items-center gap-2">
@@ -374,13 +429,13 @@ export function EsignaturesClient({ initialSignatures, initialRequests }: Props)
           <CardTitle>Podpisy dokumentów</CardTitle>
         </CardHeader>
         <CardContent>
-          {signatures.length === 0 ? (
+          {filteredSignatures.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
               Brak podpisanych dokumentów
             </div>
           ) : (
             <div className="space-y-2">
-              {signatures.map((sig) => (
+              {filteredSignatures.map((sig) => (
                 <div key={sig.id} className="flex items-center justify-between p-3 rounded-lg border">
                   <div className="flex-1">
                     <div className="flex items-center gap-2">

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { MapPin, Plus, AlertCircle, CheckCircle2, Clock, Navigation, Layers, X } from "lucide-react";
+import { MapPin, Plus, AlertCircle, CheckCircle2, Clock, Navigation, Layers, X, Search, Filter } from "lucide-react";
 import {
   recordWorkerLocation, createGeofence,
   type WorkerLocation, type Geofence, type GeofenceEvent,
@@ -22,6 +22,8 @@ export function GeolocationClient({ initialLocations, initialGeofences, initialE
   const [events, setEvents] = useState<GeofenceEvent[]>(initialEvents);
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filterEventType, setFilterEventType] = useState<"all" | "entry" | "exit">("all");
 
   const [showLocationForm, setShowLocationForm] = useState(false);
   const [showGeofenceForm, setShowGeofenceForm] = useState(false);
@@ -58,13 +60,27 @@ export function GeolocationClient({ initialLocations, initialGeofences, initialE
     setError(null);
     startTransition(async () => {
       const res = await createGeofence(geofenceForm);
-      if (!res.ok) { setError(res.error ?? "Błąд"); return; }
+      if (!res.ok) { setError(res.error ?? "Błąd"); return; }
       setShowGeofenceForm(false);
       setGeofenceForm({ projectId: "", name: "", description: "", centerLat: 0, centerLon: 0, radiusMeters: 100, entryNotification: false, exitNotification: false });
     });
   }
 
-  const recentEvents = events.slice(0, 10);
+  const filteredGeofences = geofences.filter((gf) => {
+    const matchesSearch = !searchQuery || 
+      gf.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (gf.description && gf.description.toLowerCase().includes(searchQuery.toLowerCase()));
+    return matchesSearch;
+  });
+
+  const filteredEvents = events.filter((evt) => {
+    const matchesSearch = !searchQuery || 
+      evt.event_type.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesType = filterEventType === "all" || evt.event_type === filterEventType;
+    return matchesSearch && matchesType;
+  });
+
+  const recentEvents = filteredEvents.slice(0, 10);
 
   return (
     <div className="space-y-6">
@@ -110,7 +126,7 @@ export function GeolocationClient({ initialLocations, initialGeofences, initialE
       </div>
 
       {/* Actions */}
-      <div className="flex gap-2">
+      <div className="flex gap-2 flex-wrap">
         <Button onClick={() => setShowLocationForm(true)}>
           <Navigation className="h-4 w-4 mr-2" />
           Zapisz lokalizację
@@ -119,6 +135,28 @@ export function GeolocationClient({ initialLocations, initialGeofences, initialE
           <Layers className="h-4 w-4 mr-2" />
           Utwórz geofence
         </Button>
+      </div>
+
+      {/* Filters */}
+      <div className="flex gap-3 flex-wrap">
+        <div className="relative flex-1 max-w-sm">
+          <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Шукати геофенци..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-9"
+          />
+        </div>
+        <select
+          value={filterEventType}
+          onChange={(e) => setFilterEventType(e.target.value as "all" | "entry" | "exit")}
+          className="rounded-md border bg-background px-3 py-2 text-sm"
+        >
+          <option value="all">Всі типи подій</option>
+          <option value="entry">Вхід</option>
+          <option value="exit">Вихід</option>
+        </select>
       </div>
 
       {/* Location Form */}
@@ -249,16 +287,16 @@ export function GeolocationClient({ initialLocations, initialGeofences, initialE
       {/* Geofences */}
       <Card>
         <CardHeader>
-          <CardTitle>Geofence</CardTitle>
+          <CardTitle>Pегofence</CardTitle>
         </CardHeader>
         <CardContent>
-          {geofences.length === 0 ? (
+          {filteredGeofences.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
               Brak geofence
             </div>
           ) : (
             <div className="space-y-2">
-              {geofences.map((gf) => (
+              {filteredGeofences.map((gf) => (
                 <div key={gf.id} className="flex items-center justify-between p-3 rounded-lg border">
                   <div className="flex-1">
                     <div className="flex items-center gap-2">
