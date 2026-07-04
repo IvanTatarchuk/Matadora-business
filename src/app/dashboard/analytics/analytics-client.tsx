@@ -1,12 +1,15 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import {
   BarChart3, TrendingUp, AlertTriangle, Users, DollarSign,
   FolderKanban, CheckCircle2, Clock, XCircle, ArrowRight,
+  Search, Filter, Download, Calendar,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import type { OrgAnalytics, ProjectAnalytics } from "@/lib/actions/analytics";
 
 function fmt(n: number) {
@@ -100,6 +103,10 @@ function ProjectCard({ p }: { p: ProjectAnalytics }) {
 }
 
 export function AnalyticsClient({ analytics }: { analytics: OrgAnalytics | null }) {
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filterStatus, setFilterStatus] = useState<"all" | "delayed" | "on-track" | "over-budget">("all");
+  const [showDelayedOnly, setShowDelayedOnly] = useState(false);
+
   if (!analytics) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -112,6 +119,16 @@ export function AnalyticsClient({ analytics }: { analytics: OrgAnalytics | null 
   const delayedProjects = a.projects.filter((p) => p.is_delayed);
   const budgetOverProjects = a.projects.filter((p) => p.budget_pct > 100);
   const totalOpenIssues = a.projects.reduce((s, p) => s + p.open_punch + p.open_rfis, 0);
+
+  const filteredProjects = a.projects.filter((p) => {
+    const matchesSearch = !searchQuery || p.project_name.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesStatus = filterStatus === "all" || 
+      (filterStatus === "delayed" && p.is_delayed) ||
+      (filterStatus === "on-track" && !p.is_delayed && p.budget_pct <= 100) ||
+      (filterStatus === "over-budget" && p.budget_pct > 100);
+    const matchesDelayed = !showDelayedOnly || p.is_delayed;
+    return matchesSearch && matchesStatus && matchesDelayed;
+  });
 
   return (
     <div className="space-y-8">
@@ -145,6 +162,41 @@ export function AnalyticsClient({ analytics }: { analytics: OrgAnalytics | null 
           )}
         </div>
       )}
+
+      {/* Filters */}
+      <div className="flex gap-3 flex-wrap">
+        <div className="relative flex-1 max-w-sm">
+          <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Szukaj projektów..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-9"
+          />
+        </div>
+        <select
+          value={filterStatus}
+          onChange={(e) => setFilterStatus(e.target.value as "all" | "delayed" | "on-track" | "over-budget")}
+          className="rounded-md border bg-background px-3 py-2 text-sm"
+        >
+          <option value="all">Wszystkie statusy</option>
+          <option value="delayed">Opóźnione</option>
+          <option value="on-track">Na czas</option>
+          <option value="over-budget">Przekroczenie budżetu</option>
+        </select>
+        <Button
+          variant={showDelayedOnly ? "default" : "outline"}
+          size="sm"
+          onClick={() => setShowDelayedOnly(!showDelayedOnly)}
+        >
+          <Filter className="h-4 w-4 mr-2" />
+          Tylko opóźnione
+        </Button>
+        <Button variant="outline" size="sm">
+          <Download className="h-4 w-4 mr-2" />
+          Eksport
+        </Button>
+      </div>
 
       {/* TOP-LEVEL KPIs */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -236,13 +288,13 @@ export function AnalyticsClient({ analytics }: { analytics: OrgAnalytics | null 
       </div>
 
       {/* PROJECT CARDS */}
-      {a.projects.length > 0 && (
+      {filteredProjects.length > 0 && (
         <>
           <div>
             <h2 className="text-lg font-semibold mb-1">Portfel projektów</h2>
             <p className="text-sm text-muted-foreground mb-4">Szczegółowe KPI dla każdego projektu</p>
             <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-              {a.projects
+              {filteredProjects
                 .sort((a, b) => (b.is_delayed ? 1 : 0) - (a.is_delayed ? 1 : 0))
                 .map((p) => <ProjectCard key={p.project_id} p={p} />)}
             </div>
@@ -250,12 +302,12 @@ export function AnalyticsClient({ analytics }: { analytics: OrgAnalytics | null 
         </>
       )}
 
-      {a.projects.length === 0 && (
+      {filteredProjects.length === 0 && a.projects.length > 0 && (
         <Card className="border-dashed">
           <CardContent className="p-12 text-center text-muted-foreground">
             <BarChart3 className="mx-auto h-12 w-12 opacity-20 mb-3" />
-            <p className="font-medium">Brak danych do analizy</p>
-            <p className="text-sm mt-1">Utwórz projekty i zacznij rejestrować koszty, aby zobaczyć analizy</p>
+            <p className="font-medium">Brak projektów pasujących do filtrów</p>
+            <p className="text-sm mt-1">Zmień kryteria wyszukiwania lub filtry</p>
           </CardContent>
         </Card>
       )}

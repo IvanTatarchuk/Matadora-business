@@ -90,6 +90,30 @@ export async function getMembers(orgId: string): Promise<MemberRow[]> {
   }));
 }
 
+export async function getMemberById(userId: string, orgId: string): Promise<MemberRow | null> {
+  const supabase = createClient();
+  const { data: member } = await supabase
+    .from("organization_members")
+    .select("user_id, role")
+    .eq("user_id", userId)
+    .eq("org_id", orgId)
+    .single();
+  if (!member) return null;
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("id, full_name, company_name")
+    .eq("id", userId)
+    .single();
+
+  return {
+    userId: member.user_id,
+    role: member.role as OrgMemberRole,
+    name: profile?.full_name || profile?.company_name || "Member",
+    email: null,
+  };
+}
+
 export async function inviteMember(
   orgId: string,
   email: string,

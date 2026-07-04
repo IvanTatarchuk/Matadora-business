@@ -3,33 +3,16 @@
 import { useState, useTransition } from "react";
 import {
   Plus, X, HardHat, Star, Phone, Mail, Globe,
-  Building2, CheckCircle2, XCircle, AlertCircle, Trash2,
+  Building2, CheckCircle2, XCircle, AlertCircle, Trash2, ArrowRight,
 } from "lucide-react";
 import {
   createSubcontractor, rateSubcontractor,
   type Subcontractor, type SubSpecialty,
 } from "@/lib/actions/subcontractors";
+import { SPECIALTY_LABELS } from "@/lib/constants/subcontractors";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-
-const SPECIALTY_LABELS: Record<SubSpecialty, string> = {
-  general:    "Generalny wykonawca",
-  electrical: "Elektryka",
-  plumbing:   "Hydraulika / Instalacje sanitarne",
-  hvac:       "HVAC / Klimatyzacja",
-  roofing:    "Dachy / Pokrycia dachowe",
-  flooring:   "Podłogi / Posadzki",
-  painting:   "Malowanie / Tynkowanie",
-  insulation: "Izolacje",
-  concrete:   "Beton / Żelbet",
-  steel:      "Konstrukcje stalowe",
-  windows:    "Okna / Drzwi / Fasady",
-  landscaping:"Zagospodarowanie terenu",
-  demolition: "Rozbiórki",
-  excavation: "Ziemne / Fundamenty",
-  other:      "Inne",
-};
 
 const STATUS_CONFIG = {
   active:      { label: "Aktywny",     color: "bg-green-100 text-green-700", icon: CheckCircle2 },
@@ -244,6 +227,19 @@ export function PodwykonawcyClient({ initialSubcontractors }: { initialSubcontra
                     </span>
                   </div>
                   <StarRating rating={sub.rating} onRate={(r) => handleRate(sub.id, r)} />
+                  <div className="flex gap-1 mt-2">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-6 w-6 p-0"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        window.location.href = `/dashboard/podwykonawcy/${sub.id}`;
+                      }}
+                    >
+                      <ArrowRight className="h-3 w-3" />
+                    </Button>
+                  </div>
                   <div className="mt-2 space-y-0.5 text-xs text-muted-foreground">
                     {sub.city && <p className="flex items-center gap-1"><Building2 className="h-3 w-3" />{sub.city}</p>}
                     {sub.contact_name && <p>{sub.contact_name}</p>}

@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useRef } from "react";
 import Link from "next/link";
 import {
   ArrowLeft, Plus, X, FileSpreadsheet, Trash2, Edit2, Check,
-  Lock, Unlock, ChevronDown, ChevronRight,
+  Lock, Unlock, ChevronDown, ChevronRight, Upload, Sparkles,
+  Loader2,
 } from "lucide-react";
 import {
   createBoqDocument, addBoqItem, updateBoqItem, deleteBoqItem, updateBoqStatus, getBoqItems,
@@ -37,6 +38,19 @@ type Props = {
   pricebook: PricebookItem[];
 };
 
+type AiSuggestedItem = {
+  id: string;
+  name: string;
+  unit: string;
+  qty: number;
+  knrCode: string | null;
+  laborRate: number;
+  materialRate: number;
+  selected: boolean;
+};
+
+const MAX_PDF_MB = 4;
+
 export function PrzedmiarClient({ projectId, initialDocuments, initialItems, pricebook }: Props) {
   const [documents, setDocuments] = useState<BoqDocument[]>(initialDocuments);
   const [activeDocId, setActiveDocId] = useState<string | null>(initialDocuments[0]?.id ?? null);
@@ -59,6 +73,15 @@ export function PrzedmiarClient({ projectId, initialDocuments, initialItems, pri
     quantity: "", unitPrice: "", vatRate: "23",
     quantityFormula: "", notes: "", pricebookItemId: "",
   });
+
+  // AI PDF Analysis
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [aiUploading, setAiUploading] = useState(false);
+  const [aiDragging, setAiDragging] = useState(false);
+  const [aiError, setAiError] = useState<string | null>(null);
+  const [aiFileName, setAiFileName] = useState<string | null>(null);
+  const [aiSummary, setAiSummary] = useState<string | null>(null);
+  const [aiSuggestions, setAiSuggestions] = useState<AiSuggestedItem[]>([]);
 
   const activeDoc = documents.find((d) => d.id === activeDocId) ?? null;
   const isLocked = activeDoc?.status === "locked" || activeDoc?.status === "approved";
@@ -194,8 +217,295 @@ export function PrzedmiarClient({ projectId, initialDocuments, initialItems, pri
     });
   }
 
+  // AI PDF Analysis functions
+  function handlePdfSelected(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (file) void processPdfFile(file);
+  }
+
+  function handlePdfDrop(e: React.DragEvent<HTMLDivElement>) {
+    e.preventDefault();
+    setAiDragging(false);
+    const file = e.dataTransfer.files?.[0];
+    if (file) void processPdfFile(file);
+  }
+
+  async function processPdfFile(file: File) {
+    if (!activeDocId) {
+      setError("Najpierw utwórz dokument przedmiaru");
+      return;
+    }
+    setAiError(null);
+    setAiSummary(null);
+    setAiSuggestions([]);
+
+    if (file.type !== "application/pdf") {
+      setAiError("Wgraj plik w formacie PDF.");
+      return;
+    }
+    if (file.size > MAX_PDF_MB * 1024 * 1024) {
+      setAiError(`Plik jest za duży — limit to ${MAX_PDF_MB} MB.`);
+      return;
+    }
+
+    setAiFileName(file.name);
+    setAiUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const res = await fetch("/api/kosztorys/analyze-pdf", {
+        method: "POST",
+        body: formData,
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.error ?? "Analiza nie powiodła się.");
+      }
+
+      setAiSummary(data.summary ?? null);
+      setAiSuggestions(
+        (data.items ?? []).map(
+          (item: {
+            name: string;
+            unit: string;
+            qty: number;
+            knr_code: string | null;
+            labor_rate: number;
+            material_rate: number;
+          }) => ({
+            id: `ai-${Date.now()}-${Math.random()}`,
+            name: item.name,
+            unit: item.unit,
+            qty: item.qty,
+            knrCode: item.knr_code,
+            laborRate: item.labor_rate,
+            materialRate: item.material_rate,
+            selected: true,
+          })
+        )
+      );
+    } catch (err) {
+      setAiError(err instanceof Error ? err.message : "Analiza nie powiodła się.");
+    } finally {
+      setAiUploading(false);
+    }
+  }
+
+  function toggleSuggestion(id: string) {
+    setAiSuggestions((prev) =>
+      prev.map((s) => (s.id === id ? { ...s, selected: !s.selected } : s))
+    );
+  }
+
+  function updateSuggestionField(
+    id: string,
+    field: "qty" | "laborRate" | "materialRate",
+    value: number
+  ) {
+    setAiSuggestions((prev) =>
+      prev.map((s) => (s.id === id ? { ...s, [field]: Math.max(0, value) } : s))
+    );
+  }
+
+  async function addSelectedSuggestions() {
+    if (!activeDocId) return;
+    const toAdd = aiSuggestions.filter((s) => s.selected);
+    if (toAdd.length === 0) return;
+
+    setError(null);
+    for (const s of toAdd) {
+      const res = await addBoqItem({
+        documentId: activeDocId, projectId,
+        positionNo: String(items.length + 1), section: "AI Import",
+        description: s.name, knrCode: s.knrCode || undefined,
+        category: "materials", unit: s.unit,
+        quantity: s.qty, unitPrice: s.laborRate + s.materialRate,
+        vatRate: 23,
+        notes: "Importowane z AI PDF",
+        sortOrder: items.length,
+      });
+      if (!res.ok) {
+        setError(`Błąd przy dodawaniu "${s.name}": ${res.error}`);
+        return null;
+      }
+      const qty = s.qty, price = s.laborRate + s.materialRate, vat = 23;
+      const net = Math.round(qty * price * 100) / 100;
+      const vatAmt = Math.round(net * vat / 100 * 100) / 100;
+      const newItem: BoqItem = {
+        id: res.id!, document_id: activeDocId, project_id: projectId, org_id: "", pricebook_item_id: null,
+        position_no: String(items.length + 1), section: "AI Import", subsection: null,
+        description: s.name, knr_code: s.knrCode || null,
+        category: "materials", unit: s.unit,
+        quantity: qty, unit_price: price, vat_rate: vat,
+        total_net: net, total_vat: vatAmt, total_gross: net + vatAmt,
+        quantity_formula: null, sort_order: items.length, notes: "Importowane z AI PDF",
+        created_at: new Date().toISOString(), updated_at: new Date().toISOString(),
+      };
+      setItems((prev) => [...prev, newItem]);
+    }
+    setAiSuggestions([]);
+    setAiSummary(null);
+    setAiFileName(null);
+  }
+
+  function dismissAiResults() {
+    setAiSuggestions([]);
+    setAiSummary(null);
+    setAiError(null);
+    setAiFileName(null);
+  }
+
   return (
     <div className="space-y-5">
+      {/* AI PDF ANALYSIS CARD */}
+      <Card className="border-primary/30 bg-gradient-to-br from-primary/5 to-transparent">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base flex items-center gap-2">
+            <Sparkles className="h-4 w-4 text-primary" />
+            Analiza AI z PDF
+          </CardTitle>
+          <p className="text-xs text-muted-foreground">
+            Wgraj przedmiar robót lub projekt w PDF — AI wyodrębni pozycje i doda je do dokumentu.
+          </p>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="application/pdf"
+            className="hidden"
+            onChange={handlePdfSelected}
+          />
+
+          {!aiUploading && aiSuggestions.length === 0 && (
+            <div
+              onClick={() => fileInputRef.current?.click()}
+              onDragOver={(e) => { e.preventDefault(); setAiDragging(true); }}
+              onDragLeave={() => setAiDragging(false)}
+              onDrop={handlePdfDrop}
+              role="button"
+              tabIndex={0}
+              className={`flex w-full cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed py-8 text-center transition-colors ${
+                aiDragging
+                  ? "border-primary bg-primary/10"
+                  : "border-primary/30 bg-white/60 hover:border-primary hover:bg-primary/5"
+              }`}
+            >
+              <Upload className="h-6 w-6 text-primary" />
+              <span className="text-sm font-medium">
+                Wgraj PDF przedmiaru — kliknij lub przeciągnij plik
+                <span className="text-muted-foreground"> (max {MAX_PDF_MB} MB)</span>
+              </span>
+            </div>
+          )}
+
+          {aiUploading && (
+            <div className="flex flex-col items-center justify-center gap-3 rounded-lg border-2 border-dashed border-primary/30 bg-white/60 py-8 text-center">
+              <Loader2 className="h-6 w-6 animate-spin text-primary" />
+              <span className="text-sm font-medium">Analizuję {aiFileName}…</span>
+            </div>
+          )}
+
+          {aiError && (
+            <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+              {aiError}
+            </div>
+          )}
+
+          {aiSummary && (
+            <div className="rounded-lg border border-primary/20 bg-white p-3 text-sm">
+              <p className="text-muted-foreground">{aiSummary}</p>
+            </div>
+          )}
+
+          {aiSuggestions.length > 0 && (
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                  Znalezione pozycje ({aiSuggestions.length})
+                </p>
+                <button
+                  onClick={dismissAiResults}
+                  className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1"
+                >
+                  <X className="h-3 w-3" /> Wyczyść
+                </button>
+              </div>
+              <div className="max-h-64 space-y-1.5 overflow-y-auto">
+                {aiSuggestions.map((s) => (
+                  <div
+                    key={s.id}
+                    className="flex items-start gap-2 rounded-lg border bg-white p-2.5 text-sm hover:border-primary/40"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={s.selected}
+                      onChange={() => toggleSuggestion(s.id)}
+                      className="mt-1.5 cursor-pointer"
+                    />
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        {s.knrCode && (
+                          <span className="text-[10px] font-mono bg-muted px-1.5 py-0.5 rounded">
+                            {s.knrCode}
+                          </span>
+                        )}
+                        <span className="text-xs text-muted-foreground">
+                          {fmt(s.laborRate + s.materialRate)}/{s.unit}
+                        </span>
+                      </div>
+                      <p className="mt-0.5 font-medium">{s.name}</p>
+                      <div className="mt-1.5 grid grid-cols-3 gap-1.5">
+                        <div>
+                          <label className="text-[10px] text-muted-foreground">Ilość ({s.unit})</label>
+                          <Input
+                            type="number"
+                            value={s.qty}
+                            onChange={(e) => updateSuggestionField(s.id, "qty", Number(e.target.value))}
+                            className="mt-0.5 h-7 text-xs"
+                            min={0}
+                          />
+                        </div>
+                        <div>
+                          <label className="text-[10px] text-muted-foreground">Robocizna</label>
+                          <Input
+                            type="number"
+                            value={s.laborRate}
+                            onChange={(e) => updateSuggestionField(s.id, "laborRate", Number(e.target.value))}
+                            className="mt-0.5 h-7 text-xs"
+                            min={0}
+                          />
+                        </div>
+                        <div>
+                          <label className="text-[10px] text-muted-foreground">Materiał</label>
+                          <Input
+                            type="number"
+                            value={s.materialRate}
+                            onChange={(e) => updateSuggestionField(s.id, "materialRate", Number(e.target.value))}
+                            className="mt-0.5 h-7 text-xs"
+                            min={0}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <Button
+                size="sm"
+                className="w-full gap-1"
+                onClick={addSelectedSuggestions}
+                disabled={!aiSuggestions.some((s) => s.selected)}
+              >
+                <Plus className="h-4 w-4" />
+                Dodaj zaznaczone do przedmiaru
+              </Button>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
       {/* HEADER */}
       <div className="flex items-center gap-3">
         <Button variant="ghost" size="sm" asChild>

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Plus, X, TrendingUp, TrendingDown, ChevronLeft, ChevronRight, Trash2 } from "lucide-react";
+import { Plus, X, TrendingUp, TrendingDown, ChevronLeft, ChevronRight, Trash2, Search, Filter } from "lucide-react";
 import {
   createCashflowEntry, updateCashflowActual, deleteCashflowEntry,
   type CashflowEntry, type CashflowType, type CashflowCategory,
@@ -40,6 +40,9 @@ export function CashflowClient({ initialEntries, initialYear }: { initialEntries
   const [editAmount, setEditAmount] = useState("");
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filterType, setFilterType] = useState<CashflowType | "all">("all");
+  const [filterCategory, setFilterCategory] = useState<CashflowCategory | "all">("all");
 
   const [form, setForm] = useState({
     type: "inflow" as CashflowType, category: "invoice_income" as CashflowCategory,
@@ -81,7 +84,16 @@ export function CashflowClient({ initialEntries, initialYear }: { initialEntries
   const maxBalance = Math.max(...runningBalances.map(Math.abs), 1);
 
   const [selectedMonth, setSelectedMonth] = useState<number | null>(null);
-  const monthEntries = selectedMonth ? entries.filter((e) => e.period_month === selectedMonth) : entries;
+  
+  const filteredEntries = entries.filter((e) => {
+    const matchesSearch = !searchQuery || 
+      e.description.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesType = filterType === "all" || e.type === filterType;
+    const matchesCategory = filterCategory === "all" || e.category === filterCategory;
+    return matchesSearch && matchesType && matchesCategory;
+  });
+
+  const monthEntries = selectedMonth ? filteredEntries.filter((e) => e.period_month === selectedMonth) : filteredEntries;
 
   function handleCreate() {
     if (!form.description.trim() || !form.plannedAmount) { setError("Opis i kwota są wymagane"); return; }
@@ -150,6 +162,36 @@ export function CashflowClient({ initialEntries, initialYear }: { initialEntries
         <Card><CardContent className="p-4"><p className="text-xs text-muted-foreground">Saldo rzeczywiste</p>
           <p className={`text-xl font-bold ${(totals.actualIn - totals.actualOut) >= 0 ? "text-green-700" : "text-red-700"}`}>
             {fmt(totals.actualIn - totals.actualOut)}</p></CardContent></Card>
+      </div>
+
+      {/* Filters */}
+      <div className="flex gap-3 flex-wrap">
+        <div className="relative flex-1 max-w-sm">
+          <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Шукати записи..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-9"
+          />
+        </div>
+        <select
+          value={filterType}
+          onChange={(e) => setFilterType(e.target.value as CashflowType | "all")}
+          className="rounded-md border bg-background px-3 py-2 text-sm"
+        >
+          <option value="all">Всі типи</option>
+          <option value="inflow">Впливи</option>
+          <option value="outflow">Видатки</option>
+        </select>
+        <select
+          value={filterCategory}
+          onChange={(e) => setFilterCategory(e.target.value as CashflowCategory | "all")}
+          className="rounded-md border bg-background px-3 py-2 text-sm"
+        >
+          <option value="all">Всі категорії</option>
+          {Object.entries(CATEGORY_LABELS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+        </select>
       </div>
 
       {/* MONTHLY BAR CHART */}
