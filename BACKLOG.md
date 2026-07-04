@@ -5,20 +5,18 @@
 
 ## 🔴 Критично
 
-1. **Stripe webhook: 0 зареєстрованих endpoints у тестовому режимі.**
-   `STRIPE_WEBHOOK_SECRET=whsec_12345` у `.env.local` — це заглушка
-   (реальний секрет Stripe завжди довгий випадковий рядок), і Stripe API
-   підтверджує: жодного webhook endpoint не зареєстровано для тестового
-   ключа. Перевірити НЕ вдалось для live-режиму (немає доступу до live
-   secret key з цієї сесії — навмисно, за правилом "не чіпати Stripe-конфіг
-   без дозволу"). **Ризик**: якщо так само і в live — після оплати клієнта
-   `checkout.session.completed` ніколи не долетить, і
-   `kosztorys_purchases.status` ніколи не стане `paid`, попри те, що клієнт
-   реально заплатив.
-   **Дія власника**: перевірити в Stripe Dashboard → Developers → Webhooks,
-   чи є endpoint на `https://matadora.business/api/stripe/webhook` з подією
-   `checkout.session.completed`, і чи `STRIPE_WEBHOOK_SECRET` у Vercel
-   Production відповідає реальному "Signing secret" з цього endpoint.
+1. ~~Stripe webhook відсутній~~ **ОНОВЛЕНО 2026-07-04: перевірено live-режим
+   через Vercel production ключ (тільки читання) — webhook РЕАЛЬНО
+   зареєстрований і активний** (`we_1ToiEEK0dtidxE85pw50F6LC`,
+   `https://matadora.business/api/stripe/webhook`, подія
+   `checkout.session.completed`). Тестовий режим (`whsec_12345` — заглушка,
+   0 endpoints) не стосується реальних клієнтів, тому не критично.
+   **Залишається неперевіреним**: чи `STRIPE_WEBHOOK_SECRET` у Vercel
+   Production точно відповідає signing secret саме цього endpoint — Stripe
+   API не повертає secret повторно через GET з міркувань безпеки, це можна
+   перевірити тільки вручну в Stripe Dashboard → цей endpoint → "Reveal
+   signing secret" і звірити з Vercel env. Понижую пріоритет із 🔴 на 🟡,
+   бо інфраструктура на місці, залишається лише звірка одного значення.
 
 2. **`ANTHROPIC_API_KEY` — баланс акаунту вичерпано.**
    Ключ підключено до Vercel Production (2026-07-03), але Anthropic API
@@ -52,15 +50,30 @@
 
 ## 🔵 Технічний борг (не з початкового завдання, знайдено попутно)
 
-9. `npm run lint` зламаний репо-вайд через конфлікт версій
-   `eslint-config-next`/`@typescript-eslint` — не блокує деплой
-   (`ignoreDuringBuilds: true`), але лінт зараз не дає жодного реального
-   сигналу. Потребує окремого розбору версій `@typescript-eslint/*`.
+9. `npm run lint` зламаний репо-вайд. **Діагностовано детально
+   (2026-07-04)**: `@typescript-eslint/eslint-plugin@8.62.1` встановлено
+   коректно (єдина копія, `npm ls` чистий, `require()` підтверджує рule
+   `no-explicit-any` реально є в пакеті — 134 правила всього), і версія в
+   межах офіційно підтримуваного діапазону `eslint-config-next@14.2.35`
+   (`^5.4.2 || ^6.0.0 || ^7.0.0 || ^8.0.0`). Помилка "Definition for rule
+   ... was not found" відтворюється навіть при прямому `npx eslint`
+   (обійшовши обгортку `next lint`) — тобто це не проблема Next.js-обгортки,
+   а глибша несумісність у тому, як `.eslintrc.json` (`extends:
+   next/core-web-vitals`) підключає правила цього плагіна саме в цій
+   комбінації версій. Не блокує деплой (`ignoreDuringBuilds: true`), QA
+   трактує лінт як інформативний. Наступний крок для того, хто продовжить:
+   спробувати мігрувати на flat config (`eslint.config.mjs`) замість
+   легасі `.eslintrc.json`, або відкотити `eslint-config-next` до патч-версії
+   ближчої за часом виходу до Next 14.2.21 (до апгрейду), а не 14.2.35.
 10. Локальний `.env.local` має неузгоджені Stripe-ключі: `STRIPE_SECRET_KEY`
     тестовий (`sk_test_...`), а `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` —
     живий (`pk_live_...`). Не впливає на production (там свої, окремі
-    ключі у Vercel), але зламає `npm run dev` локально, якщо хтось спробує
-    пройти оплату вダев-режимі.
+    ключі у Vercel — перевірено, це справжній робочий live-ключ), але
+    зламає оплату при `npm run dev` локально. Не зміг виправити сам:
+    Stripe API навмисно не дозволяє програмно отримати publishable-ключ
+    (тільки secret-ключ, яким я вже маю доступ) — потрібно вручну взяти
+    `pk_test_...` зі Stripe Dashboard → Developers → API keys → Test mode
+    і вставити в `.env.local` замість поточного `pk_live_...`.
 11. Windsurf локально додав 20 нових міграцій (0031-0050: месенджер,
     сповіщення, інвентар, workflows, CRM тощо) паралельно з роботою в цій
     сесії — усі застосовані до бази й збираються чисто, але не
