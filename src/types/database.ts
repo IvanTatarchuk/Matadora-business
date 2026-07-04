@@ -138,6 +138,7 @@ export interface Database {
           description: string | null;
           cost: number;
           order_index: number;
+          group_label: string | null;
           created_at: string;
         };
         Insert: {
@@ -147,6 +148,7 @@ export interface Database {
           description?: string | null;
           cost?: number;
           order_index?: number;
+          group_label?: string | null;
         };
         Update: Partial<Database["public"]["Tables"]["offer_stages"]["Insert"]>;
         Relationships: [];

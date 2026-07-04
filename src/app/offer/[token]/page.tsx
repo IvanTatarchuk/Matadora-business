@@ -43,7 +43,7 @@ export default async function PublicOfferView({
         .single(),
       supabase
         .from("offer_stages")
-        .select("stage_name, description, cost, order_index")
+        .select("stage_name, description, cost, order_index, group_label")
         .eq("offer_id", offer.id)
         .order("order_index"),
       supabase

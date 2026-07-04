@@ -1,4 +1,7 @@
+import { Fragment } from "react";
+
 import { formatPLN } from "@/lib/utils";
+import { groupStagesByLabel } from "@/lib/offer-calc";
 import type { OfferStage } from "@/types/database";
 
 export interface OfferMaterialLine {
@@ -15,7 +18,7 @@ export function OfferSummary({
   totalNet,
   totalGross,
 }: {
-  stages: Pick<OfferStage, "stage_name" | "description" | "cost">[];
+  stages: Pick<OfferStage, "stage_name" | "description" | "cost" | "group_label">[];
   materials?: OfferMaterialLine[];
   vatRate: number;
   totalNet: number;
@@ -26,6 +29,8 @@ export function OfferSummary({
     (sum, m) => sum + Number(m.quantity) * Number(m.price_net),
     0
   );
+  const groups = groupStagesByLabel(stages);
+  const hasSections = groups.some((g) => g.label !== null);
 
   return (
     <div className="space-y-6">
@@ -38,20 +43,41 @@ export function OfferSummary({
             </tr>
           </thead>
           <tbody className="divide-y">
-            {stages.map((s, i) => (
-              <tr key={i}>
-                <td className="p-3">
-                  <p className="font-medium">{s.stage_name}</p>
-                  {s.description && (
-                    <p className="text-xs text-muted-foreground">
-                      {s.description}
-                    </p>
-                  )}
-                </td>
-                <td className="p-3 text-right font-medium">
-                  {formatPLN(Number(s.cost))}
-                </td>
-              </tr>
+            {groups.map((group, gi) => (
+              <Fragment key={`group-${gi}`}>
+                {hasSections && (
+                  <tr key={`group-${gi}`} className="bg-muted/30">
+                    <td className="p-3 font-semibold" colSpan={2}>
+                      {group.label ?? "Inne pozycje"}
+                    </td>
+                  </tr>
+                )}
+                {group.items.map((s, i) => (
+                  <tr key={`item-${gi}-${i}`}>
+                    <td className="p-3">
+                      <p className="font-medium">{s.stage_name}</p>
+                      {s.description && (
+                        <p className="text-xs text-muted-foreground">
+                          {s.description}
+                        </p>
+                      )}
+                    </td>
+                    <td className="p-3 text-right font-medium">
+                      {formatPLN(Number(s.cost))}
+                    </td>
+                  </tr>
+                ))}
+                {hasSections && group.items.length > 1 && (
+                  <tr key={`subtotal-${gi}`}>
+                    <td className="p-3 text-right text-xs text-muted-foreground">
+                      Razem: {group.label ?? "Inne pozycje"}
+                    </td>
+                    <td className="p-3 text-right text-xs font-semibold text-muted-foreground">
+                      {formatPLN(group.subtotal)}
+                    </td>
+                  </tr>
+                )}
+              </Fragment>
             ))}
           </tbody>
         </table>

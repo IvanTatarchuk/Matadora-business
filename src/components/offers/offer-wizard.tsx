@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, useTransition } from "react";
+import { Fragment, useEffect, useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import {
   Building,
@@ -24,6 +24,7 @@ import {
   DEFAULT_STAGES,
   VAT_RATES,
   computeOfferTotals,
+  groupStagesByLabel,
   type StageInput,
 } from "@/lib/offer-calc";
 import { createOffer } from "@/lib/actions/offers";
@@ -87,6 +88,12 @@ export function OfferWizard({ materials }: { materials: CatalogMaterial[] }) {
     () => computeOfferTotals(stages, vatRate),
     [stages, vatRate]
   );
+
+  const reviewGroups = useMemo(
+    () => groupStagesByLabel(stages.filter((s) => s.stage_name)),
+    [stages]
+  );
+  const hasSections = reviewGroups.some((g) => g.label !== null);
 
   const selectedMaterials = useMemo(
     () =>
@@ -284,6 +291,14 @@ export function OfferWizard({ materials }: { materials: CatalogMaterial[] }) {
                         placeholder="Short description"
                         className="min-h-[60px]"
                       />
+                      <Input
+                        value={stage.group_label ?? ""}
+                        onChange={(e) =>
+                          updateStage(i, { group_label: e.target.value })
+                        }
+                        placeholder="Section (optional, e.g. Bathroom)"
+                        className="h-8 text-xs"
+                      />
                     </div>
                     <div className="space-y-2">
                       <Label className="text-xs text-muted-foreground">
@@ -421,23 +436,42 @@ export function OfferWizard({ materials }: { materials: CatalogMaterial[] }) {
                     </tr>
                   </thead>
                   <tbody className="divide-y">
-                    {stages
-                      .filter((s) => s.stage_name)
-                      .map((s, i) => (
-                        <tr key={i}>
-                          <td className="p-3">
-                            <p className="font-medium">{s.stage_name}</p>
-                            {s.description && (
-                              <p className="text-xs text-muted-foreground">
-                                {s.description}
-                              </p>
-                            )}
-                          </td>
-                          <td className="p-3 text-right">
-                            {formatPLN(Number(s.cost))}
-                          </td>
-                        </tr>
-                      ))}
+                    {reviewGroups.map((group, gi) => (
+                      <Fragment key={`group-${gi}`}>
+                        {hasSections && (
+                          <tr className="bg-muted/30">
+                            <td className="p-3 font-semibold" colSpan={2}>
+                              {group.label ?? "Bez sekcji"}
+                            </td>
+                          </tr>
+                        )}
+                        {group.items.map((s, i) => (
+                          <tr key={`item-${gi}-${i}`}>
+                            <td className="p-3">
+                              <p className="font-medium">{s.stage_name}</p>
+                              {s.description && (
+                                <p className="text-xs text-muted-foreground">
+                                  {s.description}
+                                </p>
+                              )}
+                            </td>
+                            <td className="p-3 text-right">
+                              {formatPLN(Number(s.cost))}
+                            </td>
+                          </tr>
+                        ))}
+                        {hasSections && group.items.length > 1 && (
+                          <tr>
+                            <td className="p-3 text-right text-xs text-muted-foreground">
+                              Razem: {group.label ?? "Bez sekcji"}
+                            </td>
+                            <td className="p-3 text-right text-xs font-semibold text-muted-foreground">
+                              {formatPLN(group.subtotal)}
+                            </td>
+                          </tr>
+                        )}
+                      </Fragment>
+                    ))}
                   </tbody>
                 </table>
               </div>
