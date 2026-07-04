@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Plus, X, Receipt, CheckCircle2, Clock, AlertTriangle, ArrowUpRight, ArrowDownLeft } from "lucide-react";
+import { Plus, X, Receipt, CheckCircle2, Clock, AlertTriangle, ArrowUpRight, ArrowDownLeft, Search, Filter } from "lucide-react";
 import {
   createInvoice, markInvoicePaid, updateInvoiceStatus,
   type Invoice, type InvoiceDirection, type InvoiceType, type InvoiceStatus,
@@ -42,6 +42,7 @@ export function FakturyClient({ initialInvoices }: { initialInvoices: Invoice[] 
   const [showForm, setShowForm] = useState(false);
   const [filterDir, setFilterDir] = useState<"all" | InvoiceDirection>("all");
   const [filterStatus, setFilterStatus] = useState<"all" | "unpaid" | "overdue">("all");
+  const [searchQuery, setSearchQuery] = useState("");
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
 
@@ -64,10 +65,13 @@ export function FakturyClient({ initialInvoices }: { initialInvoices: Invoice[] 
   };
 
   const filtered = invoices.filter((i) => {
+    const matchesSearch = !searchQuery || 
+      i.invoice_number.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      i.counterparty.toLowerCase().includes(searchQuery.toLowerCase());
     if (filterDir !== "all" && i.direction !== filterDir) return false;
     if (filterStatus === "unpaid" && !["unpaid","partially_paid"].includes(i.status)) return false;
     if (filterStatus === "overdue" && !(i.due_date && new Date(i.due_date) < now && !["paid","cancelled"].includes(i.status))) return false;
-    return true;
+    return matchesSearch;
   });
 
   function handleCreate() {
@@ -203,7 +207,16 @@ export function FakturyClient({ initialInvoices }: { initialInvoices: Invoice[] 
       )}
 
       {/* FILTERS */}
-      <div className="flex gap-2 flex-wrap">
+      <div className="flex gap-3 flex-wrap">
+        <div className="relative flex-1 max-w-sm">
+          <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Шукати фактури..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-9"
+          />
+        </div>
         <div className="flex rounded-md border overflow-hidden text-sm">
           {(["all", "outgoing", "incoming"] as const).map((d) => (
             <button key={d} onClick={() => setFilterDir(d)}

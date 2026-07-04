@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import {
   Plus, X, TrendingUp, Phone, Mail, Building2,
-  MapPin, Star, ChevronRight, Trash2, CheckCircle2,
+  MapPin, Star, ChevronRight, Trash2, CheckCircle2, Search, Filter,
 } from "lucide-react";
 import {
   createLead, updateLeadStage, addLeadActivity, deleteLead,
@@ -61,6 +61,9 @@ export function CRMClient({ initialLeads }: { initialLeads: Lead[] }) {
   const [lostReason, setLostReason] = useState("");
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filterStage, setFilterStage] = useState<LeadStage | "all">("all");
+  const [filterSource, setFilterSource] = useState<LeadSource | "all">("all");
 
   const [form, setForm] = useState({
     clientName: "", clientCompany: "", clientEmail: "", clientPhone: "",
@@ -77,9 +80,19 @@ export function CRMClient({ initialLeads }: { initialLeads: Lead[] }) {
 
   const active = leads.find((l) => l.id === selectedLead);
 
-  const pipelineValue = leads.filter((l) => !["won","lost","on_hold"].includes(l.stage))
+  const filteredLeads = leads.filter((l) => {
+    const matchesSearch = !searchQuery || 
+      l.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      l.client_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (l.client_company && l.client_company.toLowerCase().includes(searchQuery.toLowerCase()));
+    const matchesStage = filterStage === "all" || l.stage === filterStage;
+    const matchesSource = filterSource === "all" || l.source === filterSource;
+    return matchesSearch && matchesStage && matchesSource;
+  });
+
+  const pipelineValue = filteredLeads.filter((l) => !["won","lost","on_hold"].includes(l.stage))
     .reduce((s, l) => s + ((l.estimated_value ?? 0) * l.win_probability / 100), 0);
-  const wonValue = leads.filter((l) => l.stage === "won").reduce((s, l) => s + (l.estimated_value ?? 0), 0);
+  const wonValue = filteredLeads.filter((l) => l.stage === "won").reduce((s, l) => s + (l.estimated_value ?? 0), 0);
 
   function handleCreate() {
     if (!form.clientName.trim() || !form.title.trim()) { setError("Nazwa klienta i tytuł są wymagane"); return; }
@@ -188,7 +201,7 @@ export function CRMClient({ initialLeads }: { initialLeads: Lead[] }) {
       <div className="grid gap-3 sm:grid-cols-4">
         <Card><CardContent className="p-4">
           <p className="text-xs text-muted-foreground">Leady w pipeline</p>
-          <p className="text-2xl font-bold">{leads.filter((l) => !["won","lost","on_hold"].includes(l.stage)).length}</p>
+          <p className="text-2xl font-bold">{filteredLeads.filter((l) => !["won","lost","on_hold"].includes(l.stage)).length}</p>
         </CardContent></Card>
         <Card><CardContent className="p-4">
           <p className="text-xs text-muted-foreground">Wartość ważona</p>
@@ -201,11 +214,40 @@ export function CRMClient({ initialLeads }: { initialLeads: Lead[] }) {
         <Card><CardContent className="p-4">
           <p className="text-xs text-muted-foreground">Win rate</p>
           <p className="text-2xl font-bold">
-            {leads.filter((l) => ["won","lost"].includes(l.stage)).length > 0
-              ? Math.round(leads.filter((l) => l.stage === "won").length / leads.filter((l) => ["won","lost"].includes(l.stage)).length * 100)
+            {filteredLeads.filter((l) => ["won","lost"].includes(l.stage)).length > 0
+              ? Math.round(filteredLeads.filter((l) => l.stage === "won").length / filteredLeads.filter((l) => ["won","lost"].includes(l.stage)).length * 100)
               : 0}%
           </p>
         </CardContent></Card>
+      </div>
+
+      {/* Filters */}
+      <div className="flex gap-3 flex-wrap">
+        <div className="relative flex-1 max-w-sm">
+          <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Шукати ліди..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-9"
+          />
+        </div>
+        <select
+          value={filterStage}
+          onChange={(e) => setFilterStage(e.target.value as LeadStage | "all")}
+          className="rounded-md border bg-background px-3 py-2 text-sm"
+        >
+          <option value="all">Всі етапи</option>
+          {Object.entries(STAGE_CONFIG).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
+        </select>
+        <select
+          value={filterSource}
+          onChange={(e) => setFilterSource(e.target.value as LeadSource | "all")}
+          className="rounded-md border bg-background px-3 py-2 text-sm"
+        >
+          <option value="all">Всі джерела</option>
+          {Object.entries(SOURCE_LABELS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+        </select>
       </div>
 
       {/* LOST FORM */}
@@ -284,7 +326,7 @@ export function CRMClient({ initialLeads }: { initialLeads: Lead[] }) {
         <div className="overflow-x-auto pb-4">
           <div className="flex gap-4 min-w-max">
             {PIPELINE_STAGES.map((stage) => {
-              const stageLeads = leads.filter((l) => l.stage === stage);
+              const stageLeads = filteredLeads.filter((l) => l.stage === stage);
               const stageValue = stageLeads.reduce((s, l) => s + (l.estimated_value ?? 0), 0);
               const cfg = STAGE_CONFIG[stage];
               return (
@@ -347,7 +389,7 @@ export function CRMClient({ initialLeads }: { initialLeads: Lead[] }) {
                   </tr>
                 </thead>
                 <tbody className="divide-y">
-                  {leads.map((lead) => {
+                  {filteredLeads.map((lead) => {
                     const cfg = STAGE_CONFIG[lead.stage];
                     return (
                       <tr key={lead.id} className="hover:bg-muted/20 cursor-pointer" onClick={() => setSelectedLead(selectedLead === lead.id ? null : lead.id)}>
@@ -372,7 +414,7 @@ export function CRMClient({ initialLeads }: { initialLeads: Lead[] }) {
                   })}
                 </tbody>
               </table>
-              {leads.length === 0 && (
+              {filteredLeads.length === 0 && (
                 <div className="p-12 text-center text-muted-foreground">
                   <Star className="mx-auto h-12 w-12 opacity-20 mb-3" />
                   <p>Brak leadów. Dodaj pierwszy klikając &quot;Nowy lead&quot;.</p>

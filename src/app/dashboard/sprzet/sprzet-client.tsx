@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import {
   Plus, X, Wrench, AlertTriangle, CheckCircle2,
-  Clock, Archive, Settings,
+  Clock, Archive, Settings, ArrowRight,
 } from "lucide-react";
 import {
   createEquipment, updateEquipmentStatus,
@@ -278,6 +278,14 @@ export function SprzętClient({ initialEquipment }: { initialEquipment: Equipmen
                     )}
                   </div>
                   <div className="flex gap-1 mt-3 flex-wrap">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-xs h-7"
+                      onClick={() => window.location.href = `/dashboard/sprzet/${eq.id}`}
+                    >
+                      <ArrowRight className="h-3 w-3" />
+                    </Button>
                     {eq.status !== "available" && (
                       <Button size="sm" variant="outline" className="text-xs h-7" onClick={() => handleStatus(eq.id, "available")} disabled={pending}>
                         Dostępny

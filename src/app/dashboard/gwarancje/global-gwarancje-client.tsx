@@ -2,9 +2,10 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { ShieldCheck, AlertTriangle, CheckCircle2, Clock, ArrowRight } from "lucide-react";
+import { ShieldCheck, AlertTriangle, CheckCircle2, Clock, ArrowRight, Search, Filter } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import type { WarrantyRecord, WarrantyStatus, WarrantyCategory } from "@/lib/actions/warranty";
 import React from "react";
 
@@ -24,6 +25,8 @@ const STATUS_CONFIG: Record<WarrantyStatus, { label: string; color: string; icon
 
 export function GlobalGwarancjeClient({ initialWarranties }: { initialWarranties: WarrantyRecord[] }) {
   const [warranties] = useState<WarrantyRecord[]>(initialWarranties);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filterStatus, setFilterStatus] = useState<"all" | "active" | "claimed" | "expired">("all");
   const now = new Date();
 
   const expiringSoon = warranties.filter((w) => {
@@ -33,6 +36,12 @@ export function GlobalGwarancjeClient({ initialWarranties }: { initialWarranties
   });
 
   const claimed = warranties.filter((w) => w.status === "claimed");
+
+  const filteredWarranties = warranties.filter((w) => {
+    const matchesSearch = !searchQuery || w.title.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesStatus = filterStatus === "all" || w.status === filterStatus;
+    return matchesSearch && matchesStatus;
+  });
 
   const stats = {
     active: warranties.filter((w) => w.status === "active").length,
@@ -59,6 +68,29 @@ export function GlobalGwarancjeClient({ initialWarranties }: { initialWarranties
         <Card><CardContent className="p-4"><p className="text-xs text-muted-foreground">Łącznie aktywnych</p><p className="text-2xl font-bold">{stats.total}</p></CardContent></Card>
       </div>
 
+      {/* Filters */}
+      <div className="flex gap-3 flex-wrap">
+        <div className="relative flex-1 max-w-sm">
+          <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Шукати гарантії..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-9"
+          />
+        </div>
+        <select
+          value={filterStatus}
+          onChange={(e) => setFilterStatus(e.target.value as "all" | "active" | "claimed" | "expired")}
+          className="rounded-md border bg-background px-3 py-2 text-sm"
+        >
+          <option value="all">Всі статуси</option>
+          <option value="active">Активні</option>
+          <option value="claimed">Розглядаються</option>
+          <option value="expired">Завершені</option>
+        </select>
+      </div>
+
       {claimed.length > 0 && (
         <div className="rounded-lg bg-orange-50 border border-orange-200 p-4">
           <p className="font-semibold text-orange-800 mb-2 flex items-center gap-1.5"><AlertTriangle className="h-4 w-4" />Otwarte roszczenia ({claimed.length})</p>
@@ -82,7 +114,7 @@ export function GlobalGwarancjeClient({ initialWarranties }: { initialWarranties
         <div>
           <h2 className="font-semibold mb-3">Wygasające w ciągu 90 dni ({expiringSoon.length})</h2>
           <div className="space-y-2">
-            {expiringSoon.map((w) => {
+            {expiringSoon.filter(w => filteredWarranties.includes(w)).map((w) => {
               const cfg = STATUS_CONFIG[w.status];
               const Icon = cfg.icon;
               const daysLeft = Math.floor((new Date(w.end_date).getTime() - now.getTime()) / 86400000);
