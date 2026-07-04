@@ -146,3 +146,25 @@ export async function updateEquipmentStatus(
   revalidatePath("/dashboard/sprzet");
   return { ok: true };
 }
+
+export async function getEquipmentById(id: string): Promise<Equipment | null> {
+  const supabase = createClient();
+  const { data, error } = await db(supabase)
+    .from("equipment")
+    .select("*")
+    .eq("id", id)
+    .single();
+  if (error) return null;
+  return data as Equipment;
+}
+
+export async function getEquipmentHistory(equipmentId: string): Promise<EquipmentAssignment[]> {
+  const supabase = createClient();
+  const { data, error } = await db(supabase)
+    .from("equipment_assignments")
+    .select("*")
+    .eq("equipment_id", equipmentId)
+    .order("assigned_date", { ascending: false });
+  if (error) return [];
+  return (data ?? []) as EquipmentAssignment[];
+}

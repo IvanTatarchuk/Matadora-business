@@ -7,6 +7,11 @@ import {
   createTaskCard, moveTaskCard, deleteTaskCard,
   type TaskCard, type TaskStatus, type TaskPriority, type TaskCategory,
 } from "@/lib/actions/task-board";
+import {
+  createProjectTask, updateTaskStatus, deleteProjectTask,
+  createProjectUpdate,
+  type ProjectTask, type ProjectUpdate,
+} from "@/lib/actions/project-execution";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -37,8 +42,20 @@ const CATEGORY_LABELS: Record<TaskCategory, string> = {
   other:       "Inne",
 };
 
-export function ZadaniaClient({ projectId, initialTasks }: { projectId: string; initialTasks: TaskCard[] }) {
+export function ZadaniaClient({ 
+  projectId, 
+  initialTasks, 
+  initialProjectTasks, 
+  initialUpdates 
+}: { 
+  projectId: string; 
+  initialTasks: TaskCard[]; 
+  initialProjectTasks: ProjectTask[]; 
+  initialUpdates: ProjectUpdate[]; 
+}) {
   const [tasks, setTasks] = useState<TaskCard[]>(initialTasks);
+  const [projectTasks, setProjectTasks] = useState<ProjectTask[]>(initialProjectTasks);
+  const [updates, setUpdates] = useState<ProjectUpdate[]>(initialUpdates);
   const [showForm, setShowForm] = useState<TaskStatus | null>(null);
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
