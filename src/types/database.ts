@@ -21,6 +21,8 @@ export type OrderStatus =
 export type StockStatus = "in_stock" | "low_stock" | "out_of_stock" | "on_order";
 export type OrgMemberRole = "owner" | "admin" | "manager" | "member";
 export type ProjectTaskStatus = "todo" | "in_progress" | "blocked" | "done";
+export type AgentTaskStatus = "idle" | "processing" | "completed" | "error";
+export type AgentMessageType = "request" | "response" | "notification";
 
 export interface Database {
   public: {
@@ -615,6 +617,79 @@ export interface Database {
         };
         Update: Partial<
           Database["public"]["Tables"]["project_expenses"]["Insert"]
+        >;
+        Relationships: [];
+      };
+      agents: {
+        Row: {
+          id: string;
+          name: string;
+          description: string | null;
+          category: string;
+          capabilities: string[];
+          dependencies: string[];
+          priority: number;
+          created_at: string;
+        };
+        Insert: {
+          id: string;
+          name: string;
+          description?: string | null;
+          category: string;
+          capabilities?: string[];
+          dependencies?: string[];
+          priority?: number;
+        };
+        Update: Partial<Database["public"]["Tables"]["agents"]["Insert"]>;
+        Relationships: [];
+      };
+      agent_tasks: {
+        Row: {
+          id: string;
+          agent_id: string;
+          org_id: string | null;
+          project_id: string | null;
+          type: string;
+          payload: unknown;
+          status: AgentTaskStatus;
+          result: unknown;
+          error: string | null;
+          created_at: string;
+          completed_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          agent_id: string;
+          org_id?: string | null;
+          project_id?: string | null;
+          type: string;
+          payload?: unknown;
+          status?: AgentTaskStatus;
+          result?: unknown;
+          error?: string | null;
+          completed_at?: string | null;
+        };
+        Update: Partial<Database["public"]["Tables"]["agent_tasks"]["Insert"]>;
+        Relationships: [];
+      };
+      agent_messages: {
+        Row: {
+          id: string;
+          from_agent: string;
+          to_agent: string;
+          type: AgentMessageType;
+          payload: unknown;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          from_agent: string;
+          to_agent: string;
+          type?: AgentMessageType;
+          payload?: unknown;
+        };
+        Update: Partial<
+          Database["public"]["Tables"]["agent_messages"]["Insert"]
         >;
         Relationships: [];
       };
