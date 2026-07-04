@@ -1,14 +1,15 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Plus, X, ChevronLeft, ChevronRight, CheckCircle2, XCircle, Users } from "lucide-react";
+import { Plus, X, ChevronLeft, ChevronRight, CheckCircle2, XCircle, Users, BarChart3, Filter, Download } from "lucide-react";
 import {
   createDispatchAssignment, updateDispatchStatus, deleteDispatchAssignment,
   type DispatchAssignment, type DispatchStatus,
 } from "@/lib/actions/dispatch";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import React from "react";
 
 const STATUS_CONFIG: Record<DispatchStatus, { label: string; color: string }> = {
@@ -36,9 +37,11 @@ export function PlanowanieClient({ initialAssignments, initialStart }: { initial
   const [assignments, setAssignments] = useState<DispatchAssignment[]>(initialAssignments);
   const [weekStart, setWeekStart] = useState(initialStart);
   const [showForm, setShowForm] = useState<string | null>(null); // date for which we're adding
+  const [showStats, setShowStats] = useState(false);
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [form, setForm] = useState({ workerName: "", projectId: "", taskDescription: "", startTime: "07:00", endTime: "15:00", notes: "" });
+  const [filterStatus, setFilterStatus] = useState<DispatchStatus | "all">("all");
 
   const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
 
@@ -46,6 +49,19 @@ export function PlanowanieClient({ initialAssignments, initialStart }: { initial
   function nextWeek() { setWeekStart((s) => addDays(s, 7)); }
 
   const byDay = (date: string) => assignments.filter((a) => a.work_date === date);
+  
+  const filteredAssignments = assignments.filter((a) => 
+    filterStatus === "all" || a.status === filterStatus
+  );
+
+  const byDayFiltered = (date: string) => filteredAssignments.filter((a) => a.work_date === date);
+
+  const weekStats = {
+    planned: assignments.filter((a) => a.status === "planned").length,
+    completed: assignments.filter((a) => a.status === "completed").length,
+    absent: assignments.filter((a) => a.status === "absent").length,
+    cancelled: assignments.filter((a) => a.status === "cancelled").length,
+  };
 
   function handleCreate(date: string) {
     if (!form.workerName.trim() || !form.projectId.trim()) { setError("Pracownik i ID projektu są wymagane"); return; }
@@ -97,6 +113,9 @@ export function PlanowanieClient({ initialAssignments, initialStart }: { initial
           <p className="text-sm text-muted-foreground">Tygodniowy harmonogram pracy — {totalPlanned} przypisań w tym tygodniu</p>
         </div>
         <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" onClick={() => setShowStats(!showStats)}>
+            <BarChart3 className="h-4 w-4" />
+          </Button>
           <Button variant="outline" size="sm" onClick={prevWeek}><ChevronLeft className="h-4 w-4" /></Button>
           <span className="text-sm font-medium px-2">
             {formatDay(weekStart)} — {formatDay(addDays(weekStart, 6))}
@@ -105,10 +124,61 @@ export function PlanowanieClient({ initialAssignments, initialStart }: { initial
         </div>
       </div>
 
+      {showStats && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-sm">Statystyki tygodnia</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-4 gap-4">
+              <div className="text-center">
+                <p className="text-2xl font-bold text-blue-600">{weekStats.planned}</p>
+                <p className="text-xs text-muted-foreground">Planowane</p>
+              </div>
+              <div className="text-center">
+                <p className="text-2xl font-bold text-green-600">{weekStats.completed}</p>
+                <p className="text-xs text-muted-foreground">Wykonane</p>
+              </div>
+              <div className="text-center">
+                <p className="text-2xl font-bold text-red-600">{weekStats.absent}</p>
+                <p className="text-xs text-muted-foreground">Nieobecne</p>
+              </div>
+              <div className="text-center">
+                <p className="text-2xl font-bold text-slate-600">{weekStats.cancelled}</p>
+                <p className="text-xs text-muted-foreground">Odwołane</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2">
+          <Filter className="h-4 w-4 text-muted-foreground" />
+          <Label className="text-sm">Filtruj:</Label>
+          <select
+            className="h-8 rounded-md border border-input bg-background px-3 text-sm"
+            value={filterStatus}
+            onChange={(e) => setFilterStatus(e.target.value as DispatchStatus | "all")}
+          >
+            <option value="all">Wszystkie</option>
+            <option value="planned">Planowane</option>
+            <option value="confirmed">Potwierdzone</option>
+            <option value="completed">Wykonane</option>
+            <option value="absent">Nieobecne</option>
+            <option value="cancelled">Odwołane</option>
+          </select>
+        </div>
+        <Button variant="outline" size="sm" className="ml-auto">
+          <Download className="h-4 w-4 mr-2" />
+          Eksportuj
+        </Button>
+      </div>
+
       <div className="overflow-x-auto">
         <div className="grid gap-2 min-w-[700px]" style={{ gridTemplateColumns: `repeat(7, minmax(140px, 1fr))` }}>
           {weekDays.map((date, dayIdx) => {
-            const dayAssignments = byDay(date);
+            const dayAssignments = byDayFiltered(date);
             const isToday = date === new Date().toISOString().slice(0, 10);
             return (
               <div key={date} className={`rounded-lg border p-2 min-h-[200px] ${isToday ? "border-primary/40 bg-primary/5" : "bg-muted/20"}`}>

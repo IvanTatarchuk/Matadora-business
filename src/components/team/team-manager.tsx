@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Trash2, Copy, Check } from "lucide-react";
+import { Trash2, Copy, Check, ArrowRight, Search, Filter } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -61,6 +61,8 @@ export function TeamManager({
   const [role, setRole] = useState<OrgMemberRole>("member");
   const [inviteError, setInviteError] = useState<string | null>(null);
   const [copied, setCopied] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filterRole, setFilterRole] = useState<"all" | "owner" | "admin" | "manager" | "member">("all");
 
   const inviteLink = (token: string) =>
     typeof window !== "undefined"
@@ -94,6 +96,12 @@ export function TeamManager({
       router.refresh();
     });
   }
+
+  const filteredMembers = members.filter((m) => {
+    const matchesSearch = !searchQuery || m.name.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesRole = filterRole === "all" || m.role === filterRole;
+    return matchesSearch && matchesRole;
+  });
 
   return (
     <div className="grid gap-6 lg:grid-cols-2">
@@ -165,12 +173,36 @@ export function TeamManager({
 
       {/* Members + invitations */}
       <div className="space-y-6">
+        {/* Filters */}
+        <div className="flex gap-3 flex-wrap">
+          <div className="relative flex-1 max-w-sm">
+            <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Шукати членів..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-9"
+            />
+          </div>
+          <select
+            value={filterRole}
+            onChange={(e) => setFilterRole(e.target.value as "all" | "owner" | "admin" | "manager" | "member")}
+            className="rounded-md border bg-background px-3 py-2 text-sm"
+          >
+            <option value="all">Всі ролі</option>
+            <option value="owner">Owner</option>
+            <option value="admin">Admin</option>
+            <option value="manager">Manager</option>
+            <option value="member">Member</option>
+          </select>
+        </div>
+
         <Card>
           <CardHeader>
-            <CardTitle>Members ({members.length})</CardTitle>
+            <CardTitle>Members ({filteredMembers.length})</CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
-            {members.map((m) => (
+            {filteredMembers.map((m) => (
               <div
                 key={m.userId}
                 className="flex items-center justify-between text-sm"
@@ -179,21 +211,31 @@ export function TeamManager({
                   {m.name}{" "}
                   <span className="text-muted-foreground">· {m.role}</span>
                 </span>
-                {canManage && m.role !== "owner" && (
+                <div className="flex shrink-0 items-center gap-1">
                   <Button
                     variant="ghost"
                     size="sm"
+                    onClick={() => router.push(`/dashboard/team/${m.userId}`)}
                     disabled={pending}
-                    onClick={() =>
-                      startTransition(async () => {
-                        await removeMember(org.id, m.userId);
-                        router.refresh();
-                      })
-                    }
                   >
-                    <Trash2 className="h-4 w-4 text-destructive" />
+                    <ArrowRight className="h-4 w-4" />
                   </Button>
-                )}
+                  {canManage && m.role !== "owner" && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      disabled={pending}
+                      onClick={() =>
+                        startTransition(async () => {
+                          await removeMember(org.id, m.userId);
+                          router.refresh();
+                        })
+                      }
+                    >
+                      <Trash2 className="h-4 w-4 text-destructive" />
+                    </Button>
+                  )}
+                </div>
               </div>
             ))}
           </CardContent>

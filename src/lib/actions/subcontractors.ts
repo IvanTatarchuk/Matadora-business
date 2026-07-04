@@ -169,3 +169,18 @@ export async function rateSubcontractor(
   revalidatePath("/dashboard/podwykonawcy");
   return { ok: true };
 }
+
+export async function getSubcontractorById(id: string): Promise<Subcontractor | null> {
+  const supabase = createClient();
+  const { data, error } = await db(supabase)
+    .from("subcontractors")
+    .select("*, contracts:subcontractor_contracts(count)")
+    .eq("id", id)
+    .single();
+  if (error) return null;
+  const result = data as Record<string, unknown>;
+  return {
+    ...result,
+    contracts_count: (result.contracts as { count: number }[] | null)?.[0]?.count ?? 0,
+  } as Subcontractor;
+}

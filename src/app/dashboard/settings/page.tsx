@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 
 import { createClient } from "@/lib/supabase/server";
 import { CompanyProfileForm } from "@/components/settings/company-profile-form";
+import { SettingsNav } from "@/components/settings/settings-nav";
 
 export default async function SettingsPage() {
   const supabase = createClient();
@@ -19,28 +20,31 @@ export default async function SettingsPage() {
     .single();
 
   return (
-    <div className="mx-auto max-w-3xl space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">Ustawienia firmy</h1>
-        <p className="text-sm text-muted-foreground">
-          Logo i dane firmy są widoczne w kosztorysach i ofertach wysyłanych do zamawiających.
-        </p>
-      </div>
+    <div className="flex gap-6">
+      <SettingsNav />
+      <div className="flex-1 max-w-3xl space-y-6">
+        <div>
+          <h1 className="text-2xl font-bold">Ustawienia firmy</h1>
+          <p className="text-sm text-muted-foreground">
+            Logo i dane firmy są widoczne w kosztorysach i ofertach wysyłanych do zamawiających.
+          </p>
+        </div>
 
-      <CompanyProfileForm
-        initial={{
-          full_name: profile?.full_name ?? "",
-          company_name: profile?.company_name ?? "",
-          phone: profile?.phone ?? "",
-          city: profile?.city ?? "",
-          nip: profile?.nip ?? "",
-          company_address: profile?.company_address ?? "",
-          website: profile?.website ?? "",
-          bio: profile?.bio ?? "",
-        }}
-        logoUrl={profile?.logo_url ?? null}
-        email={user.email ?? ""}
-      />
+        <CompanyProfileForm
+          initial={{
+            full_name: profile?.full_name ?? "",
+            company_name: profile?.company_name ?? "",
+            phone: profile?.phone ?? "",
+            city: profile?.city ?? "",
+            nip: profile?.nip ?? "",
+            company_address: profile?.company_address ?? "",
+            website: profile?.website ?? "",
+            bio: profile?.bio ?? "",
+          }}
+          logoUrl={profile?.logo_url ?? null}
+          email={user.email ?? ""}
+        />
+      </div>
     </div>
   );
 }
