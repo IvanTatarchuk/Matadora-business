@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Trash2, Plus } from "lucide-react";
+import { Trash2, Plus, ArrowRight, Search, Filter } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -33,6 +33,8 @@ export function CrewsManager({
   const [name, setName] = useState("");
   const [foreman, setForeman] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filterStatus, setFilterStatus] = useState<"all" | "with_members" | "without_members">("all");
 
   const workerName = (id: string) =>
     workers.find((w) => w.id === id)?.full_name ?? "—";
@@ -40,13 +42,13 @@ export function CrewsManager({
   function add() {
     setError(null);
     if (!name.trim()) {
-      setError("Crew name is required");
+      setError("Назва бригади є обов'язковою");
       return;
     }
     startTransition(async () => {
       const res = await createCrew(orgId, name, foreman || null);
       if (!res.ok) {
-        setError(res.error ?? "Failed");
+        setError(res.error ?? "Помилка створення");
         return;
       }
       setName("");
@@ -72,29 +74,37 @@ export function CrewsManager({
     });
   }
 
+  const filteredCrews = crews.filter((c) => {
+    const matchesSearch = !searchQuery || c.name.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesStatus = filterStatus === "all" || 
+      (filterStatus === "with_members" && c.memberIds.length > 0) ||
+      (filterStatus === "without_members" && c.memberIds.length === 0);
+    return matchesSearch && matchesStatus;
+  });
+
   return (
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle>Create crew</CardTitle>
+          <CardTitle>Створити бригаду</CardTitle>
         </CardHeader>
-        <CardContent className="grid gap-3 sm:grid-cols-[1fr_1fr_auto] sm:items-end">
+        <CardContent className="grid gap-3 sm:grid-cols-[1fr_1fr_auto_auto] sm:items-end">
           <div className="space-y-1">
-            <Label>Crew name</Label>
+            <Label>Назва бригади</Label>
             <Input
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="Crew A"
+              placeholder="Бригада А"
             />
           </div>
           <div className="space-y-1">
-            <Label>Foreman</Label>
+            <Label>Бригадир</Label>
             <select
               className={selectClass}
               value={foreman}
               onChange={(e) => setForeman(e.target.value)}
             >
-              <option value="">— none —</option>
+              <option value="">— не обрано —</option>
               {workers.map((w) => (
                 <option key={w.id} value={w.id}>
                   {w.full_name}
@@ -103,45 +113,85 @@ export function CrewsManager({
             </select>
           </div>
           <Button onClick={add} disabled={pending}>
-            <Plus className="mr-1 h-4 w-4" /> Create
+            <Plus className="mr-1 h-4 w-4" /> Створити
+          </Button>
+          <Button variant="outline" onClick={() => router.push("/dashboard/crews/new")} disabled={pending}>
+            <Plus className="mr-1 h-4 w-4" /> Нова
           </Button>
           {error && (
-            <p className="text-sm text-destructive sm:col-span-3">{error}</p>
+            <p className="text-sm text-destructive sm:col-span-4">{error}</p>
           )}
         </CardContent>
       </Card>
 
-      {crews.length === 0 ? (
-        <p className="text-sm text-muted-foreground">No crews yet.</p>
+      {/* Filters */}
+      <div className="flex gap-3 flex-wrap">
+        <div className="relative flex-1 max-w-sm">
+          <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Шукати бригади..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-9"
+          />
+        </div>
+        <select
+          value={filterStatus}
+          onChange={(e) => setFilterStatus(e.target.value as "all" | "with_members" | "without_members")}
+          className="rounded-md border bg-background px-3 py-2 text-sm"
+        >
+          <option value="all">Всі статуси</option>
+          <option value="with_members">З членами</option>
+          <option value="without_members">Без членів</option>
+        </select>
+      </div>
+
+      {filteredCrews.length === 0 ? (
+        <Card>
+          <CardContent className="p-12 text-center text-muted-foreground">
+            <p className="font-medium">Бригад ще немає</p>
+            <p className="text-sm mt-1">Створіть першу бригаду, щоб почати групувати працівників</p>
+          </CardContent>
+        </Card>
       ) : (
         <div className="grid gap-4 md:grid-cols-2">
-          {crews.map((crew) => (
+          {filteredCrews.map((crew) => (
             <Card key={crew.id}>
               <CardHeader className="flex flex-row items-center justify-between space-y-0">
-                <div>
+                <div className="flex-1">
                   <CardTitle>{crew.name}</CardTitle>
                   {crew.foreman_worker_id && (
                     <p className="text-xs text-muted-foreground">
-                      Foreman: {workerName(crew.foreman_worker_id)}
+                      Бригадир: {workerName(crew.foreman_worker_id)}
                     </p>
                   )}
                 </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => remove(crew.id)}
-                  disabled={pending}
-                >
-                  <Trash2 className="h-4 w-4 text-destructive" />
-                </Button>
+                <div className="flex gap-1">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => router.push(`/dashboard/crews/${crew.id}`)}
+                    disabled={pending}
+                  >
+                    <ArrowRight className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => remove(crew.id)}
+                    disabled={pending}
+                  >
+                    <Trash2 className="h-4 w-4 text-destructive" />
+                  </Button>
+                </div>
               </CardHeader>
               <CardContent>
                 <p className="mb-2 text-sm font-medium">
-                  Members ({crew.memberIds.length})
+                  Члени ({crew.memberIds.length})
                 </p>
                 {workers.length === 0 ? (
                   <p className="text-sm text-muted-foreground">
-                    Add workers first.
+                    Спочатку додайте працівників.
                   </p>
                 ) : (
                   <div className="space-y-1">

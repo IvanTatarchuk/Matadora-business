@@ -4,23 +4,21 @@ import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 
 export type NotificationType =
+  | "offer_sent" | "offer_accepted" | "offer_rejected"
+  | "message_received" | "payment_released" | "task_assigned"
+  | "project_update" | "review_received" | "milestone_ready"
   | "info" | "warning" | "error" | "success"
-  | "rfi_new" | "rfi_answered" | "punch_opened" | "punch_closed"
-  | "inspection_completed" | "risk_high" | "budget_alert"
-  | "cert_expiring" | "warranty_expiring" | "document_uploaded"
-  | "payment_due" | "daily_report_submitted";
+  | "ad_response_received" | "ad_response_accepted" | "ad_response_rejected"
+  | "ad_review_received" | "ad_created";
 
 export type Notification = {
   id: string;
   user_id: string;
-  org_id: string | null;
   type: NotificationType;
   title: string;
-  body: string | null;
-  href: string | null;
-  entity_type: string | null;
-  entity_id: string | null;
-  is_read: boolean;
+  message: string | null;
+  link: string | null;
+  metadata: any;
   read_at: string | null;
   created_at: string;
 };
@@ -45,7 +43,7 @@ export async function countUnreadNotifications(): Promise<number> {
   if (!user) return 0;
   const { count, error } = await db(supabase)
     .from("notifications").select("id", { count: "exact", head: true })
-    .eq("user_id", user.id).eq("is_read", false);
+    .eq("user_id", user.id).is("read_at", null);
   if (error) return 0;
   return count ?? 0;
 }
@@ -53,7 +51,7 @@ export async function countUnreadNotifications(): Promise<number> {
 export async function markNotificationRead(id: string): Promise<void> {
   const supabase = createClient();
   await db(supabase).from("notifications").update({
-    is_read: true, read_at: new Date().toISOString(),
+    read_at: new Date().toISOString(),
   }).eq("id", id);
   revalidatePath("/dashboard");
 }
@@ -63,23 +61,26 @@ export async function markAllNotificationsRead(): Promise<void> {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return;
   await db(supabase).from("notifications").update({
-    is_read: true, read_at: new Date().toISOString(),
-  }).eq("user_id", user.id).eq("is_read", false);
+    read_at: new Date().toISOString(),
+  }).eq("user_id", user.id).is("read_at", null);
   revalidatePath("/dashboard");
 }
 
 export async function createNotification(input: {
-  userId: string; orgId?: string;
-  type: NotificationType; title: string;
-  body?: string; href?: string;
-  entityType?: string; entityId?: string;
+  userId: string;
+  type: NotificationType;
+  title: string;
+  message?: string;
+  link?: string;
+  metadata?: any;
 }): Promise<void> {
   const supabase = createClient();
   await db(supabase).from("notifications").insert({
-    user_id: input.userId, org_id: input.orgId ?? null,
-    type: input.type, title: input.title,
-    body: input.body ?? null, href: input.href ?? null,
-    entity_type: input.entityType ?? null,
-    entity_id: input.entityId ?? null,
+    user_id: input.userId,
+    type: input.type,
+    title: input.title,
+    message: input.message ?? null,
+    link: input.link ?? null,
+    metadata: input.metadata ?? null,
   });
 }
