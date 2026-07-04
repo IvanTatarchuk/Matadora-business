@@ -142,6 +142,7 @@ export async function createOffer(
         description: s.description ?? null,
         cost: s.cost,
         order_index: s.order_index ?? i,
+        group_label: s.group_label?.trim() || null,
       }))
     );
     if (stagesError) return { ok: false, error: stagesError.message };

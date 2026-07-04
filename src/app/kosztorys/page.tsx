@@ -19,6 +19,8 @@ import {
   Loader2,
   X,
   AlertTriangle,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -57,7 +59,30 @@ type LineItem = {
   qty: number;
   laborRate: number;
   materialRate: number;
+  /** Optional section/room label for grouping items (e.g. "Łazienka"). */
+  groupLabel?: string;
 };
+
+const UNGROUPED_KEY = "__ungrouped__";
+
+/** Groups line items by `groupLabel`, preserving first-seen order. */
+function groupItemsByLabel(items: LineItem[]) {
+  const groups = new Map<string, { label: string | null; items: LineItem[] }>();
+  for (const item of items) {
+    const label = item.groupLabel?.trim() || null;
+    const key = label ?? UNGROUPED_KEY;
+    const bucket = groups.get(key);
+    if (bucket) bucket.items.push(item);
+    else groups.set(key, { label, items: [item] });
+  }
+  return Array.from(groups.values()).map((g) => ({
+    ...g,
+    subtotal: g.items.reduce(
+      (sum, i) => sum + i.qty * (i.laborRate + i.materialRate),
+      0
+    ),
+  }));
+}
 
 let idCounter = 0;
 function newId() { return `item-${++idCounter}`; }
@@ -93,6 +118,7 @@ export default function KosztorysPage() {
   const [search, setSearch] = useState("");
   const [showCatalog, setShowCatalog] = useState(false);
   const [showSaveModal, setShowSaveModal] = useState(false);
+  const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set());
 
   // AI PDF analysis
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -126,6 +152,22 @@ export default function KosztorysPage() {
   function updateRate(id: string, field: "laborRate" | "materialRate", val: number) {
     setItems((prev) => prev.map((i) => (i.id === id ? { ...i, [field]: Math.max(0, val) } : i)));
   }
+
+  function updateGroupLabel(id: string, groupLabel: string) {
+    setItems((prev) => prev.map((i) => (i.id === id ? { ...i, groupLabel } : i)));
+  }
+
+  function toggleGroupCollapsed(key: string) {
+    setCollapsedGroups((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+  }
+
+  const groupedItems = groupItemsByLabel(items);
+  const hasSections = groupedItems.some((g) => g.label !== null);
 
   const totals = items.reduce(
     (acc, item) => {
@@ -267,6 +309,7 @@ export default function KosztorysPage() {
       description: item.code,
       cost: item.qty * (item.laborRate + item.materialRate),
       order_index: idx,
+      group_label: item.groupLabel?.trim() || null,
     }));
     localStorage.setItem(
       "matadora_kosztorys_draft",
@@ -572,68 +615,108 @@ export default function KosztorysPage() {
                       <p>Brak pozycji. Dodaj pozycję z katalogu KNR.</p>
                     </div>
                   ) : (
-                    <div className="space-y-3">
-                      {items.map((item, idx) => (
-                        <div
-                          key={item.id}
-                          className="rounded-lg border bg-white p-4"
-                        >
-                          <div className="flex items-start justify-between gap-2">
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-2 flex-wrap">
-                                <Badge variant="outline" className="text-xs font-mono">
-                                  {item.code}
-                                </Badge>
+                    <div className="space-y-4">
+                      {groupedItems.map((group) => {
+                        const key = group.label ?? UNGROUPED_KEY;
+                        const collapsed = collapsedGroups.has(key);
+                        return (
+                          <div key={key} className="space-y-3">
+                            {hasSections && (
+                              <button
+                                type="button"
+                                onClick={() => toggleGroupCollapsed(key)}
+                                className="flex w-full items-center justify-between rounded-md bg-slate-100 px-3 py-2 text-left hover:bg-slate-200"
+                              >
+                                <span className="flex items-center gap-1.5 text-sm font-semibold">
+                                  {collapsed ? (
+                                    <ChevronDown className="h-4 w-4" />
+                                  ) : (
+                                    <ChevronUp className="h-4 w-4" />
+                                  )}
+                                  {group.label ?? "Bez sekcji"}
+                                </span>
+                                <span className="text-sm font-semibold text-muted-foreground">
+                                  {formatPLN(group.subtotal)}
+                                </span>
+                              </button>
+                            )}
+                            {!collapsed && (
+                              <div className="space-y-3">
+                                {group.items.map((item) => (
+                                  <div
+                                    key={item.id}
+                                    className="rounded-lg border bg-white p-4"
+                                  >
+                                    <div className="flex items-start justify-between gap-2">
+                                      <div className="flex-1 min-w-0">
+                                        <div className="flex items-center gap-2 flex-wrap">
+                                          <Badge variant="outline" className="text-xs font-mono">
+                                            {item.code}
+                                          </Badge>
+                                        </div>
+                                        <p className="mt-1 text-sm font-medium">{item.name}</p>
+                                      </div>
+                                      <button
+                                        onClick={() => removeItem(item.id)}
+                                        className="text-muted-foreground hover:text-destructive"
+                                      >
+                                        <Trash2 className="h-4 w-4" />
+                                      </button>
+                                    </div>
+                                    <div className="mt-3">
+                                      <label className="text-xs text-muted-foreground">Sekcja (opcjonalnie)</label>
+                                      <Input
+                                        value={item.groupLabel ?? ""}
+                                        onChange={(e) => updateGroupLabel(item.id, e.target.value)}
+                                        placeholder="np. Łazienka"
+                                        className="mt-1 h-8 text-sm"
+                                      />
+                                    </div>
+                                    <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
+                                      <div>
+                                        <label className="text-xs text-muted-foreground">Ilość ({item.unit})</label>
+                                        <Input
+                                          type="number"
+                                          value={item.qty}
+                                          onChange={(e) => updateQty(item.id, Number(e.target.value))}
+                                          className="mt-1 h-8 text-sm"
+                                          min={0}
+                                        />
+                                      </div>
+                                      <div>
+                                        <label className="text-xs text-muted-foreground">Robocizna (zł/{item.unit})</label>
+                                        <Input
+                                          type="number"
+                                          value={item.laborRate}
+                                          onChange={(e) => updateRate(item.id, "laborRate", Number(e.target.value))}
+                                          className="mt-1 h-8 text-sm"
+                                          min={0}
+                                        />
+                                      </div>
+                                      <div>
+                                        <label className="text-xs text-muted-foreground">Materiał (zł/{item.unit})</label>
+                                        <Input
+                                          type="number"
+                                          value={item.materialRate}
+                                          onChange={(e) => updateRate(item.id, "materialRate", Number(e.target.value))}
+                                          className="mt-1 h-8 text-sm"
+                                          min={0}
+                                        />
+                                      </div>
+                                      <div>
+                                        <label className="text-xs text-muted-foreground">Razem netto</label>
+                                        <div className="mt-1 flex h-8 items-center rounded-md border bg-slate-50 px-2 text-sm font-semibold">
+                                          {formatPLN(item.qty * (item.laborRate + item.materialRate))}
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </div>
+                                ))}
                               </div>
-                              <p className="mt-1 text-sm font-medium">{item.name}</p>
-                            </div>
-                            <button
-                              onClick={() => removeItem(item.id)}
-                              className="text-muted-foreground hover:text-destructive"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </button>
+                            )}
                           </div>
-                          <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
-                            <div>
-                              <label className="text-xs text-muted-foreground">Ilość ({item.unit})</label>
-                              <Input
-                                type="number"
-                                value={item.qty}
-                                onChange={(e) => updateQty(item.id, Number(e.target.value))}
-                                className="mt-1 h-8 text-sm"
-                                min={0}
-                              />
-                            </div>
-                            <div>
-                              <label className="text-xs text-muted-foreground">Robocizna (zł/{item.unit})</label>
-                              <Input
-                                type="number"
-                                value={item.laborRate}
-                                onChange={(e) => updateRate(item.id, "laborRate", Number(e.target.value))}
-                                className="mt-1 h-8 text-sm"
-                                min={0}
-                              />
-                            </div>
-                            <div>
-                              <label className="text-xs text-muted-foreground">Materiał (zł/{item.unit})</label>
-                              <Input
-                                type="number"
-                                value={item.materialRate}
-                                onChange={(e) => updateRate(item.id, "materialRate", Number(e.target.value))}
-                                className="mt-1 h-8 text-sm"
-                                min={0}
-                              />
-                            </div>
-                            <div>
-                              <label className="text-xs text-muted-foreground">Razem netto</label>
-                              <div className="mt-1 flex h-8 items-center rounded-md border bg-slate-50 px-2 text-sm font-semibold">
-                                {formatPLN(item.qty * (item.laborRate + item.materialRate))}
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   )}
                 </CardContent>

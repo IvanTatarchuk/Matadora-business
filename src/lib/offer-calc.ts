@@ -5,6 +5,8 @@ export interface StageInput {
   description?: string;
   cost: number;
   order_index?: number;
+  /** Optional section/room label for grouping stages (e.g. "Łazienka"). */
+  group_label?: string | null;
 }
 
 export interface OfferTotals {
@@ -84,6 +86,33 @@ export function findOutlierRates(
     }
   }
   return warnings;
+}
+
+export interface StageGroup<T> {
+  label: string | null;
+  items: T[];
+  subtotal: number;
+}
+
+/**
+ * Groups stages by `group_label`, preserving first-seen order. Ungrouped
+ * stages (null/empty label) are collected under a `null`-label group.
+ */
+export function groupStagesByLabel<T extends Pick<StageInput, "cost" | "group_label">>(
+  stages: T[]
+): StageGroup<T>[] {
+  const groups = new Map<string | null, T[]>();
+  for (const stage of stages) {
+    const label = stage.group_label?.trim() || null;
+    const bucket = groups.get(label);
+    if (bucket) bucket.push(stage);
+    else groups.set(label, [stage]);
+  }
+  return Array.from(groups.entries()).map(([label, items]) => ({
+    label,
+    items,
+    subtotal: round2(items.reduce((sum, s) => sum + (Number(s.cost) || 0), 0)),
+  }));
 }
 
 /** Default professional construction stages used to seed the estimate form. */
