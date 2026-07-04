@@ -7,6 +7,7 @@ import { createEvmSnapshot, type EvmSnapshot } from "@/lib/actions/evm";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { EvmSCurve } from "./evm-chart";
 
 function fmt(n: number | null) {
   if (n == null) return "—";
@@ -139,6 +140,9 @@ export function EvmClient({ projectId, initialSnapshots }: { projectId: string; 
           </div>
         </div>
       )}
+
+      {/* S-CURVE CHART */}
+      <EvmSCurve snapshots={snapshots} />
 
       {/* ADD FORM */}
       {showForm && (
