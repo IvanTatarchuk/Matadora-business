@@ -42,13 +42,13 @@ export function CrewsManager({
   function add() {
     setError(null);
     if (!name.trim()) {
-      setError("Crew name is required");
+      setError("Назва бригади є обов'язковою");
       return;
     }
     startTransition(async () => {
       const res = await createCrew(orgId, name, foreman || null);
       if (!res.ok) {
-        setError(res.error ?? "Failed");
+        setError(res.error ?? "Помилка створення");
         return;
       }
       setName("");
@@ -86,25 +86,25 @@ export function CrewsManager({
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle>Create crew</CardTitle>
+          <CardTitle>Створити бригаду</CardTitle>
         </CardHeader>
         <CardContent className="grid gap-3 sm:grid-cols-[1fr_1fr_auto_auto] sm:items-end">
           <div className="space-y-1">
-            <Label>Crew name</Label>
+            <Label>Назва бригади</Label>
             <Input
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="Crew A"
+              placeholder="Бригада А"
             />
           </div>
           <div className="space-y-1">
-            <Label>Foreman</Label>
+            <Label>Бригадир</Label>
             <select
               className={selectClass}
               value={foreman}
               onChange={(e) => setForeman(e.target.value)}
             >
-              <option value="">— none —</option>
+              <option value="">— не обрано —</option>
               {workers.map((w) => (
                 <option key={w.id} value={w.id}>
                   {w.full_name}
@@ -113,10 +113,10 @@ export function CrewsManager({
             </select>
           </div>
           <Button onClick={add} disabled={pending}>
-            <Plus className="mr-1 h-4 w-4" /> Create
+            <Plus className="mr-1 h-4 w-4" /> Створити
           </Button>
           <Button variant="outline" onClick={() => router.push("/dashboard/crews/new")} disabled={pending}>
-            <Plus className="mr-1 h-4 w-4" /> New
+            <Plus className="mr-1 h-4 w-4" /> Нова
           </Button>
           {error && (
             <p className="text-sm text-destructive sm:col-span-4">{error}</p>
@@ -147,7 +147,12 @@ export function CrewsManager({
       </div>
 
       {filteredCrews.length === 0 ? (
-        <p className="text-sm text-muted-foreground">No crews yet.</p>
+        <Card>
+          <CardContent className="p-12 text-center text-muted-foreground">
+            <p className="font-medium">Бригад ще немає</p>
+            <p className="text-sm mt-1">Створіть першу бригаду, щоб почати групувати працівників</p>
+          </CardContent>
+        </Card>
       ) : (
         <div className="grid gap-4 md:grid-cols-2">
           {filteredCrews.map((crew) => (
@@ -157,7 +162,7 @@ export function CrewsManager({
                   <CardTitle>{crew.name}</CardTitle>
                   {crew.foreman_worker_id && (
                     <p className="text-xs text-muted-foreground">
-                      Foreman: {workerName(crew.foreman_worker_id)}
+                      Бригадир: {workerName(crew.foreman_worker_id)}
                     </p>
                   )}
                 </div>
@@ -182,11 +187,11 @@ export function CrewsManager({
               </CardHeader>
               <CardContent>
                 <p className="mb-2 text-sm font-medium">
-                  Members ({crew.memberIds.length})
+                  Члени ({crew.memberIds.length})
                 </p>
                 {workers.length === 0 ? (
                   <p className="text-sm text-muted-foreground">
-                    Add workers first.
+                    Спочатку додайте працівників.
                   </p>
                 ) : (
                   <div className="space-y-1">
