@@ -6,6 +6,7 @@ import {
   Bell, Check, CheckCheck, X, Info, AlertTriangle,
   AlertCircle, CheckCircle2, FileText, ShieldAlert,
   Calendar, CreditCard, Upload, ClipboardCheck, Trash2, Search, Filter,
+  MessageSquare as MessageSquareIcon, Star as StarIcon,
 } from "lucide-react";
 import {
   markNotificationRead, markAllNotificationsRead,
@@ -29,6 +30,11 @@ const TYPE_CONFIG: Record<NotificationType, { label: string; icon: React.Element
   warning: { label: "Ostrzeżenie", icon: AlertTriangle, color: "bg-yellow-100 text-yellow-700" },
   error: { label: "Błąd", icon: AlertCircle, color: "bg-red-100 text-red-700" },
   success: { label: "Sukces", icon: CheckCircle2, color: "bg-green-100 text-green-700" },
+  ad_response_received: { label: "Відповідь на оголошення", icon: MessageSquareIcon, color: "bg-blue-100 text-blue-700" },
+  ad_response_accepted: { label: "Відповідь прийнято", icon: CheckCircle2, color: "bg-green-100 text-green-700" },
+  ad_response_rejected: { label: "Відповідь відхилено", icon: X, color: "bg-red-100 text-red-700" },
+  ad_review_received: { label: "Відгук отримано", icon: StarIcon, color: "bg-yellow-100 text-yellow-700" },
+  ad_created: { label: "Оголошення створено", icon: FileText, color: "bg-green-100 text-green-700" },
 };
 
 export function NotificationsClient({

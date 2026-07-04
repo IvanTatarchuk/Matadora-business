@@ -5,7 +5,7 @@ import Link from "next/link";
 import {
   Bell, CheckCheck, Info, AlertTriangle, CheckCircle2, XCircle,
   FileText, ClipboardCheck, ShieldAlert, DollarSign, GraduationCap,
-  Shield, Upload, Receipt,
+  Shield, Upload, Receipt, MessageSquare as MessageSquareIcon, Star as StarIcon,
 } from "lucide-react";
 import {
   markNotificationRead, markAllNotificationsRead,
@@ -27,8 +27,13 @@ const TYPE_CONFIG: Record<NotificationType, { label: string; icon: React.Element
   milestone_ready: { label: "Etap gotowy", icon: CheckCircle2, color: "text-orange-600" },
   info: { label: "Informacja", icon: Info, color: "text-blue-500" },
   warning: { label: "Ostrzeżenie", icon: AlertTriangle, color: "text-yellow-500" },
-  error: { label: "Błąd", icon: XCircle, color: "text-red-500" },
+  error: { label: "Błąд", icon: XCircle, color: "text-red-500" },
   success: { label: "Sukces", icon: CheckCircle2, color: "text-green-500" },
+  ad_response_received: { label: "Відповідь на оголошення", icon: MessageSquareIcon, color: "text-blue-600" },
+  ad_response_accepted: { label: "Відповідь прийнято", icon: CheckCircle2, color: "text-green-600" },
+  ad_response_rejected: { label: "Відповідь відхилено", icon: XCircle, color: "text-red-600" },
+  ad_review_received: { label: "Відгук отримано", icon: StarIcon, color: "text-yellow-500" },
+  ad_created: { label: "Оголошення створено", icon: FileText, color: "text-green-600" },
 };
 
 function timeAgo(dateStr: string): string {

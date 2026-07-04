@@ -7,7 +7,9 @@ export type NotificationType =
   | "offer_sent" | "offer_accepted" | "offer_rejected"
   | "message_received" | "payment_released" | "task_assigned"
   | "project_update" | "review_received" | "milestone_ready"
-  | "info" | "warning" | "error" | "success";
+  | "info" | "warning" | "error" | "success"
+  | "ad_response_received" | "ad_response_accepted" | "ad_response_rejected"
+  | "ad_review_received" | "ad_created";
 
 export type Notification = {
   id: string;
