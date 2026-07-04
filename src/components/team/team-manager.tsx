@@ -173,12 +173,36 @@ export function TeamManager({
 
       {/* Members + invitations */}
       <div className="space-y-6">
+        {/* Filters */}
+        <div className="flex gap-3 flex-wrap">
+          <div className="relative flex-1 max-w-sm">
+            <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Шукати членів..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-9"
+            />
+          </div>
+          <select
+            value={filterRole}
+            onChange={(e) => setFilterRole(e.target.value as "all" | "owner" | "admin" | "manager" | "member")}
+            className="rounded-md border bg-background px-3 py-2 text-sm"
+          >
+            <option value="all">Всі ролі</option>
+            <option value="owner">Owner</option>
+            <option value="admin">Admin</option>
+            <option value="manager">Manager</option>
+            <option value="member">Member</option>
+          </select>
+        </div>
+
         <Card>
           <CardHeader>
-            <CardTitle>Members ({members.length})</CardTitle>
+            <CardTitle>Members ({filteredMembers.length})</CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
-            {members.map((m) => (
+            {filteredMembers.map((m) => (
               <div
                 key={m.userId}
                 className="flex items-center justify-between text-sm"

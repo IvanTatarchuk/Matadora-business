@@ -1,10 +1,11 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Mail, Bell, CheckCircle2, RefreshCw, Clock, AlertCircle } from "lucide-react";
+import { Mail, Bell, CheckCircle2, RefreshCw, Clock, AlertCircle, Search, Filter } from "lucide-react";
 import { updateEmailPreferences, listEmailQueue, type EmailConfig } from "@/lib/actions/email";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 
 type Props = {
   initialPreferences: any;
@@ -15,6 +16,8 @@ export function EmailSettingsClient({ initialPreferences }: Props) {
   const [queue, setQueue] = useState<any[]>([]);
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filterStatus, setFilterStatus] = useState<"all" | "sent" | "pending" | "failed">("all");
 
   function handleSave() {
     setError(null);
@@ -52,8 +55,16 @@ export function EmailSettingsClient({ initialPreferences }: Props) {
     });
   }
 
-  const pendingEmails = queue.filter((e) => e.status === "pending");
-  const failedEmails = queue.filter((e) => e.status === "failed");
+  const filteredQueue = queue.filter((e) => {
+    const matchesSearch = !searchQuery || 
+      e.subject.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (Array.isArray(e.to) ? e.to.some((t: string) => t.toLowerCase().includes(searchQuery.toLowerCase())) : e.to.toLowerCase().includes(searchQuery.toLowerCase()));
+    const matchesStatus = filterStatus === "all" || e.status === filterStatus;
+    return matchesSearch && matchesStatus;
+  });
+
+  const pendingEmails = filteredQueue.filter((e) => e.status === "pending");
+  const failedEmails = filteredQueue.filter((e) => e.status === "failed");
 
   return (
     <div className="space-y-6">
@@ -170,6 +181,29 @@ export function EmailSettingsClient({ initialPreferences }: Props) {
           </div>
         </CardHeader>
         <CardContent>
+          {/* Filters */}
+          <div className="flex gap-3 flex-wrap mb-4">
+            <div className="relative flex-1 max-w-sm">
+              <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Шукати email..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-9"
+              />
+            </div>
+            <select
+              value={filterStatus}
+              onChange={(e) => setFilterStatus(e.target.value as "all" | "sent" | "pending" | "failed")}
+              className="rounded-md border bg-background px-3 py-2 text-sm"
+            >
+              <option value="all">Всі статуси</option>
+              <option value="sent">Надіслані</option>
+              <option value="pending">Очікуючі</option>
+              <option value="failed">З помилками</option>
+            </select>
+          </div>
+
           <div className="flex gap-4 mb-4">
             <div className="flex items-center gap-2">
               <Clock className="h-4 w-4 text-orange-500" />
@@ -181,13 +215,13 @@ export function EmailSettingsClient({ initialPreferences }: Props) {
             </div>
           </div>
 
-          {queue.length === 0 ? (
+          {filteredQueue.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
               Brak email w kolejce
             </div>
           ) : (
             <div className="space-y-2">
-              {queue.map((email) => (
+              {filteredQueue.map((email) => (
                 <div key={email.id} className="flex items-center justify-between p-3 rounded-lg border">
                   <div className="flex-1">
                     <div className="flex items-center gap-2">
