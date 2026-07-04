@@ -18,6 +18,7 @@ import {
   Upload,
   Loader2,
   X,
+  AlertTriangle,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -25,6 +26,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { formatPLN } from "@/lib/utils";
+import { validateEstimateForSubmission, findOutlierRates } from "@/lib/offer-calc";
 
 const KNR_ITEMS = [
   { code: "KNR 4-01 0501-01", name: "Posadzki z płytek ceramicznych na kleju — 30×30 cm", unit: "m²", laborRate: 35, materialRate: 55 },
@@ -40,6 +42,12 @@ const KNR_ITEMS = [
   { code: "KNR 2-01 0201-01", name: "Murowanie ściany działowej z cegły", unit: "m²", laborRate: 65, materialRate: 85 },
   { code: "KNR 4-01 0101-01", name: "Hydroizolacja łazienki (folia w płynie 2×)", unit: "m²", laborRate: 30, materialRate: 35 },
 ];
+
+/** Reference band for outlier-rate detection: 0.3×–3× the catalog's own min/max. */
+const KNR_RATE_BOUNDS = (() => {
+  const rates = KNR_ITEMS.flatMap((k) => [k.laborRate, k.materialRate]);
+  return { min: Math.min(...rates) * 0.3, max: Math.max(...rates) * 3 };
+})();
 
 type LineItem = {
   id: string;
@@ -130,6 +138,14 @@ export default function KosztorysPage() {
   const net = totals.labor + totals.material;
   const vat = net * vatRate;
   const gross = net + vat;
+
+  const submissionWarnings = [
+    ...validateEstimateForSubmission(
+      items.map((i) => ({ stage_name: i.name, cost: i.qty * (i.laborRate + i.materialRate) })),
+      { clientName }
+    ),
+    ...findOutlierRates(items, KNR_RATE_BOUNDS),
+  ];
 
   function handlePdfSelected(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -295,12 +311,29 @@ export default function KosztorysPage() {
               Kosztorys online zgodny z KNR — bezpłatnie, bez instalacji
             </div>
             <h1 className="text-3xl font-extrabold sm:text-4xl">
-              Stwórz profesjonalny kosztorys
+              Wycena kosztów remontu w kilka minut
             </h1>
             <p className="mt-2 text-white/70">
               Normy KNR, stawki SEKOCENBUD, eksport PDF — wszystko w przeglądarce.
-              Zastąp Norma PRO bez instalacji.
+              Dla generalnych wykonawców, architektów, zarządców nieruchomości
+              i projektantów wnętrz — przygotuj wiarygodną wycenę dla klienta
+              bez instalowania Norma PRO.
             </p>
+            <div className="mt-3 flex flex-wrap gap-2">
+              {[
+                "Generalni wykonawcy",
+                "Architekci",
+                "Zarządcy nieruchomości",
+                "Projektanci wnętrz",
+              ].map((audience) => (
+                <span
+                  key={audience}
+                  className="rounded-full border border-white/20 bg-white/10 px-2.5 py-1 text-xs text-white/80"
+                >
+                  {audience}
+                </span>
+              ))}
+            </div>
           </div>
         </section>
 
@@ -675,6 +708,20 @@ export default function KosztorysPage() {
                     <span className="font-bold text-primary">RAZEM BRUTTO</span>
                     <span className="font-extrabold text-primary text-lg">{formatPLN(gross)}</span>
                   </div>
+
+                  {items.length > 0 && submissionWarnings.length > 0 && (
+                    <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800">
+                      <p className="mb-1 flex items-center gap-1.5 font-semibold">
+                        <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
+                        Sprawdź przed wysłaniem
+                      </p>
+                      <ul className="list-disc space-y-0.5 pl-4">
+                        {submissionWarnings.map((warning) => (
+                          <li key={warning}>{warning}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
 
                   <div className="pt-2 space-y-2">
                     {items.length > 0 && (

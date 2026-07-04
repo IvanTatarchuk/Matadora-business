@@ -34,6 +34,58 @@ export function computeOfferTotals(
   return { totalNet, vatAmount, totalGross };
 }
 
+/** Non-blocking warnings surfaced before a contractor sends an estimate to a client. */
+export function validateEstimateForSubmission(
+  stages: Pick<StageInput, "stage_name" | "cost">[],
+  opts: { clientName?: string } = {}
+): string[] {
+  const warnings: string[] = [];
+
+  const zeroCost = stages.filter((s) => (Number(s.cost) || 0) <= 0);
+  if (zeroCost.length === 1) {
+    warnings.push(`Pozycja "${zeroCost[0]!.stage_name}" ma zerową cenę.`);
+  } else if (zeroCost.length > 1) {
+    warnings.push(`${zeroCost.length} pozycji ma zerową cenę.`);
+  }
+
+  if (!opts.clientName?.trim()) {
+    warnings.push("Brak nazwy klienta / zamawiającego.");
+  }
+
+  return warnings;
+}
+
+export interface RateItem {
+  name: string;
+  unit: string;
+  laborRate: number;
+  materialRate: number;
+}
+
+/**
+ * Flags labor/material rates far outside the given reference range — usually a
+ * data-entry mistake (e.g. a misplaced decimal) rather than deliberate pricing.
+ */
+export function findOutlierRates(
+  items: RateItem[],
+  bounds: { min: number; max: number }
+): string[] {
+  const warnings: string[] = [];
+  for (const item of items) {
+    if (item.laborRate > 0 && (item.laborRate < bounds.min || item.laborRate > bounds.max)) {
+      warnings.push(
+        `"${item.name}": stawka robocizny ${item.laborRate} zł/${item.unit} odbiega od typowych wartości.`
+      );
+    }
+    if (item.materialRate > 0 && (item.materialRate < bounds.min || item.materialRate > bounds.max)) {
+      warnings.push(
+        `"${item.name}": stawka materiału ${item.materialRate} zł/${item.unit} odbiega od typowych wartości.`
+      );
+    }
+  }
+  return warnings;
+}
+
 /** Default professional construction stages used to seed the estimate form. */
 export const DEFAULT_STAGES: StageInput[] = [
   { stage_name: "Logistics", description: "Transport, site setup, equipment rental", cost: 0, order_index: 0 },
