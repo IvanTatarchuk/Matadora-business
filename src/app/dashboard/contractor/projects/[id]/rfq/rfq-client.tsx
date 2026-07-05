@@ -4,7 +4,7 @@ import { useState, useTransition } from "react";
 import Link from "next/link";
 import {
   ArrowLeft, Plus, X, ShoppingBag, CheckCircle2, Send,
-  Trophy, XCircle, ChevronDown, ChevronRight,
+  Trophy, XCircle, ChevronDown, ChevronRight, ShieldAlert, ShieldCheck, ShieldQuestion,
 } from "lucide-react";
 import {
   createRfq, addRfqResponse, awardRfq, updateRfqStatus,
@@ -39,6 +39,19 @@ function fmt(n: number) {
   return new Intl.NumberFormat("pl-PL", { style: "currency", currency: "PLN" }).format(n);
 }
 
+function qualificationBadge(bid: SubBid) {
+  const insuranceExpiry = bid.subcontractor?.insurance_expiry;
+  if (!insuranceExpiry) return null;
+  const days = Math.floor((new Date(insuranceExpiry).getTime() - Date.now()) / 86_400_000);
+  if (days < 0) {
+    return { label: "Ubezpieczenie wygasło", color: "bg-red-100 text-red-700", Icon: ShieldAlert };
+  }
+  if (days <= 30) {
+    return { label: `Ubezpieczenie wygasa za ${days} dni`, color: "bg-amber-100 text-amber-700", Icon: ShieldQuestion };
+  }
+  return { label: "Ubezpieczenie ważne", color: "bg-emerald-100 text-emerald-700", Icon: ShieldCheck };
+}
+
 const SUB_BID_STATUS_CONFIG: Record<SubBidStatus, { label: string; color: string }> = {
   draft:       { label: "Szkic",        color: "bg-slate-100 text-slate-500" },
   submitted:   { label: "Złożona",      color: "bg-blue-100 text-blue-700" },
@@ -47,7 +60,11 @@ const SUB_BID_STATUS_CONFIG: Record<SubBidStatus, { label: string; color: string
   rejected:    { label: "Odrzucona",    color: "bg-red-100 text-red-700" },
 };
 
-export function RfqClient({ projectId, initialRfqs }: { projectId: string; initialRfqs: Rfq[] }) {
+export function RfqClient({
+  projectId, initialRfqs, initialSubBids,
+}: {
+  projectId: string; initialRfqs: Rfq[]; initialSubBids?: Record<string, SubBid[]>;
+}) {
   const [rfqs, setRfqs] = useState<Rfq[]>(initialRfqs);
   const [showForm, setShowForm] = useState(false);
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -56,7 +73,7 @@ export function RfqClient({ projectId, initialRfqs }: { projectId: string; initi
   const [error, setError] = useState<string | null>(null);
 
   // Sub bids state
-  const [subBids, setSubBids] = useState<Record<string, SubBid[]>>({});
+  const [subBids, setSubBids] = useState<Record<string, SubBid[]>>(initialSubBids ?? {});
   const [subBidRfqId, setSubBidRfqId] = useState<string | null>(null);
   const [subBidForm, setSubBidForm] = useState({
     bidderName: "", bidderNip: "", bidderEmail: "", bidderPhone: "",
@@ -476,14 +493,20 @@ export function RfqClient({ projectId, initialRfqs }: { projectId: string; initi
                           <div className="space-y-1">
                             {(subBids[rfq.id] ?? []).sort((a, b) => a.amount_net - b.amount_net).map((bid, idx) => {
                               const cfg = SUB_BID_STATUS_CONFIG[bid.status];
+                              const qual = qualificationBadge(bid);
                               return (
                                 <div key={bid.id} className={`flex items-center justify-between p-2 rounded-md ${bid.status === "accepted" ? "bg-green-50 border border-green-200" : "bg-muted/40"}`}>
                                   <div className="flex items-center gap-2">
                                     <span className="text-xs font-bold text-muted-foreground">#{idx + 1}</span>
                                     <div>
-                                      <div className="flex items-center gap-1.5">
+                                      <div className="flex items-center gap-1.5 flex-wrap">
                                         <p className="text-sm font-medium">{bid.bidder_name}</p>
                                         <span className={`text-[10px] rounded-full px-1.5 py-0.5 font-semibold ${cfg.color}`}>{cfg.label}</span>
+                                        {qual && (
+                                          <span className={`inline-flex items-center gap-1 text-[10px] rounded-full px-1.5 py-0.5 font-semibold ${qual.color}`}>
+                                            <qual.Icon className="h-3 w-3" />{qual.label}
+                                          </span>
+                                        )}
                                       </div>
                                       <div className="flex gap-2 text-xs text-muted-foreground">
                                         <span className="font-semibold text-foreground">{fmt(bid.amount_net)} netto</span>

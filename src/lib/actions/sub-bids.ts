@@ -27,6 +27,7 @@ export type SubBid = {
   review_notes: string | null;
   created_at: string;
   updated_at: string;
+  subcontractor?: { insurance_expiry: string | null; license_number: string | null } | null;
 };
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -35,7 +36,7 @@ const db = (s: any) => s as any;
 export async function listSubBids(rfqId: string): Promise<SubBid[]> {
   const supabase = createClient();
   const { data, error } = await db(supabase)
-    .from("sub_bids").select("*").eq("rfq_id", rfqId)
+    .from("sub_bids").select("*, subcontractor:subcontractors(insurance_expiry, license_number)").eq("rfq_id", rfqId)
     .order("amount_net", { ascending: true });
   if (error) return [];
   return (data ?? []) as SubBid[];
@@ -44,7 +45,7 @@ export async function listSubBids(rfqId: string): Promise<SubBid[]> {
 export async function listProjectSubBids(projectId: string): Promise<SubBid[]> {
   const supabase = createClient();
   const { data, error } = await db(supabase)
-    .from("sub_bids").select("*").eq("project_id", projectId)
+    .from("sub_bids").select("*, subcontractor:subcontractors(insurance_expiry, license_number)").eq("project_id", projectId)
     .order("created_at", { ascending: false });
   if (error) return [];
   return (data ?? []) as SubBid[];
