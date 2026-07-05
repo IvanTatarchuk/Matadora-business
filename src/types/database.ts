@@ -620,6 +620,158 @@ export interface Database {
         >;
         Relationships: [];
       };
+      cashflow_entries: {
+        Row: {
+          id: string;
+          project_id: string | null;
+          org_id: string;
+          created_by: string | null;
+          period_year: number;
+          period_month: number;
+          type: "inflow" | "outflow";
+          category: string;
+          description: string;
+          planned_amount: number;
+          actual_amount: number | null;
+          is_confirmed: boolean;
+          notes: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          project_id?: string | null;
+          org_id: string;
+          created_by?: string | null;
+          period_year: number;
+          period_month: number;
+          type?: "inflow" | "outflow";
+          category?: string;
+          description: string;
+          planned_amount?: number;
+          actual_amount?: number | null;
+          is_confirmed?: boolean;
+          notes?: string | null;
+        };
+        Update: Partial<
+          Database["public"]["Tables"]["cashflow_entries"]["Insert"]
+        >;
+        Relationships: [];
+      };
+      invoices: {
+        Row: {
+          id: string;
+          project_id: string | null;
+          org_id: string;
+          created_by: string | null;
+          invoice_number: string;
+          direction: "incoming" | "outgoing";
+          type: string;
+          counterparty: string;
+          nip: string | null;
+          issue_date: string;
+          sale_date: string | null;
+          due_date: string | null;
+          paid_date: string | null;
+          net_amount: number;
+          vat_rate: number;
+          vat_amount: number;
+          gross_amount: number;
+          currency: string;
+          status:
+            | "draft"
+            | "sent"
+            | "unpaid"
+            | "partially_paid"
+            | "paid"
+            | "overdue"
+            | "cancelled";
+          ksef_reference: string | null;
+          payment_method: string | null;
+          bank_account: string | null;
+          description: string | null;
+          notes: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          project_id?: string | null;
+          org_id: string;
+          created_by?: string | null;
+          invoice_number: string;
+          direction?: "incoming" | "outgoing";
+          type?: string;
+          counterparty: string;
+          nip?: string | null;
+          issue_date: string;
+          sale_date?: string | null;
+          due_date?: string | null;
+          paid_date?: string | null;
+          net_amount: number;
+          vat_rate?: number;
+          currency?: string;
+          status?:
+            | "draft"
+            | "sent"
+            | "unpaid"
+            | "partially_paid"
+            | "paid"
+            | "overdue"
+            | "cancelled";
+          ksef_reference?: string | null;
+          payment_method?: string | null;
+          bank_account?: string | null;
+          description?: string | null;
+          notes?: string | null;
+        };
+        Update: Partial<Database["public"]["Tables"]["invoices"]["Insert"]>;
+        Relationships: [];
+      };
+      retention_payments: {
+        Row: {
+          id: string;
+          project_id: string;
+          org_id: string;
+          created_by: string | null;
+          title: string;
+          description: string | null;
+          party_name: string;
+          direction: "held" | "paid_out";
+          contract_value: number;
+          retention_pct: number;
+          retention_amount: number;
+          release_condition: string | null;
+          release_date: string | null;
+          released_at: string | null;
+          released_amount: number | null;
+          status: "held" | "partially_released" | "released" | "disputed";
+          notes: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          project_id: string;
+          org_id: string;
+          created_by?: string | null;
+          title: string;
+          description?: string | null;
+          party_name: string;
+          direction?: "held" | "paid_out";
+          contract_value: number;
+          retention_pct?: number;
+          release_condition?: string | null;
+          release_date?: string | null;
+          released_at?: string | null;
+          released_amount?: number | null;
+          status?: "held" | "partially_released" | "released" | "disputed";
+          notes?: string | null;
+        };
+        Update: Partial<
+          Database["public"]["Tables"]["retention_payments"]["Insert"]
+        >;
+        Relationships: [];
+      };
       agents: {
         Row: {
           id: string;
