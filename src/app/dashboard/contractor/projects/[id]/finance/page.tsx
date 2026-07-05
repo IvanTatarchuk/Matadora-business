@@ -8,6 +8,7 @@ import {
 } from "@/lib/actions/finance";
 import { FinancePanel } from "@/components/execution/finance-panel";
 import { ProjectSubnav } from "@/components/execution/project-subnav";
+import { CashFlowInsightCard } from "@/components/execution/cashflow-insight-card";
 
 export default async function ProjectFinancePage({
   params,
@@ -64,6 +65,8 @@ export default async function ProjectFinancePage({
         initialExpenses={expenses}
         workers={workers ?? []}
       />
+
+      <CashFlowInsightCard projectId={params.id} />
     </div>
   );
 }
