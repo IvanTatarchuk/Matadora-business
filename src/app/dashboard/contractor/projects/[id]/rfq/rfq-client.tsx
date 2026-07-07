@@ -5,6 +5,7 @@ import Link from "next/link";
 import {
   ArrowLeft, Plus, X, ShoppingBag, CheckCircle2, Send,
   Trophy, XCircle, ChevronDown, ChevronRight, ShieldAlert, ShieldCheck, ShieldQuestion,
+  Rows3, Columns3,
 } from "lucide-react";
 import {
   createRfq, addRfqResponse, awardRfq, updateRfqStatus,
@@ -52,6 +53,79 @@ function qualificationBadge(bid: SubBid) {
   return { label: "Ubezpieczenie ważne", color: "bg-emerald-100 text-emerald-700", Icon: ShieldCheck };
 }
 
+function SubBidComparisonMatrix({ bids }: { bids: SubBid[] }) {
+  const cheapest = Math.min(...bids.map((b) => b.amount_net));
+  const fastest = bids
+    .map((b) => b.completion_days)
+    .filter((d): d is number => d != null)
+    .reduce((min, d) => (min === null || d < min ? d : min), null as number | null);
+
+  return (
+    <div className="overflow-x-auto rounded-md border">
+      <table className="w-full text-sm">
+        <thead>
+          <tr className="bg-muted/40">
+            <th className="p-2 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide">Kryterium</th>
+            {bids.map((bid) => (
+              <th key={bid.id} className="p-2 text-left min-w-[140px]">
+                <p className="font-semibold">{bid.bidder_name}</p>
+                <span className={`inline-block text-[10px] rounded-full px-1.5 py-0.5 font-semibold ${SUB_BID_STATUS_CONFIG[bid.status].color}`}>
+                  {SUB_BID_STATUS_CONFIG[bid.status].label}
+                </span>
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          <tr className="border-t">
+            <td className="p-2 text-muted-foreground">Kwota netto</td>
+            {bids.map((bid) => (
+              <td key={bid.id} className={`p-2 ${bid.amount_net === cheapest ? "bg-green-50 font-semibold text-green-700" : ""}`}>
+                {fmt(bid.amount_net)}
+              </td>
+            ))}
+          </tr>
+          <tr className="border-t">
+            <td className="p-2 text-muted-foreground">Kwota brutto</td>
+            {bids.map((bid) => <td key={bid.id} className="p-2">{fmt(bid.amount_gross)}</td>)}
+          </tr>
+          <tr className="border-t">
+            <td className="p-2 text-muted-foreground">Czas realizacji</td>
+            {bids.map((bid) => (
+              <td key={bid.id} className={`p-2 ${bid.completion_days != null && bid.completion_days === fastest ? "bg-green-50 font-semibold text-green-700" : ""}`}>
+                {bid.completion_days != null ? `${bid.completion_days} dni` : "—"}
+              </td>
+            ))}
+          </tr>
+          <tr className="border-t">
+            <td className="p-2 text-muted-foreground">Kwalifikacja</td>
+            {bids.map((bid) => {
+              const qual = qualificationBadge(bid);
+              return (
+                <td key={bid.id} className="p-2">
+                  {qual ? (
+                    <span className={`inline-flex items-center gap-1 text-[10px] rounded-full px-1.5 py-0.5 font-semibold ${qual.color}`}>
+                      <qual.Icon className="h-3 w-3" />{qual.label}
+                    </span>
+                  ) : "—"}
+                </td>
+              );
+            })}
+          </tr>
+          <tr className="border-t">
+            <td className="p-2 text-muted-foreground">NIP</td>
+            {bids.map((bid) => <td key={bid.id} className="p-2 text-xs">{bid.bidder_nip || "—"}</td>)}
+          </tr>
+          <tr className="border-t">
+            <td className="p-2 text-muted-foreground">Uwagi</td>
+            {bids.map((bid) => <td key={bid.id} className="p-2 text-xs">{bid.notes || "—"}</td>)}
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
 const SUB_BID_STATUS_CONFIG: Record<SubBidStatus, { label: string; color: string }> = {
   draft:       { label: "Szkic",        color: "bg-slate-100 text-slate-500" },
   submitted:   { label: "Złożona",      color: "bg-blue-100 text-blue-700" },
@@ -75,6 +149,7 @@ export function RfqClient({
   // Sub bids state
   const [subBids, setSubBids] = useState<Record<string, SubBid[]>>(initialSubBids ?? {});
   const [subBidRfqId, setSubBidRfqId] = useState<string | null>(null);
+  const [subBidView, setSubBidView] = useState<Record<string, "list" | "matrix">>({});
   const [subBidForm, setSubBidForm] = useState({
     bidderName: "", bidderNip: "", bidderEmail: "", bidderPhone: "",
     amountNet: "", vatRate: "8", completionDays: "", notes: "",
@@ -454,9 +529,29 @@ export function RfqClient({
                       <div>
                         <div className="flex items-center justify-between mb-2">
                           <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Oferty podwykonawców</p>
-                          <Button size="sm" variant="outline" onClick={() => setSubBidRfqId(subBidRfqId === rfq.id ? null : rfq.id)}>
-                            <Plus className="h-3 w-3 mr-1" />Dodaj ofertę
-                          </Button>
+                          <div className="flex items-center gap-1.5">
+                            {(subBids[rfq.id] ?? []).length > 1 && (
+                              <div className="flex rounded-md border overflow-hidden">
+                                <button
+                                  type="button"
+                                  onClick={() => setSubBidView((prev) => ({ ...prev, [rfq.id]: "list" }))}
+                                  className={`flex items-center gap-1 px-2 py-1 text-xs ${(subBidView[rfq.id] ?? "list") === "list" ? "bg-primary text-white" : "bg-background hover:bg-muted/50"}`}
+                                >
+                                  <Rows3 className="h-3 w-3" />Lista
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => setSubBidView((prev) => ({ ...prev, [rfq.id]: "matrix" }))}
+                                  className={`flex items-center gap-1 px-2 py-1 text-xs border-l ${subBidView[rfq.id] === "matrix" ? "bg-primary text-white" : "bg-background hover:bg-muted/50"}`}
+                                >
+                                  <Columns3 className="h-3 w-3" />Porównanie
+                                </button>
+                              </div>
+                            )}
+                            <Button size="sm" variant="outline" onClick={() => setSubBidRfqId(subBidRfqId === rfq.id ? null : rfq.id)}>
+                              <Plus className="h-3 w-3 mr-1" />Dodaj ofertę
+                            </Button>
+                          </div>
                         </div>
                         {subBidRfqId === rfq.id && (
                           <div className="rounded-md border p-3 space-y-2 mb-2 bg-muted/30">
@@ -489,6 +584,8 @@ export function RfqClient({
                         )}
                         {(subBids[rfq.id] ?? []).length === 0 ? (
                           <p className="text-xs text-muted-foreground">Brak ofert podwykonawców</p>
+                        ) : subBidView[rfq.id] === "matrix" ? (
+                          <SubBidComparisonMatrix bids={[...(subBids[rfq.id] ?? [])].sort((a, b) => a.amount_net - b.amount_net)} />
                         ) : (
                           <div className="space-y-1">
                             {(subBids[rfq.id] ?? []).sort((a, b) => a.amount_net - b.amount_net).map((bid, idx) => {
