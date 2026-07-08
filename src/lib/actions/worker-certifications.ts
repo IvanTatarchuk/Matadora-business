@@ -141,3 +141,30 @@ export async function listExpiringCertifications(daysAhead = 60): Promise<Worker
     worker_specialty: (c.worker as { specialty?: string } | null)?.specialty ?? null,
   })) as WorkerCertification[];
 }
+
+/** Same as listExpiringCertifications, scoped to a specific set of workers (e.g. a crew's members) rather than the whole org. */
+export async function listExpiringCertificationsForWorkers(
+  workerIds: string[],
+  daysAhead = 60
+): Promise<WorkerCertification[]> {
+  if (workerIds.length === 0) return [];
+  const supabase = createClient();
+
+  const cutoff = new Date();
+  cutoff.setDate(cutoff.getDate() + daysAhead);
+
+  const { data, error } = await db(supabase)
+    .from("worker_certifications")
+    .select("*, worker:worker_id(full_name, specialty)")
+    .in("worker_id", workerIds)
+    .eq("is_permanent", false)
+    .lte("expiry_date", cutoff.toISOString().slice(0, 10))
+    .order("expiry_date", { ascending: true });
+  if (error) return [];
+  return (data ?? []).map((c: Record<string, unknown>) => ({
+    ...c,
+    worker_name: (c.worker as { full_name?: string } | null)?.full_name ?? null,
+    worker_specialty: (c.worker as { specialty?: string } | null)?.specialty ?? null,
+  })) as WorkerCertification[];
+}
+

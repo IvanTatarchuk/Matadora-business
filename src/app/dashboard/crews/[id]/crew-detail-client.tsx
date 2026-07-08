@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Users, Calendar, Settings, Trash2, Save, Plus, FolderOpen, Clock, BarChart3 } from "lucide-react";
+import { ArrowLeft, Users, Calendar, Settings, Trash2, Save, Plus, FolderOpen, Clock, BarChart3, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -12,6 +12,8 @@ import {
   createCrewSchedule, deleteCrewSchedule, type ShiftType,
   type CrewWithMembers,
 } from "@/lib/actions/workforce";
+import type { WorkerCertification } from "@/lib/actions/worker-certifications";
+import { CERT_LABELS, daysUntilExpiry } from "@/lib/certifications";
 import type { Worker } from "@/types/database";
 
 type Props = {
@@ -25,9 +27,10 @@ type Props = {
     averageEfficiency: number;
     averageQuality: number;
   };
+  expiringCertifications: WorkerCertification[];
 };
 
-export function CrewDetailClient({ crew, initialAssignments, initialSchedules, initialProductivityStats }: Props) {
+export function CrewDetailClient({ crew, initialAssignments, initialSchedules, initialProductivityStats, expiringCertifications }: Props) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
@@ -274,6 +277,26 @@ export function CrewDetailClient({ crew, initialAssignments, initialSchedules, i
             </Button>
           </CardHeader>
           <CardContent>
+            {expiringCertifications.length > 0 && (
+              <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800">
+                <p className="mb-1 flex items-center gap-1.5 font-semibold">
+                  <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
+                  Перед призначенням перевірте кваліфікації
+                </p>
+                <ul className="list-disc space-y-0.5 pl-4">
+                  {expiringCertifications.map((cert) => {
+                    const days = daysUntilExpiry(cert);
+                    const label = cert.certification_type === "custom" ? cert.custom_name : CERT_LABELS[cert.certification_type];
+                    return (
+                      <li key={cert.id}>
+                        {cert.worker_name ?? "Робітник"} — {label}{" "}
+                        {days !== null && days < 0 ? "(термін дії закінчився)" : `(закінчується через ${days} дн.)`}
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            )}
             {showAssignForm && (
               <div className="space-y-3 mb-4 p-3 bg-muted rounded">
                 <div>
