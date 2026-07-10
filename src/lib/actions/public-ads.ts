@@ -211,8 +211,8 @@ export async function getPublicAd(id: string) {
     return { ok: false, error: error.message };
   }
 
-  // TODO: Implement view count increment after RPC is properly configured
-  // await supabase.rpc('increment_views_count', { ad_id: id });
+  // Don't fail the page load if the view-count bump errors — best effort only.
+  await supabase.rpc("increment_views_count", { ad_id: id });
 
   return { ok: true, data: data as PublicAd };
 }
