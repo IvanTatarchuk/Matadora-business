@@ -378,21 +378,11 @@ export function RFIClient({
                           )}
                           <div className="flex gap-2 flex-wrap">
                             {rfi.status === "draft" && (
-                              <>
-                                <Button size="sm" onClick={() => handleOpen(rfi.id)} disabled={pending}>
-                                  <Send className="mr-1 h-3 w-3" /> Wyślij zapytanie
-                                </Button>
-                                <Button size="sm" variant="ghost" onClick={() => handleDelete(rfi.id)} disabled={pending} className="text-destructive">Usuń</Button>
-                              </>
+                              <Button size="sm" variant="ghost" onClick={() => handleDelete(rfi.id)} disabled={pending} className="text-destructive">Usuń</Button>
                             )}
                             {rfi.status === "open" && !answerMode && (
                               <Button size="sm" variant="outline" onClick={() => setAnswerMode(rfi.id)}>
                                 <MessageSquare className="mr-1 h-3 w-3" /> Odpowiedz
-                              </Button>
-                            )}
-                            {rfi.status === "answered" && (
-                              <Button size="sm" variant="outline" onClick={() => handleClose(rfi.id)} disabled={pending}>
-                                <Check className="mr-1 h-3 w-3" /> Zamknij RFI
                               </Button>
                             )}
                             {(rfi.status === "draft" || rfi.status === "open") && (
@@ -404,9 +394,21 @@ export function RFIClient({
                         </div>
                       )}
                     </div>
-                    <Button variant="ghost" size="sm" onClick={() => setExpandedId(isExpanded ? null : rfi.id)}>
-                      {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-                    </Button>
+                    <div className="flex shrink-0 items-center gap-2">
+                      {rfi.status === "draft" && (
+                        <Button size="sm" onClick={() => handleOpen(rfi.id)} disabled={pending}>
+                          <Send className="mr-1 h-3 w-3" /> Wyślij
+                        </Button>
+                      )}
+                      {rfi.status === "answered" && (
+                        <Button size="sm" variant="outline" onClick={() => handleClose(rfi.id)} disabled={pending}>
+                          <Check className="mr-1 h-3 w-3" /> Zamknij
+                        </Button>
+                      )}
+                      <Button variant="ghost" size="sm" onClick={() => setExpandedId(isExpanded ? null : rfi.id)}>
+                        {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                      </Button>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
