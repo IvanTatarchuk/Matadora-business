@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, User, Mail, Phone, DollarSign, Calendar, Settings, Trash2, Save, Users as UsersIcon, Plus, FolderOpen } from "lucide-react";
+import { ArrowLeft, User, Mail, Phone, DollarSign, Calendar, Settings, Trash2, Save, Users as UsersIcon, Plus, FolderOpen, GraduationCap, AlertTriangle, CheckCircle2, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -11,15 +11,37 @@ import {
   updateWorker, deleteWorker, setCrewMembers, createWorkerHistory, deleteWorkerHistory,
   type CrewWithMembers,
 } from "@/lib/actions/workforce";
+import type { WorkerCertification } from "@/lib/actions/worker-certifications";
+import { CERT_LABELS, daysUntilExpiry } from "@/lib/certifications";
 import type { Worker } from "@/types/database";
 
 type Props = {
   worker: Worker;
   crews: CrewWithMembers[];
   initialHistory: any[];
+  certifications: WorkerCertification[];
 };
 
-export function WorkerDetailClient({ worker, crews, initialHistory }: Props) {
+const EXPIRY_CONFIG = {
+  permanent: { label: "Bezterminowe",  color: "bg-blue-100 text-blue-700",     icon: CheckCircle2 },
+  ok:        { label: "Ważne",         color: "bg-green-100 text-green-700",   icon: CheckCircle2 },
+  warning:   { label: "Wygasa wkrótce",color: "bg-yellow-100 text-yellow-700", icon: AlertTriangle },
+  critical:  { label: "Krytyczne",     color: "bg-orange-100 text-orange-700", icon: AlertTriangle },
+  expired:   { label: "Wygasłe",       color: "bg-red-100 text-red-700",       icon: XCircle },
+  unknown:   { label: "Brak daty",     color: "bg-slate-100 text-slate-500",   icon: CheckCircle2 },
+} as const;
+
+function expiryStatus(cert: WorkerCertification): keyof typeof EXPIRY_CONFIG {
+  if (cert.is_permanent) return "permanent";
+  const days = daysUntilExpiry(cert);
+  if (days === null) return "unknown";
+  if (days < 0) return "expired";
+  if (days <= 30) return "critical";
+  if (days <= 60) return "warning";
+  return "ok";
+}
+
+export function WorkerDetailClient({ worker, crews, initialHistory, certifications }: Props) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
@@ -302,6 +324,51 @@ export function WorkerDetailClient({ worker, crews, initialHistory }: Props) {
           </CardContent>
         </Card>
       </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <GraduationCap className="h-5 w-5" />
+            Сертифікати та кваліфікації
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {certifications.length === 0 ? (
+            <p className="text-sm text-muted-foreground">Немає доданих сертифікатів</p>
+          ) : (
+            <div className="grid gap-2 sm:grid-cols-2">
+              {certifications.map((cert) => {
+                const status = expiryStatus(cert);
+                const expCfg = EXPIRY_CONFIG[status];
+                const ExpIcon = expCfg.icon;
+                const days = daysUntilExpiry(cert);
+                return (
+                  <div
+                    key={cert.id}
+                    className={`rounded-lg border p-3 ${status === "expired" ? "border-red-200 bg-red-50/20" : status === "critical" ? "border-orange-200" : ""}`}
+                  >
+                    <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold ${expCfg.color}`}>
+                      <ExpIcon className="h-3 w-3" />{expCfg.label}
+                    </span>
+                    <p className="mt-1 font-medium text-sm">
+                      {cert.certification_type === "custom" ? cert.custom_name : CERT_LABELS[cert.certification_type]}
+                    </p>
+                    {cert.is_permanent ? (
+                      <p className="text-xs text-blue-600 mt-0.5">Bezterminowe</p>
+                    ) : cert.expiry_date ? (
+                      <p className={`text-xs mt-0.5 ${days !== null && days < 0 ? "text-red-600" : days !== null && days <= 30 ? "text-orange-600" : "text-muted-foreground"}`}>
+                        {days !== null && days < 0
+                          ? `Wygasłe ${Math.abs(days)} dni temu`
+                          : `Ważne do: ${new Date(cert.expiry_date).toLocaleDateString("pl-PL")}`}
+                      </p>
+                    ) : null}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0">
