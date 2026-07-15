@@ -65,7 +65,7 @@ export async function listLeads(): Promise<Lead[]> {
 
   const { data, error } = await db(supabase)
     .from("leads")
-    .select("*")
+    .select("*, activities:lead_activities(*)")
     .eq("org_id", member.org_id)
     .order("created_at", { ascending: false });
   if (error) return [];
