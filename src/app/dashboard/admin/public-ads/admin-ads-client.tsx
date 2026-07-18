@@ -256,7 +256,7 @@ export function AdminAdsClient() {
             </CardHeader>
             <CardContent className="space-y-4">
               <p className="text-muted-foreground">
-                Ви впевнені, що хочете видалити оголошення "{selectedAd.title}"? Цю дію неможливо скасувати.
+                Ви впевнені, що хочете видалити оголошення &quot;{selectedAd.title}&quot;? Цю дію неможливо скасувати.
               </p>
               {error && <p className="text-sm text-destructive">{error}</p>}
               <div className="flex gap-2 justify-end">

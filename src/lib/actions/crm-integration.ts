@@ -50,9 +50,9 @@ export async function createCRMConnection(input: {
 }): Promise<{ ok: boolean; id?: string; error?: string }> {
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { ok: false, error: "Не залоговано" };
+  if (!user) return { ok: false, error: "Nie zalogowano" };
   const { data: member } = await supabase.from("organization_members").select("org_id").eq("user_id", user.id).single();
-  if (!member) return { ok: false, error: "Брак організації" };
+  if (!member) return { ok: false, error: "Brak organizacji" };
 
   const { data, error } = await db(supabase).from("crm_connections").insert({
     org_id: member.org_id,

@@ -170,7 +170,7 @@ export function WorkerDetailClient({ worker, crews, initialHistory }: Props) {
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <Label>Повне ім'я</Label>
+              <Label>Pełne imię i nazwisko</Label>
               <Input value={editForm.full_name} onChange={(e) => setEditForm({ ...editForm, full_name: e.target.value })} className="mt-1" />
             </div>
             <div>
@@ -224,7 +224,7 @@ export function WorkerDetailClient({ worker, crews, initialHistory }: Props) {
             <div className="flex items-center gap-3">
               <User className="h-4 w-4 text-muted-foreground" />
               <div>
-                <p className="text-sm text-muted-foreground">Повне ім'я</p>
+                <p className="text-sm text-muted-foreground">Pełne imię i nazwisko</p>
                 <p className="font-medium">{worker.full_name}</p>
               </div>
             </div>

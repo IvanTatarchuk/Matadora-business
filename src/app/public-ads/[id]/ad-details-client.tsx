@@ -10,20 +10,20 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 
 const PROPERTY_TYPES = [
-  { value: "apartment", label: "Квартира" },
-  { value: "house", label: "Будинок" },
-  { value: "office", label: "Офіс" },
-  { value: "commercial", label: "Комерційне приміщення" },
+  { value: "apartment", label: "Mieszkanie" },
+  { value: "house", label: "Dom" },
+  { value: "office", label: "Biuro" },
+  { value: "commercial", label: "Lokal komercyjny" },
 ];
 
 const WORK_TYPES = [
-  { value: "full_repair", label: "Повний ремонт" },
-  { value: "partial", label: "Частковий ремонт" },
-  { value: "electric", label: "Електрика" },
-  { value: "plumbing", label: "Сантехніка" },
-  { value: "painting", label: "Малярні роботи" },
-  { value: "flooring", label: "Підлога" },
-  { value: "other", label: "Інше" },
+  { value: "full_repair", label: "Remont kompleksowy" },
+  { value: "partial", label: "Remont częściowy" },
+  { value: "electric", label: "Elektryka" },
+  { value: "plumbing", label: "Hydraulika" },
+  { value: "painting", label: "Prace malarskie" },
+  { value: "flooring", label: "Podłogi" },
+  { value: "other", label: "Inne" },
 ];
 
 interface Props {
@@ -62,7 +62,7 @@ export function AdDetailsClient({ ad, responses, user }: Props) {
       <div className="container mx-auto py-8 px-4">
         <Card>
           <CardContent className="p-12 text-center text-muted-foreground">
-            <p className="font-medium">Оголошення не знайдено</p>
+            <p className="font-medium">Nie znaleziono ogłoszenia</p>
           </CardContent>
         </Card>
       </div>
@@ -74,11 +74,11 @@ export function AdDetailsClient({ ad, responses, user }: Props) {
 
   function handleRespond() {
     if (!responseForm.message.trim()) {
-      setError("Повідомлення є обов'язковим");
+      setError("Wiadomość jest wymagana");
       return;
     }
     if (!ad) {
-      setError("Оголошення не знайдено");
+      setError("Nie znaleziono ogłoszenia");
       return;
     }
     setError(null);
@@ -90,7 +90,7 @@ export function AdDetailsClient({ ad, responses, user }: Props) {
         estimated_days: responseForm.estimated_days ? Number(responseForm.estimated_days) : undefined,
       });
       if (!res.ok) {
-        setError(res.error ?? "Помилка відправки відповіді");
+        setError(res.error ?? "Błąd wysyłania odpowiedzi");
         return;
       }
       setShowResponseForm(false);
@@ -103,7 +103,7 @@ export function AdDetailsClient({ ad, responses, user }: Props) {
     startTransition(async () => {
       const res = await updateResponseStatus(responseId, status);
       if (!res.ok) {
-        setError(res.error ?? "Помилка оновлення статусу");
+        setError(res.error ?? "Błąd aktualizacji statusu");
         return;
       }
       window.location.reload();
@@ -112,11 +112,11 @@ export function AdDetailsClient({ ad, responses, user }: Props) {
 
   function handleCreateReview(contractorId: string) {
     if (!reviewForm.review.trim()) {
-      setError("Відгук є обов'язковим");
+      setError("Opinia jest wymagana");
       return;
     }
     if (!ad) {
-      setError("Оголошення не знайдено");
+      setError("Nie znaleziono ogłoszenia");
       return;
     }
     setError(null);
@@ -128,7 +128,7 @@ export function AdDetailsClient({ ad, responses, user }: Props) {
         review: reviewForm.review,
       });
       if (!res.ok) {
-        setError(res.error ?? "Помилка створення відгуку");
+        setError(res.error ?? "Błąd dodawania opinii");
         return;
       }
       setShowReviewForm(false);
@@ -139,12 +139,12 @@ export function AdDetailsClient({ ad, responses, user }: Props) {
 
   function handleContactSubmit() {
     if (!contactForm.name.trim() || !contactForm.email.trim() || !contactForm.message.trim()) {
-      setError("Ім'я, email та повідомлення є обов'язковими");
+      setError("Imię, email i wiadomość są wymagane");
       return;
     }
     setError(null);
     // In a real implementation, this would send an email
-    alert("Повідомлення відправлено! Автор оголошення зв'яжеться з вами.");
+    alert("Wiadomość została wysłana! Autor ogłoszenia skontaktuje się z Tobą.");
     setShowContactForm(false);
     setContactForm({ name: "", email: "", phone: "", message: "" });
   }
@@ -153,7 +153,7 @@ export function AdDetailsClient({ ad, responses, user }: Props) {
     <div className="container mx-auto py-8 px-4">
       {/* Back button */}
       <Button variant="ghost" className="mb-4" onClick={() => window.history.back()}>
-        ← Назад
+        ← Wstecz
       </Button>
 
       <div className="grid gap-6 lg:grid-cols-3">
@@ -173,7 +173,7 @@ export function AdDetailsClient({ ad, responses, user }: Props) {
                     >
                       <img
                         src={photo}
-                        alt={`${ad.title} - фото ${index + 1}`}
+                        alt={`${ad.title} - zdjęcie ${index + 1}`}
                         className="w-full h-full object-cover"
                       />
                     </div>
@@ -190,16 +190,16 @@ export function AdDetailsClient({ ad, responses, user }: Props) {
                 <div>
                   <CardTitle className="text-2xl mb-2">{ad.title}</CardTitle>
                   <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                    <span>{new Date(ad.created_at).toLocaleDateString("uk-UA")}</span>
+                    <span>{new Date(ad.created_at).toLocaleDateString("pl-PL")}</span>
                     <span>•</span>
-                    <span>{ad.views_count} переглядів</span>
+                    <span>{ad.views_count} wyświetleń</span>
                     <span>•</span>
-                    <span>{ad.responses_count} відповідей</span>
+                    <span>{ad.responses_count} odpowiedzi</span>
                   </div>
                 </div>
                 {ad.status === "closed" && (
                   <span className="px-3 py-1 bg-muted rounded-full text-sm">
-                    Закрито
+                    Zamknięte
                   </span>
                 )}
               </div>
@@ -222,16 +222,16 @@ export function AdDetailsClient({ ad, responses, user }: Props) {
                     <p className="font-medium">
                       {PROPERTY_TYPES.find((pt) => pt.value === ad.property_type)?.label}
                     </p>
-                    {ad.area_size && <p className="text-sm text-muted-foreground">{ad.area_size} м²</p>}
+                    {ad.area_size && <p className="text-sm text-muted-foreground">{ad.area_size} m²</p>}
                   </div>
                 </div>
                 {ad.start_date && (
                   <div className="flex items-center gap-2">
                     <Calendar className="h-5 w-5 text-muted-foreground" />
                     <div>
-                      <p className="font-medium">Початок робіт</p>
+                      <p className="font-medium">Rozpoczęcie prac</p>
                       <p className="text-sm text-muted-foreground">
-                        {new Date(ad.start_date).toLocaleDateString("uk-UA")}
+                        {new Date(ad.start_date).toLocaleDateString("pl-PL")}
                       </p>
                     </div>
                   </div>
@@ -243,10 +243,10 @@ export function AdDetailsClient({ ad, responses, user }: Props) {
                 <div className="flex items-center gap-2 p-4 bg-green-50 dark:bg-green-950 rounded-lg">
                   <DollarSign className="h-5 w-5 text-green-600" />
                   <div>
-                    <p className="font-medium text-green-700 dark:text-green-400">Бюджет</p>
+                    <p className="font-medium text-green-700 dark:text-green-400">Budżet</p>
                     <p className="text-lg font-bold text-green-700 dark:text-green-400">
-                      {ad.budget_min.toLocaleString()} грн
-                      {ad.budget_max && ` - ${ad.budget_max.toLocaleString()} грн`}
+                      {ad.budget_min.toLocaleString()} zł
+                      {ad.budget_max && ` - ${ad.budget_max.toLocaleString()} zł`}
                     </p>
                   </div>
                 </div>
@@ -255,7 +255,7 @@ export function AdDetailsClient({ ad, responses, user }: Props) {
               {/* Work Types */}
               {ad.work_type && ad.work_type.length > 0 && (
                 <div>
-                  <p className="font-medium mb-2">Види робіт:</p>
+                  <p className="font-medium mb-2">Rodzaje prac:</p>
                   <div className="flex flex-wrap gap-2">
                     {ad.work_type.map((wt) => (
                       <span
@@ -272,7 +272,7 @@ export function AdDetailsClient({ ad, responses, user }: Props) {
               {/* Description */}
               {ad.description && (
                 <div>
-                  <p className="font-medium mb-2">Опис:</p>
+                  <p className="font-medium mb-2">Opis:</p>
                   <p className="text-muted-foreground whitespace-pre-wrap">{ad.description}</p>
                 </div>
               )}
@@ -296,7 +296,7 @@ export function AdDetailsClient({ ad, responses, user }: Props) {
           {isOwner && responses.length > 0 && (
             <Card>
               <CardHeader>
-                <CardTitle>Відповіді ({responses.length})</CardTitle>
+                <CardTitle>Odpowiedzi ({responses.length})</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 {responses.map((response) => (
@@ -307,10 +307,10 @@ export function AdDetailsClient({ ad, responses, user }: Props) {
                     <div className="flex items-start justify-between">
                       <div>
                         <p className="font-medium">
-                          {response.contractor?.full_name || "Підрядник"}
+                          {response.contractor?.full_name || "Wykonawca"}
                         </p>
                         <p className="text-sm text-muted-foreground">
-                          {new Date(response.created_at).toLocaleString("uk-UA")}
+                          {new Date(response.created_at).toLocaleString("pl-PL")}
                         </p>
                       </div>
                       <div className="flex items-center gap-2">
@@ -322,7 +322,7 @@ export function AdDetailsClient({ ad, responses, user }: Props) {
                               onClick={() => handleUpdateStatus(response.id, "accepted")}
                             >
                               <CheckCircle2 className="h-4 w-4 mr-1" />
-                              Прийняти
+                              Akceptuj
                             </Button>
                             <Button
                               size="sm"
@@ -330,14 +330,14 @@ export function AdDetailsClient({ ad, responses, user }: Props) {
                               onClick={() => handleUpdateStatus(response.id, "rejected")}
                             >
                               <X className="h-4 w-4 mr-1" />
-                              Відхилити
+                              Odrzuć
                             </Button>
                           </>
                         )}
                         {response.status === "accepted" && (
                           <>
                             <span className="px-2 py-1 bg-green-100 text-green-700 rounded-full text-sm">
-                              Прийнято
+                              Zaakceptowano
                             </span>
                             <Button
                               size="sm"
@@ -345,13 +345,13 @@ export function AdDetailsClient({ ad, responses, user }: Props) {
                               onClick={() => setShowReviewForm(response.id)}
                             >
                               <Star className="h-4 w-4 mr-1" />
-                              Відгук
+                              Opinia
                             </Button>
                           </>
                         )}
                         {response.status === "rejected" && (
                           <span className="px-2 py-1 bg-red-100 text-red-700 rounded-full text-sm">
-                            Відхилено
+                            Odrzucono
                           </span>
                         )}
                       </div>
@@ -362,12 +362,12 @@ export function AdDetailsClient({ ad, responses, user }: Props) {
                     <div className="flex gap-4 text-sm">
                       {response.estimated_price && (
                         <span className="font-medium">
-                          {response.estimated_price.toLocaleString()} грн
+                          {response.estimated_price.toLocaleString()} zł
                         </span>
                       )}
                       {response.estimated_days && (
                         <span className="text-muted-foreground">
-                          {response.estimated_days} днів
+                          {response.estimated_days} dni
                         </span>
                       )}
                     </div>
@@ -375,7 +375,7 @@ export function AdDetailsClient({ ad, responses, user }: Props) {
                     {showReviewForm === response.id && (
                       <div className="mt-3 pt-3 border-t space-y-3">
                         <div>
-                          <Label>Оцінка</Label>
+                          <Label>Ocena</Label>
                           <div className="flex gap-1 mt-1">
                             {[1, 2, 3, 4, 5].map((star) => (
                               <button
@@ -390,12 +390,12 @@ export function AdDetailsClient({ ad, responses, user }: Props) {
                           </div>
                         </div>
                         <div>
-                          <Label htmlFor="review">Відгук</Label>
+                          <Label htmlFor="review">Opinia</Label>
                           <Textarea
                             id="review"
                             value={reviewForm.review}
                             onChange={(e) => setReviewForm({ ...reviewForm, review: e.target.value })}
-                            placeholder="Опишіть ваш досвід роботи з цим підрядником..."
+                            placeholder="Opisz swoje doświadczenie współpracy z tym wykonawcą..."
                             rows={3}
                             className="mt-1"
                           />
@@ -406,14 +406,14 @@ export function AdDetailsClient({ ad, responses, user }: Props) {
                             onClick={() => handleCreateReview(response.contractor_id)}
                             disabled={pending}
                           >
-                            {pending ? "Відправка..." : "Надіслати відгук"}
+                            {pending ? "Wysyłanie..." : "Wyślij opinię"}
                           </Button>
                           <Button
                             size="sm"
                             variant="outline"
                             onClick={() => setShowReviewForm(false)}
                           >
-                            Скасувати
+                            Anuluj
                           </Button>
                         </div>
                       </div>
@@ -430,7 +430,7 @@ export function AdDetailsClient({ ad, responses, user }: Props) {
           {/* Action Card */}
           <Card>
             <CardHeader>
-              <CardTitle>Дії</CardTitle>
+              <CardTitle>Działania</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
               {canRespond && ad.status === "active" && (
@@ -441,23 +441,23 @@ export function AdDetailsClient({ ad, responses, user }: Props) {
                       onClick={() => setShowResponseForm(true)}
                     >
                       <Send className="h-4 w-4 mr-2" />
-                      Відповісти на оголошення
+                      Odpowiedz na ogłoszenie
                     </Button>
                   ) : (
                     <div className="space-y-3">
                       <div>
-                        <Label htmlFor="message">Повідомлення *</Label>
+                        <Label htmlFor="message">Wiadomość *</Label>
                         <Textarea
                           id="message"
                           value={responseForm.message}
                           onChange={(e) => setResponseForm({ ...responseForm, message: e.target.value })}
-                          placeholder="Опишіть ваш досвід та пропозицію..."
+                          placeholder="Opisz swoje doświadczenie i propozycję..."
                           rows={4}
                           className="mt-1"
                         />
                       </div>
                       <div>
-                        <Label htmlFor="estimated_price">Оціночна вартість (грн)</Label>
+                        <Label htmlFor="estimated_price">Szacunkowa wartość (zł)</Label>
                         <Input
                           id="estimated_price"
                           type="number"
@@ -467,7 +467,7 @@ export function AdDetailsClient({ ad, responses, user }: Props) {
                         />
                       </div>
                       <div>
-                        <Label htmlFor="estimated_days">Оціночний термін (днів)</Label>
+                        <Label htmlFor="estimated_days">Szacunkowy termin (dni)</Label>
                         <Input
                           id="estimated_days"
                           type="number"
@@ -482,14 +482,14 @@ export function AdDetailsClient({ ad, responses, user }: Props) {
                         onClick={handleRespond}
                         disabled={pending}
                       >
-                        {pending ? "Відправка..." : "Відправити відповідь"}
+                        {pending ? "Wysyłanie..." : "Wyślij odpowiedź"}
                       </Button>
                       <Button
                         variant="outline"
                         className="w-full"
                         onClick={() => setShowResponseForm(false)}
                       >
-                        Скасувати
+                        Anuluj
                       </Button>
                     </div>
                   )}
@@ -497,12 +497,12 @@ export function AdDetailsClient({ ad, responses, user }: Props) {
               )}
               {isOwner && ad.status === "active" && (
                 <p className="text-sm text-muted-foreground">
-                  Ви є власником цього оголошення
+                  Jesteś właścicielem tego ogłoszenia
                 </p>
               )}
               {ad.status === "closed" && (
                 <p className="text-sm text-muted-foreground">
-                  Оголошення закрито
+                  Ogłoszenie zostało zamknięte
                 </p>
               )}
             </CardContent>
@@ -512,7 +512,7 @@ export function AdDetailsClient({ ad, responses, user }: Props) {
           {ad.phone && (
             <Card>
               <CardHeader>
-                <CardTitle>Контакт</CardTitle>
+                <CardTitle>Kontakt</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
                 <div className="flex items-center gap-2">
@@ -526,10 +526,10 @@ export function AdDetailsClient({ ad, responses, user }: Props) {
                 </div>
                 <p className="text-sm text-muted-foreground">
                   {ad.preferred_contact === "phone"
-                    ? "Бажано зв'язуватися телефоном"
+                    ? "Preferowany kontakt telefoniczny"
                     : ad.preferred_contact === "email"
-                    ? "Бажано зв'язуватися email"
-                    : "Бажано зв'язуватися через чат"}
+                    ? "Preferowany kontakt e-mailowy"
+                    : "Preferowany kontakt przez czat"}
                 </p>
                 {!showContactForm ? (
                   <Button
@@ -538,12 +538,12 @@ export function AdDetailsClient({ ad, responses, user }: Props) {
                     onClick={() => setShowContactForm(true)}
                   >
                     <Mail className="h-4 w-4 mr-2" />
-                    Написати повідомлення
+                    Napisz wiadomość
                   </Button>
                 ) : (
                   <div className="space-y-3 pt-3 border-t">
                     <div>
-                      <Label htmlFor="contact-name">Ім'я *</Label>
+                      <Label htmlFor="contact-name">Imię i nazwisko *</Label>
                       <Input
                         id="contact-name"
                         value={contactForm.name}
@@ -562,7 +562,7 @@ export function AdDetailsClient({ ad, responses, user }: Props) {
                       />
                     </div>
                     <div>
-                      <Label htmlFor="contact-phone">Телефон</Label>
+                      <Label htmlFor="contact-phone">Telefon</Label>
                       <Input
                         id="contact-phone"
                         value={contactForm.phone}

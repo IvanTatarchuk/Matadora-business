@@ -215,7 +215,7 @@ export function EsignaturesClient({ initialSignatures, initialRequests }: Props)
         <div className="relative flex-1 max-w-sm">
           <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Шукати підписи..."
+            placeholder="Szukaj podpisów..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-9"
@@ -226,22 +226,22 @@ export function EsignaturesClient({ initialSignatures, initialRequests }: Props)
           onChange={(e) => setFilterStatus(e.target.value as "all" | "pending" | "signed" | "declined")}
           className="rounded-md border bg-background px-3 py-2 text-sm"
         >
-          <option value="all">Всі статуси</option>
-          <option value="pending">Очікуючі</option>
-          <option value="signed">Підписані</option>
-          <option value="declined">Відхилені</option>
+          <option value="all">Wszystkie statusy</option>
+          <option value="pending">Oczekujące</option>
+          <option value="signed">Podpisane</option>
+          <option value="declined">Odrzucone</option>
         </select>
         <select
           value={filterType}
           onChange={(e) => setFilterType(e.target.value as "all" | "offer" | "contract" | "change_order" | "invoice" | "other")}
           className="rounded-md border bg-background px-3 py-2 text-sm"
         >
-          <option value="all">Всі типи</option>
-          <option value="offer">Оферта</option>
-          <option value="contract">Контракт</option>
-          <option value="change_order">Ане</option>
-          <option value="invoice">Інвойс</option>
-          <option value="other">Інше</option>
+          <option value="all">Wszystkie typy</option>
+          <option value="offer">Oferta</option>
+          <option value="contract">Umowa</option>
+          <option value="change_order">Aneks</option>
+          <option value="invoice">Faktura</option>
+          <option value="other">Inne</option>
         </select>
       </div>
 

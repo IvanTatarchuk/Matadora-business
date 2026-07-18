@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { formatPLN } from "@/lib/utils";
 import {
   updateEquipmentStatus,
   type Equipment, type EquipmentStatus, type EquipmentAssignment,
@@ -19,15 +20,11 @@ type Props = {
 };
 
 const STATUS_CONFIG: Record<EquipmentStatus, { label: string; color: string }> = {
-  available: { label: "Доступний", color: "bg-green-100 text-green-700" },
-  in_use: { label: "Використовується", color: "bg-blue-100 text-blue-700" },
-  maintenance: { label: "Сервіс", color: "bg-orange-100 text-orange-700" },
-  retired: { label: "Виведено", color: "bg-slate-100 text-slate-500" },
+  available: { label: "Dostępny", color: "bg-green-100 text-green-700" },
+  in_use: { label: "W użyciu", color: "bg-blue-100 text-blue-700" },
+  maintenance: { label: "Serwis", color: "bg-orange-100 text-orange-700" },
+  retired: { label: "Wycofany", color: "bg-slate-100 text-slate-500" },
 };
-
-function fmt(n: number) {
-  return new Intl.NumberFormat("uk-UA", { style: "currency", currency: "UAH", maximumFractionDigits: 0 }).format(n);
-}
 
 export function SprzetDetailClient({ equipment, history }: Props) {
   const router = useRouter();
@@ -51,7 +48,7 @@ export function SprzetDetailClient({ equipment, history }: Props) {
   function handleSave() {
     setError(null);
     if (!editForm.name.trim()) {
-      setError("Назва є обов'язковою");
+      setError("Nazwa jest wymagana");
       return;
     }
     // Save logic would go here
@@ -86,7 +83,7 @@ export function SprzetDetailClient({ equipment, history }: Props) {
         <div className="flex gap-2">
           <Button variant="outline" onClick={() => setIsEditing(!isEditing)}>
             {isEditing ? <Save className="h-4 w-4 mr-2" /> : <Edit className="h-4 w-4 mr-2" />}
-            {isEditing ? "Зберегти" : "Редагувати"}
+            {isEditing ? "Zapisz" : "Edytuj"}
           </Button>
         </div>
       </div>
@@ -94,68 +91,68 @@ export function SprzetDetailClient({ equipment, history }: Props) {
       {isEditing && (
         <Card className="border-primary">
           <CardHeader>
-            <CardTitle>Редагування обладнання</CardTitle>
+            <CardTitle>Edycja sprzętu</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <Label>Назва</Label>
+              <Label>Nazwa</Label>
               <Input value={editForm.name} onChange={(e) => setEditForm({ ...editForm, name: e.target.value })} className="mt-1" />
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <Label>Марка</Label>
+                <Label>Marka</Label>
                 <Input value={editForm.brand} onChange={(e) => setEditForm({ ...editForm, brand: e.target.value })} className="mt-1" />
               </div>
               <div>
-                <Label>Модель</Label>
+                <Label>Model</Label>
                 <Input value={editForm.model} onChange={(e) => setEditForm({ ...editForm, model: e.target.value })} className="mt-1" />
               </div>
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <Label>Серійний номер</Label>
+                <Label>Numer seryjny</Label>
                 <Input value={editForm.serialNumber} onChange={(e) => setEditForm({ ...editForm, serialNumber: e.target.value })} className="mt-1" />
               </div>
               <div>
-                <Label>Рік виробництва</Label>
+                <Label>Rok produkcji</Label>
                 <Input type="number" value={editForm.year} onChange={(e) => setEditForm({ ...editForm, year: e.target.value })} className="mt-1" />
               </div>
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <Label>Вартість покупки</Label>
+                <Label>Cena zakupu</Label>
                 <Input type="number" value={editForm.purchasePrice} onChange={(e) => setEditForm({ ...editForm, purchasePrice: e.target.value })} className="mt-1" />
               </div>
               <div>
-                <Label>Денна ставка</Label>
+                <Label>Stawka dzienna</Label>
                 <Input type="number" value={editForm.dailyRate} onChange={(e) => setEditForm({ ...editForm, dailyRate: e.target.value })} className="mt-1" />
               </div>
             </div>
             <div>
-              <Label>Локація</Label>
+              <Label>Lokalizacja</Label>
               <Input value={editForm.location} onChange={(e) => setEditForm({ ...editForm, location: e.target.value })} className="mt-1" />
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <Label>Наступний сервіс</Label>
+                <Label>Następny serwis</Label>
                 <Input type="date" value={editForm.nextServiceDate} onChange={(e) => setEditForm({ ...editForm, nextServiceDate: e.target.value })} className="mt-1" />
               </div>
               <div>
-                <Label>Страхування до</Label>
+                <Label>Ubezpieczenie do</Label>
                 <Input type="date" value={editForm.insuranceExpiry} onChange={(e) => setEditForm({ ...editForm, insuranceExpiry: e.target.value })} className="mt-1" />
               </div>
             </div>
             <div>
-              <Label>Примітки</Label>
+              <Label>Notatki</Label>
               <Input value={editForm.notes} onChange={(e) => setEditForm({ ...editForm, notes: e.target.value })} className="mt-1" />
             </div>
             {error && <p className="text-sm text-destructive">{error}</p>}
             <div className="flex gap-2">
               <Button onClick={handleSave} disabled={pending}>
-                Зберегти зміни
+                Zapisz zmiany
               </Button>
               <Button variant="outline" onClick={() => setIsEditing(false)}>
-                Скасувати
+                Anuluj
               </Button>
             </div>
           </CardContent>
@@ -167,7 +164,7 @@ export function SprzetDetailClient({ equipment, history }: Props) {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Settings className="h-5 w-5" />
-              Статус
+              Status
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -183,14 +180,14 @@ export function SprzetDetailClient({ equipment, history }: Props) {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <DollarSign className="h-5 w-5" />
-              Вартість
+              Wartość
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-center">
-              <p className="text-2xl font-bold">{equipment.purchase_price ? fmt(equipment.purchase_price) : "-"}</p>
+              <p className="text-2xl font-bold">{equipment.purchase_price ? formatPLN(equipment.purchase_price) : "-"}</p>
               {equipment.daily_rate && (
-                <p className="text-sm text-muted-foreground">{fmt(equipment.daily_rate)}/день</p>
+                <p className="text-sm text-muted-foreground">{formatPLN(equipment.daily_rate)}/dzień</p>
               )}
             </div>
           </CardContent>
@@ -200,12 +197,12 @@ export function SprzetDetailClient({ equipment, history }: Props) {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <MapPin className="h-5 w-5" />
-              Локація
+              Lokalizacja
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-center">
-              <p className="text-xl font-bold">{equipment.location || "Не вказано"}</p>
+              <p className="text-xl font-bold">{equipment.location || "Nie podano"}</p>
             </div>
           </CardContent>
         </Card>
@@ -216,16 +213,16 @@ export function SprzetDetailClient({ equipment, history }: Props) {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <AlertTriangle className="h-5 w-5" />
-              Сервіс
+              Serwis
             </CardTitle>
           </CardHeader>
           <CardContent>
             <p className={`font-medium ${serviceDays < 0 ? "text-red-600" : serviceDays <= 14 ? "text-orange-600" : "text-foreground"}`}>
               {serviceDays < 0
-                ? `Сервіс прострочено на ${Math.abs(serviceDays)} днів`
+                ? `Serwis przeterminowany o ${Math.abs(serviceDays)} dni`
                 : serviceDays <= 14
-                ? `Сервіс через ${serviceDays} днів`
-                : `Сервіс: ${new Date(equipment.next_service_date!).toLocaleDateString("uk-UA")}`}
+                ? `Serwis za ${serviceDays} dni`
+                : `Serwis: ${new Date(equipment.next_service_date!).toLocaleDateString("pl-PL")}`}
             </p>
           </CardContent>
         </Card>
@@ -235,26 +232,26 @@ export function SprzetDetailClient({ equipment, history }: Props) {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <FileText className="h-5 w-5" />
-            Історія використання
+            Historia użytkowania
           </CardTitle>
         </CardHeader>
         <CardContent>
           {history.length === 0 ? (
-            <p className="text-sm text-muted-foreground text-center py-4">Немає історії використання</p>
+            <p className="text-sm text-muted-foreground text-center py-4">Brak historii użytkowania</p>
           ) : (
             <div className="space-y-2">
               {history.map((entry) => (
                 <div key={entry.id} className="flex items-center justify-between p-3 rounded bg-muted">
                   <div>
-                    <p className="text-sm font-medium">Проект: {entry.project_id}</p>
+                    <p className="text-sm font-medium">Projekt: {entry.project_id}</p>
                     <p className="text-xs text-muted-foreground">
-                      {new Date(entry.assigned_date).toLocaleDateString("uk-UA")}
-                      {entry.returned_date && ` - ${new Date(entry.returned_date).toLocaleDateString("uk-UA")}`}
+                      {new Date(entry.assigned_date).toLocaleDateString("pl-PL")}
+                      {entry.returned_date && ` - ${new Date(entry.returned_date).toLocaleDateString("pl-PL")}`}
                     </p>
-                    {entry.days_used && <p className="text-xs text-muted-foreground">Використано: {entry.days_used} днів</p>}
+                    {entry.days_used && <p className="text-xs text-muted-foreground">Wykorzystano: {entry.days_used} dni</p>}
                   </div>
                   {entry.cost && (
-                    <p className="font-semibold">{fmt(entry.cost)}</p>
+                    <p className="font-semibold">{formatPLN(entry.cost)}</p>
                   )}
                 </div>
               ))}

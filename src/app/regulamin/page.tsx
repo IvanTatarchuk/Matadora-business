@@ -38,16 +38,16 @@ export default function RegulaminPage() {
               <h2 className="text-lg font-bold text-slate-900">§ 1. Postanowienia ogólne</h2>
               <ol className="mt-3 list-decimal space-y-2 pl-5">
                 <li>
-                  Niniejszy regulamin (dalej: „Regulamin") określa zasady korzystania z platformy internetowej
-                  dostępnej pod adresem <strong>matadora.business</strong> (dalej: „Platforma" lub „Serwis"),
+                  Niniejszy regulamin (dalej: „Regulamin&rdquo;) określa zasady korzystania z platformy internetowej
+                  dostępnej pod adresem <strong>matadora.business</strong> (dalej: „Platforma&rdquo; lub „Serwis&rdquo;),
                   w tym zasady świadczenia usług drogą elektroniczną w rozumieniu ustawy z dnia 18 lipca 2002 r.
                   o świadczeniu usług drogą elektroniczną (Dz. U. z 2020 r. poz. 344 z późn. zm.).
                 </li>
                 <li>
                   Operatorem Platformy i podmiotem świadczącym usługi opisane w Regulaminie jest{" "}
                   <strong>VANBUD Ivan Tatarchuk</strong>, prowadzący działalność gospodarczą pod adresem
-                  ul. Mielecka 5, 70-740 Szczecin, NIP: <strong>955-235-98-44</strong> (dalej: „Operator" lub
-                  „Usługodawca").
+                  ul. Mielecka 5, 70-740 Szczecin, NIP: <strong>955-235-98-44</strong> (dalej: „Operator&rdquo; lub
+                  „Usługodawca&rdquo;).
                 </li>
                 <li>
                   Kontakt z Operatorem możliwy jest pod adresem e-mail:{" "}
@@ -127,7 +127,7 @@ export default function RegulaminPage() {
                 </li>
                 <li>
                   Korzystanie z Platformy jest bezpłatne. Jedyną odpłatną Usługą jest analiza AI kosztorysu
-                  z przesłanego dokumentu PDF, rozliczana jednorazowo za dokument (<strong>„płać za użycie"</strong>,
+                  z przesłanego dokumentu PDF, rozliczana jednorazowo za dokument (<strong>„płać za użycie&rdquo;</strong>,
                   pay-per-use), zgodnie z cennikiem dostępnym na stronie{" "}
                   <Link href="/pricing" className="text-primary underline">/pricing</Link>. Platforma nie oferuje
                   planów abonamentowych ani cyklicznych opłat subskrypcyjnych.

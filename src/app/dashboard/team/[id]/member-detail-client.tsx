@@ -57,7 +57,7 @@ export function TeamMemberClient({ member, org, myRole }: Props) {
             <div className="flex items-center gap-3">
               <User className="h-4 w-4 text-muted-foreground" />
               <div>
-                <p className="text-sm text-muted-foreground">Ім'я</p>
+                <p className="text-sm text-muted-foreground">Imię i nazwisko</p>
                 <p className="font-medium">{member.name}</p>
               </div>
             </div>

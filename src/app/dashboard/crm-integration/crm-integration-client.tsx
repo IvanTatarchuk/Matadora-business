@@ -40,13 +40,13 @@ export function CRMIntegrationClient({ initialConnections, initialSyncLogs, init
 
   function handleCreateConnection() {
     if (!connectionForm.apiKey) {
-      setError("API key є обов'язковим");
+      setError("Klucz API jest wymagany");
       return;
     }
     setError(null);
     startTransition(async () => {
       const res = await createCRMConnection(connectionForm);
-      if (!res.ok) { setError(res.error ?? "Помилка"); return; }
+      if (!res.ok) { setError(res.error ?? "Błąd"); return; }
       setShowConnectionForm(false);
       setConnectionForm({ provider: "hubspot", apiKey: "", apiUrl: "", syncDirection: "bidirectional" });
       // Reload connections
@@ -59,7 +59,7 @@ export function CRMIntegrationClient({ initialConnections, initialSyncLogs, init
     setError(null);
     startTransition(async () => {
       const res = await toggleCRMSync(connectionId);
-      if (!res.ok) { setError(res.error ?? "Помилка"); return; }
+      if (!res.ok) { setError(res.error ?? "Błąd"); return; }
       // Reload connections
       const newConnections = await fetch("/api/crm-integration/connections").then(r => r.json());
       setConnections(newConnections);
@@ -70,7 +70,7 @@ export function CRMIntegrationClient({ initialConnections, initialSyncLogs, init
     setError(null);
     startTransition(async () => {
       const res = await deleteCRMConnection(connectionId);
-      if (!res.ok) { setError(res.error ?? "Помилка"); return; }
+      if (!res.ok) { setError(res.error ?? "Błąd"); return; }
       // Reload connections
       const newConnections = await fetch("/api/crm-integration/connections").then(r => r.json());
       setConnections(newConnections);
@@ -81,7 +81,7 @@ export function CRMIntegrationClient({ initialConnections, initialSyncLogs, init
     setError(null);
     startTransition(async () => {
       const res = await triggerCRMSync(connectionId);
-      if (!res.ok) { setError(res.error ?? "Помилка"); return; }
+      if (!res.ok) { setError(res.error ?? "Błąd"); return; }
       // Reload logs
       const newLogs = await fetch("/api/crm-integration/sync-logs").then(r => r.json());
       setSyncLogs(newLogs);
@@ -103,10 +103,10 @@ export function CRMIntegrationClient({ initialConnections, initialSyncLogs, init
       <div>
         <h1 className="text-2xl font-bold flex items-center gap-2">
           <Users className="h-6 w-6" />
-          Інтеграція CRM
+          Integracja CRM
         </h1>
         <p className="text-sm text-muted-foreground mt-1">
-          Підключення HubSpot, Salesforce, Pipedrive та інших CRM систем
+          Połączenia z HubSpot, Salesforce, Pipedrive i innymi systemami CRM
         </p>
       </div>
 
@@ -115,7 +115,7 @@ export function CRMIntegrationClient({ initialConnections, initialSyncLogs, init
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center justify-between mb-2">
-              <p className="text-sm text-muted-foreground">Підключення</p>
+              <p className="text-sm text-muted-foreground">Połączenia</p>
               <Users className="h-4 w-4 text-blue-500" />
             </div>
             <p className="text-2xl font-bold">{stats.activeConnections}/{stats.totalConnections}</p>
@@ -124,7 +124,7 @@ export function CRMIntegrationClient({ initialConnections, initialSyncLogs, init
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center justify-between mb-2">
-              <p className="text-sm text-muted-foreground">Синхронізації</p>
+              <p className="text-sm text-muted-foreground">Synchronizacje</p>
               <RefreshCw className="h-4 w-4 text-purple-500" />
             </div>
             <p className="text-2xl font-bold">{stats.totalSyncs}</p>
@@ -133,7 +133,7 @@ export function CRMIntegrationClient({ initialConnections, initialSyncLogs, init
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center justify-between mb-2">
-              <p className="text-sm text-muted-foreground">Успішні</p>
+              <p className="text-sm text-muted-foreground">Udane</p>
               <CheckCircle2 className="h-4 w-4 text-green-500" />
             </div>
             <p className="text-2xl font-bold">{stats.successfulSyncs}</p>
@@ -142,7 +142,7 @@ export function CRMIntegrationClient({ initialConnections, initialSyncLogs, init
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center justify-between mb-2">
-              <p className="text-sm text-muted-foreground">Останній синк</p>
+              <p className="text-sm text-muted-foreground">Ostatnia synchronizacja</p>
               <Clock className="h-4 w-4 text-orange-500" />
             </div>
             <p className="text-2xl font-bold">{syncLogs.length > 0 && syncLogs[0]?.started_at ? new Date(syncLogs[0].started_at).toLocaleDateString("pl-PL") : "-"}</p>
@@ -154,7 +154,7 @@ export function CRMIntegrationClient({ initialConnections, initialSyncLogs, init
       <div className="flex gap-2 flex-wrap">
         <Button onClick={() => setShowConnectionForm(true)}>
           <Plus className="h-4 w-4 mr-2" />
-          Підключити CRM
+          Podłącz CRM
         </Button>
       </div>
 
@@ -163,7 +163,7 @@ export function CRMIntegrationClient({ initialConnections, initialSyncLogs, init
         <div className="relative flex-1 max-w-sm">
           <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Шукати CRM..."
+            placeholder="Szukaj CRM..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-9"
@@ -174,9 +174,9 @@ export function CRMIntegrationClient({ initialConnections, initialSyncLogs, init
           onChange={(e) => setFilterStatus(e.target.value as "all" | "active" | "inactive")}
           className="rounded-md border bg-background px-3 py-2 text-sm"
         >
-          <option value="all">Всі статуси</option>
-          <option value="active">Активні</option>
-          <option value="inactive">Неактивні</option>
+          <option value="all">Wszystkie statusy</option>
+          <option value="active">Aktywne</option>
+          <option value="inactive">Nieaktywne</option>
         </select>
       </div>
 
@@ -185,7 +185,7 @@ export function CRMIntegrationClient({ initialConnections, initialSyncLogs, init
         <Card className="border-primary">
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-base">Підключити CRM</CardTitle>
+              <CardTitle className="text-base">Podłącz CRM</CardTitle>
               <Button variant="ghost" size="sm" onClick={() => { setShowConnectionForm(false); setError(null); }}>
                 <X className="h-4 w-4" />
               </Button>
@@ -194,7 +194,7 @@ export function CRMIntegrationClient({ initialConnections, initialSyncLogs, init
           <CardContent className="space-y-4">
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
-                <label className="text-sm font-medium">CRM система</label>
+                <label className="text-sm font-medium">System CRM</label>
                 <select
                   value={connectionForm.provider}
                   onChange={(e) => setConnectionForm({ ...connectionForm, provider: e.target.value as any })}
@@ -212,11 +212,11 @@ export function CRMIntegrationClient({ initialConnections, initialSyncLogs, init
                 <Input value={connectionForm.apiKey} onChange={(e) => setConnectionForm({ ...connectionForm, apiKey: e.target.value })} className="mt-1" />
               </div>
               <div className="sm:col-span-2">
-                <label className="text-sm font-medium">API URL (опційно)</label>
+                <label className="text-sm font-medium">API URL (opcjonalnie)</label>
                 <Input value={connectionForm.apiUrl} onChange={(e) => setConnectionForm({ ...connectionForm, apiUrl: e.target.value })} className="mt-1" />
               </div>
               <div className="sm:col-span-2">
-                <label className="text-sm font-medium">Напрямок синхронізації</label>
+                <label className="text-sm font-medium">Kierunek synchronizacji</label>
                 <select
                   value={connectionForm.syncDirection}
                   onChange={(e) => setConnectionForm({ ...connectionForm, syncDirection: e.target.value as any })}

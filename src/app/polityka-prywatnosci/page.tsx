@@ -35,7 +35,7 @@ export default function PolitykaPrywatnosciPage() {
           <p className="mt-4 text-sm leading-relaxed text-slate-700">
             Niniejsza Polityka prywatności opisuje zasady przetwarzania danych osobowych Użytkowników
             platformy matadora.business, zgodnie z Rozporządzeniem Parlamentu Europejskiego i Rady (UE)
-            2016/679 z dnia 27 kwietnia 2016 r. (dalej: „RODO") oraz ustawą z dnia 10 maja 2018 r. o ochronie
+            2016/679 z dnia 27 kwietnia 2016 r. (dalej: „RODO&rdquo;) oraz ustawą z dnia 10 maja 2018 r. o ochronie
             danych osobowych.
           </p>
 
@@ -157,7 +157,7 @@ export default function PolitykaPrywatnosciPage() {
               <ul className="mt-3 list-disc space-y-1.5 pl-5">
                 <li><strong>prawo dostępu do danych</strong> (art. 15 RODO) — uzyskania informacji o przetwarzanych danych i otrzymania ich kopii;</li>
                 <li><strong>prawo do sprostowania danych</strong> (art. 16 RODO) — poprawienia nieprawidłowych lub niekompletnych danych;</li>
-                <li><strong>prawo do usunięcia danych</strong> („prawo do bycia zapomnianym", art. 17 RODO);</li>
+                <li><strong>prawo do usunięcia danych</strong> („prawo do bycia zapomnianym&rdquo;, art. 17 RODO);</li>
                 <li><strong>prawo do ograniczenia przetwarzania</strong> (art. 18 RODO);</li>
                 <li><strong>prawo do przenoszenia danych</strong> (art. 20 RODO) — otrzymania danych w ustrukturyzowanym formacie i przekazania ich innemu administratorowi;</li>
                 <li><strong>prawo do sprzeciwu</strong> wobec przetwarzania danych opartego na uzasadnionym interesie Administratora (art. 21 RODO);</li>

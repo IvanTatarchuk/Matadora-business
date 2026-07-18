@@ -85,7 +85,7 @@ export function WorkerCreateClient({ orgId, crews }: Props) {
         </CardHeader>
         <CardContent className="space-y-4">
           <div>
-            <Label>Повне ім'я</Label>
+            <Label>Powne imię i nazwisko</Label>
             <Input
               value={form.fullName}
               onChange={(e) => setForm({ ...form, fullName: e.target.value })}

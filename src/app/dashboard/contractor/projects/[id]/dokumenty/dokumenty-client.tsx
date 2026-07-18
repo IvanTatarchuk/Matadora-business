@@ -429,7 +429,7 @@ export function DokumentyClient({
                         <span>{new Date(doc.created_at).toLocaleDateString("pl-PL")}</span>
                         {doc.uploader_name && <span>{doc.uploader_name}</span>}
                         {doc.expiry_date && <span>Ważny do: {doc.expiry_date}</span>}
-                        {doc.notes && <span className="italic truncate max-w-[200px]">„{doc.notes}"</span>}
+                        {doc.notes && <span className="italic truncate max-w-[200px]">„{doc.notes}&rdquo;</span>}
                       </div>
                     </div>
                     <div className="flex items-center gap-1 shrink-0">

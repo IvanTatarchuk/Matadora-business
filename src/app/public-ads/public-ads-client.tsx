@@ -226,7 +226,7 @@ export function PublicAdsClient({ initialAds, user }: Props) {
               onChange={(e) => setFilterPropertyType(e.target.value)}
               className="rounded-md border bg-background px-3 py-2 text-sm"
             >
-              <option value="all">Всі типи об'єктів</option>
+              <option value="all">Wszystkie typy obiektów</option>
               {PROPERTY_TYPES.map((pt) => (
                 <option key={pt.value} value={pt.value}>{pt.label}</option>
               ))}
@@ -269,7 +269,7 @@ export function PublicAdsClient({ initialAds, user }: Props) {
                 />
               </div>
               <div>
-                <Label htmlFor="property_type">Тип об'єкта *</Label>
+                <Label htmlFor="property_type">Typ obiektu *</Label>
                 <select
                   id="property_type"
                   value={form.property_type}

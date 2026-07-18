@@ -60,9 +60,9 @@ export async function createWorkflowDefinition(input: {
 }): Promise<{ ok: boolean; id?: string; error?: string }> {
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { ok: false, error: "Не залоговано" };
+  if (!user) return { ok: false, error: "Nie zalogowano" };
   const { data: member } = await supabase.from("organization_members").select("org_id").eq("user_id", user.id).single();
-  if (!member) return { ok: false, error: "Брак організації" };
+  if (!member) return { ok: false, error: "Brak organizacji" };
 
   const { data, error } = await db(supabase).from("workflow_definitions").insert({
     org_id: member.org_id,
@@ -128,9 +128,9 @@ export async function createWorkflowStep(input: {
 }): Promise<{ ok: boolean; id?: string; error?: string }> {
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { ok: false, error: "Не залоговано" };
+  if (!user) return { ok: false, error: "Nie zalogowano" };
   const { data: member } = await supabase.from("organization_members").select("org_id").eq("user_id", user.id).single();
-  if (!member) return { ok: false, error: "Брак організації" };
+  if (!member) return { ok: false, error: "Brak organizacji" };
 
   const { data, error } = await db(supabase).from("workflow_steps").insert({
     workflow_id: input.workflowId,
@@ -163,9 +163,9 @@ export async function listWorkflowSteps(workflowId: string): Promise<WorkflowSte
 export async function triggerWorkflow(workflowId: string, triggerData?: Record<string, any>): Promise<{ ok: boolean; id?: string; error?: string }> {
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { ok: false, error: "Не залоговано" };
+  if (!user) return { ok: false, error: "Nie zalogowano" };
   const { data: member } = await supabase.from("organization_members").select("org_id").eq("user_id", user.id).single();
-  if (!member) return { ok: false, error: "Брак організації" };
+  if (!member) return { ok: false, error: "Brak organizacji" };
 
   const { data, error } = await db(supabase).from("workflow_executions").insert({
     workflow_id: workflowId,
