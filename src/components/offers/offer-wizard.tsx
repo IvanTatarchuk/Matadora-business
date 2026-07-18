@@ -1,6 +1,6 @@
 "use client";
 
-import { Fragment, useEffect, useMemo, useState, useTransition } from "react";
+import { Fragment, useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import {
   Building,
@@ -12,6 +12,11 @@ import {
   ArrowLeft,
   ArrowRight,
   Check,
+  Upload,
+  FileText,
+  Loader2,
+  X,
+  Sparkles,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -19,6 +24,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { cn, formatPLN } from "@/lib/utils";
 import {
   DEFAULT_STAGES,
@@ -46,6 +52,18 @@ export interface CatalogMaterial {
   stock_status: StockStatus;
 }
 
+const MAX_PDF_MB = 4;
+
+type AiSuggestedItem = {
+  id: string;
+  name: string;
+  unit: string;
+  qty: number;
+  laborRate: number;
+  materialRate: number;
+  selected: boolean;
+};
+
 export function OfferWizard({ materials }: { materials: CatalogMaterial[] }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
@@ -58,6 +76,17 @@ export function OfferWizard({ materials }: { materials: CatalogMaterial[] }) {
   const [address, setAddress] = useState("");
   const [surfaceArea, setSurfaceArea] = useState<number>(0);
   const [investorEmail, setInvestorEmail] = useState("");
+
+  // AI PDF analysis
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [aiUploading, setAiUploading] = useState(false);
+  const [aiDragging, setAiDragging] = useState(false);
+  const [aiError, setAiError] = useState<string | null>(null);
+  const [aiFileName, setAiFileName] = useState<string | null>(null);
+  const [aiSummary, setAiSummary] = useState<string | null>(null);
+  const [aiSuggestions, setAiSuggestions] = useState<AiSuggestedItem[]>([]);
+  const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
+  const [processingProgress, setProcessingProgress] = useState(0);
 
   // Step 2 — stages
   const [stages, setStages] = useState<StageInput[]>(DEFAULT_STAGES);
@@ -131,6 +160,137 @@ export function OfferWizard({ materials }: { materials: CatalogMaterial[] }) {
 
   function removeStage(index: number) {
     setStages((prev) => prev.filter((_, i) => i !== index));
+  }
+
+  // AI PDF analysis functions
+  function handlePdfSelected(e: React.ChangeEvent<HTMLInputElement>) {
+    const files = Array.from(e.target.files || []);
+    e.target.value = "";
+    if (files.length > 0) void processPdfFiles(files);
+  }
+
+  function handlePdfDrop(e: React.DragEvent<HTMLDivElement>) {
+    e.preventDefault();
+    setAiDragging(false);
+    const files = Array.from(e.dataTransfer.files || []);
+    if (files.length > 0) void processPdfFiles(files);
+  }
+
+  async function processPdfFiles(files: File[]) {
+    const pdfFiles = files.filter(f => f.type === "application/pdf");
+    if (pdfFiles.length === 0) {
+      setAiError("Wgraj pliki w formacie PDF.");
+      return;
+    }
+
+    const oversizedFiles = pdfFiles.filter(f => f.size > MAX_PDF_MB * 1024 * 1024);
+    if (oversizedFiles.length > 0) {
+      setAiError(`${oversizedFiles.length} plików jest za dużych — limit to ${MAX_PDF_MB} MB każdy.`);
+      return;
+    }
+
+    setUploadedFiles(pdfFiles);
+    setAiError(null);
+    setAiSummary(null);
+    setAiSuggestions([]);
+    setAiUploading(true);
+    setProcessingProgress(0);
+
+    const allSuggestions: AiSuggestedItem[] = [];
+    let projectNameFound = false;
+
+    for (let i = 0; i < pdfFiles.length; i++) {
+      const file = pdfFiles[i] as File;
+      setAiFileName(file.name);
+      setProcessingProgress(Math.round((i / pdfFiles.length) * 100));
+
+      try {
+        const formData = new FormData();
+        formData.append("file", file);
+        const res = await fetch("/api/kosztorys/analyze-pdf", {
+          method: "POST",
+          body: formData,
+        });
+        const data = await res.json();
+        if (!res.ok || !data.success) {
+          console.error(`Failed to analyze ${file.name}:`, data.error);
+          continue;
+        }
+
+        if (data.summary) {
+          setAiSummary(prev => prev ? `${prev}\n\n${data.summary}` : data.summary);
+        }
+        if (data.project_name && !projectNameFound) {
+          setProjectTitle(data.project_name);
+          setOfferTitle(data.project_name);
+          projectNameFound = true;
+        }
+
+        const fileSuggestions = (data.items ?? []).map(
+          (item: {
+            name: string;
+            unit: string;
+            qty: number;
+            labor_rate: number;
+            material_rate: number;
+          }) => ({
+            id: `ai-${Date.now()}-${Math.random()}-${i}`,
+            name: item.name,
+            unit: item.unit,
+            qty: item.qty,
+            laborRate: item.labor_rate,
+            materialRate: item.material_rate,
+            selected: true,
+          })
+        );
+        allSuggestions.push(...fileSuggestions);
+      } catch (err) {
+        console.error(`Error processing ${file.name}:`, err);
+      }
+    }
+
+    setProcessingProgress(100);
+    setAiSuggestions(allSuggestions);
+    setAiUploading(false);
+  }
+
+  function toggleSuggestion(id: string) {
+    setAiSuggestions((prev) =>
+      prev.map((s) => (s.id === id ? { ...s, selected: !s.selected } : s))
+    );
+  }
+
+  function updateSuggestionField(
+    id: string,
+    field: "qty" | "laborRate" | "materialRate",
+    value: number
+  ) {
+    setAiSuggestions((prev) =>
+      prev.map((s) => (s.id === id ? { ...s, [field]: Math.max(0, value) } : s))
+    );
+  }
+
+  function addSelectedSuggestions() {
+    const toAdd = aiSuggestions.filter((s) => s.selected);
+    if (toAdd.length === 0) return;
+    setStages((prev) => [
+      ...prev,
+      ...toAdd.map((s) => ({
+        stage_name: s.name,
+        description: `AI-generated: ${s.qty} ${s.unit} @ ${formatPLN(s.laborRate + s.materialRate)}/${s.unit}`,
+        cost: s.qty * (s.laborRate + s.materialRate),
+        order_index: prev.length,
+        group_label: null,
+      })),
+    ]);
+    setAiSuggestions((prev) => prev.filter((s) => !s.selected));
+  }
+
+  function dismissAiResults() {
+    setAiSuggestions([]);
+    setAiSummary(null);
+    setAiError(null);
+    setAiFileName(null);
   }
 
   function next() {
@@ -256,6 +416,169 @@ export function OfferWizard({ materials }: { materials: CatalogMaterial[] }) {
                     placeholder="investor@example.com"
                   />
                 </div>
+              </div>
+
+              {/* AI PDF Analysis Section */}
+              <div className="mt-6 rounded-lg border border-primary/30 bg-gradient-to-br from-primary/5 to-transparent p-4">
+                <div className="mb-3 flex items-center gap-2">
+                  <Sparkles className="h-4 w-4 text-primary" />
+                  <h3 className="text-sm font-semibold">Analiza AI z PDF</h3>
+                  <Badge className="bg-primary/15 text-primary hover:bg-primary/15">Nowość</Badge>
+                </div>
+                <p className="mb-3 text-xs text-muted-foreground">
+                  Wgraj projekt PDF, przedmiar robót lub istniejący kosztorys — AI wyodrębni pozycje robót z ilościami i automatycznie utworzy etapy.
+                </p>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="application/pdf"
+                  multiple
+                  className="hidden"
+                  onChange={handlePdfSelected}
+                />
+
+                {!aiUploading && aiSuggestions.length === 0 && (
+                  <div
+                    onClick={() => fileInputRef.current?.click()}
+                    onDragOver={(e) => {
+                      e.preventDefault();
+                      setAiDragging(true);
+                    }}
+                    onDragLeave={() => setAiDragging(false)}
+                    onDrop={handlePdfDrop}
+                    role="button"
+                    tabIndex={0}
+                    className={`flex w-full cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed py-6 text-center transition-colors ${
+                      aiDragging
+                        ? "border-primary bg-primary/10"
+                        : "border-primary/30 bg-white/60 hover:border-primary hover:bg-primary/5"
+                    }`}
+                  >
+                    <Upload className="h-5 w-5 text-primary" />
+                    <span className="text-sm font-medium">
+                      Wgraj projekty PDF — kliknij lub przeciągnij pliki tutaj{" "}
+                      <span className="text-muted-foreground">(max {MAX_PDF_MB} MB każdy)</span>
+                    </span>
+                    <span className="text-xs text-muted-foreground">
+                      Możesz wgrać wiele plików jednocześnie
+                    </span>
+                  </div>
+                )}
+
+                {aiUploading && (
+                  <div className="flex flex-col items-center justify-center gap-3 rounded-lg border-2 border-dashed border-primary/30 bg-white/60 py-6 text-center">
+                    <Loader2 className="h-5 w-5 animate-spin text-primary" />
+                    <span className="text-sm font-medium">
+                      Analizuję {aiFileName}… ({uploadedFiles.length} plików)
+                    </span>
+                    <div className="w-full max-w-xs">
+                      <div className="h-2 w-full overflow-hidden rounded-full bg-primary/15">
+                        <div
+                          className="h-full bg-primary transition-all duration-300"
+                          style={{ width: `${processingProgress}%` }}
+                        />
+                      </div>
+                      <span className="mt-1 text-xs text-muted-foreground">
+                        {processingProgress}% zakończone
+                      </span>
+                    </div>
+                    <span className="text-xs text-muted-foreground">
+                      To może potrwać kilka minut dla wielu plików
+                    </span>
+                  </div>
+                )}
+
+                {aiError && (
+                  <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+                    {aiError}
+                  </div>
+                )}
+
+                {aiSummary && (
+                  <div className="rounded-lg border border-primary/20 bg-white p-3 text-sm">
+                    <p className="text-muted-foreground">{aiSummary}</p>
+                  </div>
+                )}
+
+                {aiSuggestions.length > 0 && (
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                        Znalezione pozycje ({aiSuggestions.length})
+                      </p>
+                      <button
+                        onClick={dismissAiResults}
+                        className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1"
+                      >
+                        <X className="h-3 w-3" /> Wyczyść
+                      </button>
+                    </div>
+                    <div className="max-h-64 space-y-1.5 overflow-y-auto">
+                      {aiSuggestions.map((s) => (
+                        <div
+                          key={s.id}
+                          className="flex items-start gap-2 rounded-lg border bg-white p-2 text-sm hover:border-primary/40"
+                        >
+                          <input
+                            type="checkbox"
+                            checked={s.selected}
+                            onChange={() => toggleSuggestion(s.id)}
+                            className="mt-1.5 cursor-pointer"
+                          />
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span className="text-xs text-muted-foreground">
+                                {formatPLN(s.laborRate + s.materialRate)}/{s.unit}
+                              </span>
+                            </div>
+                            <p className="mt-0.5 font-medium">{s.name}</p>
+                            <div className="mt-1.5 grid grid-cols-3 gap-1.5">
+                              <div>
+                                <label className="text-[10px] text-muted-foreground">Ilość ({s.unit})</label>
+                                <Input
+                                  type="number"
+                                  value={s.qty}
+                                  onChange={(e) => updateSuggestionField(s.id, "qty", Number(e.target.value))}
+                                  className="mt-0.5 h-7 text-xs"
+                                  min={0}
+                                />
+                              </div>
+                              <div>
+                                <label className="text-[10px] text-muted-foreground">Robocizna</label>
+                                <Input
+                                  type="number"
+                                  value={s.laborRate}
+                                  onChange={(e) => updateSuggestionField(s.id, "laborRate", Number(e.target.value))}
+                                  className="mt-0.5 h-7 text-xs"
+                                  min={0}
+                                />
+                              </div>
+                              <div>
+                                <label className="text-[10px] text-muted-foreground">Materiał</label>
+                                <Input
+                                  type="number"
+                                  value={s.materialRate}
+                                  onChange={(e) => updateSuggestionField(s.id, "materialRate", Number(e.target.value))}
+                                  className="mt-0.5 h-7 text-xs"
+                                  min={0}
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    <Button
+                      size="sm"
+                      className="w-full gap-1"
+                      onClick={addSelectedSuggestions}
+                      disabled={!aiSuggestions.some((s) => s.selected)}
+                    >
+                      <Plus className="h-4 w-4" />
+                      Dodaj zaznaczone do etapów
+                    </Button>
+                  </div>
+                )}
               </div>
             </div>
           )}
