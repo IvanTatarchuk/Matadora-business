@@ -64,7 +64,7 @@ export async function POST(req: NextRequest) {
     const session = event.data.object;
     const sessionId = session.id as string;
     const email = (session.customer_details as { email?: string } | null)?.email ?? "unknown";
-    const tier = (session.metadata as Record<string, string> | null)?.tier ?? "maly";
+    const tier = (session.metadata as Record<string, string> | null)?.tier ?? "standardowy";
     const amountTotal = (session.amount_total as number) ?? 0;
     const paymentIntent = session.payment_intent as string | null;
 

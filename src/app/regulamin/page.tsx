@@ -126,10 +126,11 @@ export default function RegulaminPage() {
                   brutto (zawierają podatek VAT wg obowiązującej stawki).
                 </li>
                 <li>
-                  Model rozliczeń oparty jest o zasadę <strong>„płać za użycie"</strong> (pay-per-use) — Użytkownik
-                  ponosi opłatę za konkretny, jednorazowo wygenerowany kosztorys lub pakiet funkcji, zgodnie z
-                  cennikiem dostępnym na stronie <Link href="/pricing" className="text-primary underline">/pricing</Link>,
-                  lub — w przypadku wybrania planu abonamentowego — cykliczną opłatę subskrypcyjną.
+                  Korzystanie z Platformy jest bezpłatne. Jedyną odpłatną Usługą jest analiza AI kosztorysu
+                  z przesłanego dokumentu PDF, rozliczana jednorazowo za dokument (<strong>„płać za użycie"</strong>,
+                  pay-per-use), zgodnie z cennikiem dostępnym na stronie{" "}
+                  <Link href="/pricing" className="text-primary underline">/pricing</Link>. Platforma nie oferuje
+                  planów abonamentowych ani cyklicznych opłat subskrypcyjnych.
                 </li>
                 <li>
                   Po zaksięgowaniu płatności Użytkownik otrzymuje dostęp do zakupionej Usługi. Na żądanie

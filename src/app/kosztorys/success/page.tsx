@@ -3,17 +3,8 @@ import { CheckCircle2, ArrowRight, HardHat } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PrintReceiptButton } from "./receipt-actions";
 
-const TIER_LABELS: Record<string, string> = {
-  maly: "Kosztorys Mały",
-  standardowy: "Kosztorys Standardowy",
-  kompleksowy: "Kosztorys Kompleksowy",
-};
-
-const TIER_PRICES_PLN: Record<string, number> = {
-  maly: 149,
-  standardowy: 299,
-  kompleksowy: 499,
-};
+const PRODUCT_LABEL = "Analiza AI kosztorysu";
+const PRODUCT_PRICE_PLN = 500;
 
 const SELLER_NIP = "955-235-98-44";
 const SELLER_NAME = "VANBUD Ivan Tatarchuk";
@@ -22,11 +13,10 @@ const SELLER_ADDRESS = "ul. Mielecka 5, 70-740 Szczecin";
 export default function KosztorysSuccessPage({
   searchParams,
 }: {
-  searchParams: { tier?: string; session_id?: string };
+  searchParams: { session_id?: string };
 }) {
-  const tier = searchParams.tier ?? "standardowy";
-  const tierLabel = TIER_LABELS[tier] ?? "Kosztorys";
-  const price = TIER_PRICES_PLN[tier] ?? 299;
+  const tierLabel = PRODUCT_LABEL;
+  const price = PRODUCT_PRICE_PLN;
   const purchaseDate = new Intl.DateTimeFormat("pl-PL", {
     day: "2-digit",
     month: "2-digit",
@@ -53,7 +43,8 @@ export default function KosztorysSuccessPage({
 
         <h1 className="text-2xl font-bold print:hidden">Płatność zakończona!</h1>
         <p className="mt-2 text-muted-foreground print:hidden">
-          Dziękujemy za zakup. <strong>{tierLabel}</strong> jest teraz aktywny.
+          Dziękujemy za zakup. <strong>{tierLabel}</strong> uruchomi się automatycznie po powrocie do
+          kalkulatora.
         </p>
 
         {/* RECEIPT / POTWIERDZENIE ZAKUPU */}
@@ -94,8 +85,14 @@ export default function KosztorysSuccessPage({
         <div className="mt-6 space-y-3 print:hidden">
           <PrintReceiptButton />
           <Button className="w-full" asChild>
-            <Link href="/kosztorys">
-              Wróć do kalkulatora <ArrowRight className="ml-2 h-4 w-4" />
+            <Link
+              href={
+                searchParams.session_id
+                  ? `/kosztorys?paid_session_id=${encodeURIComponent(searchParams.session_id)}`
+                  : "/kosztorys"
+              }
+            >
+              Wróć do kalkulatora i pobierz wynik <ArrowRight className="ml-2 h-4 w-4" />
             </Link>
           </Button>
           <Button variant="outline" className="w-full" asChild>

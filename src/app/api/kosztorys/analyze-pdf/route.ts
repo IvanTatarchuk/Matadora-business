@@ -47,6 +47,15 @@ Jeśli dokument zawiera nazwę inwestycji lub projektu, podaj ją w project_name
 
 Jeśli w dokumencie nie ma żadnych sensownych pozycji budowlanych do wyodrębnienia, zwróć pustą listę items i wyjaśnij dlaczego w summary.`;
 
+/** Verifies payment directly against Stripe (source of truth — avoids waiting on webhook latency). */
+async function fetchPaidSession(sessionId: string, stripeKey: string) {
+  const res = await fetch(`https://api.stripe.com/v1/checkout/sessions/${sessionId}`, {
+    headers: { Authorization: `Bearer ${stripeKey}` },
+  });
+  if (!res.ok) return null;
+  return (await res.json()) as { id: string; payment_status: string };
+}
+
 export async function POST(req: NextRequest) {
   if (!process.env.ANTHROPIC_API_KEY) {
     return NextResponse.json(
@@ -55,7 +64,13 @@ export async function POST(req: NextRequest) {
     );
   }
 
+  const stripeKey = process.env.STRIPE_SECRET_KEY;
+  if (!stripeKey) {
+    return NextResponse.json({ error: "Płatności są chwilowo niedostępne." }, { status: 503 });
+  }
+
   let file: File;
+  let sessionId: string;
   try {
     const formData = await req.formData();
     const uploaded = formData.get("file");
@@ -63,6 +78,11 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Nie znaleziono pliku PDF." }, { status: 400 });
     }
     file = uploaded;
+    const sessionIdField = formData.get("session_id");
+    if (typeof sessionIdField !== "string" || !sessionIdField) {
+      return NextResponse.json({ error: "Brak potwierdzenia płatności." }, { status: 402 });
+    }
+    sessionId = sessionIdField;
   } catch {
     return NextResponse.json({ error: "Nieprawidłowe żądanie." }, { status: 400 });
   }
@@ -74,6 +94,28 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(
       { error: `Plik jest za duży — limit to ${Math.floor(MAX_PDF_BYTES / (1024 * 1024))} MB.` },
       { status: 400 }
+    );
+  }
+
+  const session = await fetchPaidSession(sessionId, stripeKey);
+  if (!session || session.payment_status !== "paid") {
+    return NextResponse.json({ error: "Płatność nie została potwierdzona." }, { status: 402 });
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const db = (s: any) => s as any;
+  const { createAdminClient } = await import("@/lib/supabase/admin");
+  const supabase = createAdminClient();
+  const { data: purchase } = await db(supabase)
+    .from("kosztorys_purchases")
+    .select("id, metadata")
+    .eq("stripe_session_id", sessionId)
+    .maybeSingle();
+
+  if (purchase?.metadata?.analysis_used) {
+    return NextResponse.json(
+      { error: "Ta płatność została już wykorzystana do analizy dokumentu." },
+      { status: 409 }
     );
   }
 
@@ -124,6 +166,15 @@ export async function POST(req: NextRequest) {
         material_rate: number;
       }>;
     };
+
+    try {
+      await db(supabase)
+        .from("kosztorys_purchases")
+        .update({ status: "paid", metadata: { ...(purchase?.metadata ?? {}), analysis_used: true } })
+        .eq("stripe_session_id", sessionId);
+    } catch {
+      // Non-blocking — worst case the same session could be replayed once more
+    }
 
     return NextResponse.json({ success: true, ...parsed });
   } catch (err) {

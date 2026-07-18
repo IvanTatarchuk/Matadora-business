@@ -146,6 +146,36 @@ export default function KosztorysPage() {
   const [aiFileName, setAiFileName] = useState<string | null>(null);
   const [aiSummary, setAiSummary] = useState<string | null>(null);
   const [aiSuggestions, setAiSuggestions] = useState<AiSuggestedItem[]>([]);
+  const [aiAwaitingPayment, setAiAwaitingPayment] = useState(false);
+  const [aiPaying, setAiPaying] = useState(false);
+
+  // Resume after Stripe checkout redirect: pending PDF lives in localStorage
+  // (the browser navigates away to Stripe and back, so React state doesn't survive).
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const sessionId = params.get("paid_session_id");
+    const stored = localStorage.getItem(PDF_STORAGE_KEY);
+
+    if (stored) {
+      try {
+        const { name, base64 } = JSON.parse(stored) as { name: string; base64: string };
+        setAiFileName(name);
+        setAiAwaitingPayment(true);
+        if (sessionId) {
+          void runAiAnalysis(base64ToFile(base64, name), sessionId);
+        }
+      } catch {
+        localStorage.removeItem(PDF_STORAGE_KEY);
+      }
+    } else if (sessionId) {
+      setAiError(
+        "Płatność została potwierdzona, ale nie znaleziono zapisanego pliku PDF w tej przeglądarce. Napisz do nas, przeanalizujemy dokument ręcznie: vanbud.felix@gmail.com"
+      );
+    }
+
+    if (sessionId) window.history.replaceState(null, "", "/kosztorys");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const filtered = KNR_ITEMS.filter(
     (k) =>
@@ -210,17 +240,18 @@ export default function KosztorysPage() {
   function handlePdfSelected(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     e.target.value = ""; // allow re-selecting the same file later
-    if (file) void processPdfFile(file);
+    if (file) void stagePdfFile(file);
   }
 
   function handlePdfDrop(e: React.DragEvent<HTMLDivElement>) {
     e.preventDefault();
     setAiDragging(false);
     const file = e.dataTransfer.files?.[0];
-    if (file) void processPdfFile(file);
+    if (file) void stagePdfFile(file);
   }
 
-  async function processPdfFile(file: File) {
+  /** Stores the chosen PDF locally and waits for payment before analyzing it. */
+  async function stagePdfFile(file: File) {
     setAiError(null);
     setAiSummary(null);
     setAiSuggestions([]);
@@ -234,11 +265,51 @@ export default function KosztorysPage() {
       return;
     }
 
+    const base64 = await fileToBase64(file);
+    localStorage.setItem(PDF_STORAGE_KEY, JSON.stringify({ name: file.name, base64 }));
     setAiFileName(file.name);
+    setAiAwaitingPayment(true);
+  }
+
+  function cancelStagedPdf() {
+    localStorage.removeItem(PDF_STORAGE_KEY);
+    setAiAwaitingPayment(false);
+    setAiFileName(null);
+    setAiError(null);
+  }
+
+  /** Starts a Stripe Checkout session for the flat 500 zł AI analysis fee. */
+  async function payAndAnalyze() {
+    setAiError(null);
+    setAiPaying(true);
+    try {
+      const res = await fetch("/api/stripe/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: "{}",
+      });
+      const data = await res.json();
+      if (res.status === 503 || data.error === "payments_not_configured") {
+        setAiError("Płatności online są chwilowo niedostępne. Napisz do nas: vanbud.felix@gmail.com");
+        return;
+      }
+      if (!data.url) throw new Error(data.error ?? "Nie udało się rozpocząć płatności.");
+      window.location.href = data.url;
+    } catch (err) {
+      setAiError(err instanceof Error ? err.message : "Nie udało się rozpocząć płatności.");
+    } finally {
+      setAiPaying(false);
+    }
+  }
+
+  /** Runs the paid AI analysis once a Stripe session id is available (verified server-side). */
+  async function runAiAnalysis(file: File, sessionId: string) {
     setAiUploading(true);
+    setAiError(null);
     try {
       const formData = new FormData();
       formData.append("file", file);
+      formData.append("session_id", sessionId);
       const res = await fetch("/api/kosztorys/analyze-pdf", {
         method: "POST",
         body: formData,
@@ -273,6 +344,8 @@ export default function KosztorysPage() {
           })
         )
       );
+      localStorage.removeItem(PDF_STORAGE_KEY);
+      setAiAwaitingPayment(false);
     } catch (err) {
       setAiError(err instanceof Error ? err.message : "Analiza nie powiodła się.");
     } finally {
@@ -412,7 +485,9 @@ export default function KosztorysPage() {
                   </CardTitle>
                   <p className="text-xs text-muted-foreground">
                     Wgraj rzut architektoniczny, przedmiar robót lub istniejący kosztorys w PDF —
-                    Claude AI wyodrębni pozycje robót z ilościami i zaproponuje kody KNR.
+                    Claude AI wyodrębni pozycje robót z ilościami i zaproponuje kody KNR. Analiza AI
+                    kosztuje jednorazowo {AI_ANALYSIS_PRICE_PLN} zł — reszta kalkulatora jest
+                    bezpłatna.
                   </p>
                 </CardHeader>
                 <CardContent className="space-y-3">
@@ -424,7 +499,7 @@ export default function KosztorysPage() {
                     onChange={handlePdfSelected}
                   />
 
-                  {!aiUploading && aiSuggestions.length === 0 && (
+                  {!aiUploading && !aiAwaitingPayment && aiSuggestions.length === 0 && (
                     <div
                       onClick={() => fileInputRef.current?.click()}
                       onDragOver={(e) => {
@@ -446,6 +521,28 @@ export default function KosztorysPage() {
                         Wgraj projekt PDF — kliknij lub przeciągnij plik tutaj{" "}
                         <span className="text-muted-foreground">(max {MAX_PDF_MB} MB)</span>
                       </span>
+                    </div>
+                  )}
+
+                  {!aiUploading && aiAwaitingPayment && (
+                    <div className="flex flex-col items-center justify-center gap-3 rounded-lg border-2 border-dashed border-primary/30 bg-white/60 py-8 text-center">
+                      <FileText className="h-6 w-6 text-primary" />
+                      <span className="text-sm font-medium">{aiFileName}</span>
+                      <span className="text-xs text-muted-foreground">
+                        Plik gotowy do analizy — zapłać {AI_ANALYSIS_PRICE_PLN} zł, aby uruchomić AI
+                      </span>
+                      <div className="flex items-center gap-2">
+                        <Button size="sm" onClick={payAndAnalyze} disabled={aiPaying}>
+                          {aiPaying ? (
+                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                          ) : (
+                            `Zapłać ${AI_ANALYSIS_PRICE_PLN} zł i przeanalizuj`
+                          )}
+                        </Button>
+                        <Button size="sm" variant="outline" onClick={cancelStagedPdf} disabled={aiPaying}>
+                          Anuluj
+                        </Button>
+                      </div>
                     </div>
                   )}
 
