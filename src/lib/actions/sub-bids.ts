@@ -27,6 +27,7 @@ export type SubBid = {
   review_notes: string | null;
   created_at: string;
   updated_at: string;
+  subcontractor?: { insurance_expiry: string | null; license_number: string | null } | null;
 };
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -35,7 +36,7 @@ const db = (s: any) => s as any;
 export async function listSubBids(rfqId: string): Promise<SubBid[]> {
   const supabase = createClient();
   const { data, error } = await db(supabase)
-    .from("sub_bids").select("*").eq("rfq_id", rfqId)
+    .from("sub_bids").select("*, subcontractor:subcontractors(insurance_expiry, license_number)").eq("rfq_id", rfqId)
     .order("amount_net", { ascending: true });
   if (error) return [];
   return (data ?? []) as SubBid[];
@@ -44,7 +45,7 @@ export async function listSubBids(rfqId: string): Promise<SubBid[]> {
 export async function listProjectSubBids(projectId: string): Promise<SubBid[]> {
   const supabase = createClient();
   const { data, error } = await db(supabase)
-    .from("sub_bids").select("*").eq("project_id", projectId)
+    .from("sub_bids").select("*, subcontractor:subcontractors(insurance_expiry, license_number)").eq("project_id", projectId)
     .order("created_at", { ascending: false });
   if (error) return [];
   return (data ?? []) as SubBid[];
@@ -96,21 +97,62 @@ export async function updateSubBidStatus(
   status: SubBidStatus, reviewNotes?: string
 ): Promise<{ ok: boolean; error?: string }> {
   const supabase = createClient();
-  const { error } = await db(supabase).from("sub_bids").update({
+  const { data: updated, error } = await db(supabase).from("sub_bids").update({
     status, review_notes: reviewNotes ?? null,
     reviewed_at: new Date().toISOString(), updated_at: new Date().toISOString(),
-  }).eq("id", id);
+  }).eq("id", id)
+    .select("id, project_id, org_id, rfq_id, bidder_name, amount_net")
+    .single();
   if (error) return { ok: false, error: error.message };
 
-  // If accepting a bid, reject all others for same RFQ
+  // If accepting a bid, reject all others for same RFQ and commit its cost to job costing
   if (status === "accepted") {
     await db(supabase).from("sub_bids")
       .update({ status: "rejected", updated_at: new Date().toISOString() })
       .eq("rfq_id", rfqId).neq("id", id).eq("status", "submitted");
+
+    await pushAcceptedBidToJobCosting(supabase, updated);
+    revalidatePath(`/dashboard/contractor/projects/${projectId}/koszty`);
   }
 
   revalidatePath(`/dashboard/contractor/projects/${projectId}/rfq`);
   return { ok: true };
+}
+
+/**
+ * Awarding a bid should commit its cost immediately, not after someone
+ * manually re-enters it in job costing — inserts a `subcontract` job_cost_items
+ * row (or updates one already created for this bid, so re-awarding is safe).
+ */
+async function pushAcceptedBidToJobCosting(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  supabase: any,
+  bid: { id: string; project_id: string; org_id: string; rfq_id: string; bidder_name: string; amount_net: number }
+) {
+  const marker = `[sub_bid:${bid.id}]`;
+
+  const { data: existing } = await db(supabase).from("job_cost_items")
+    .select("id").eq("project_id", bid.project_id).ilike("notes", `%${marker}%`).limit(1);
+  if (existing && existing.length > 0) {
+    await db(supabase).from("job_cost_items").update({
+      unit_cost_planned: bid.amount_net, quantity_planned: 1,
+      updated_at: new Date().toISOString(),
+    }).eq("id", existing[0].id);
+    return;
+  }
+
+  const { data: rfq } = await db(supabase).from("rfqs").select("title").eq("id", bid.rfq_id).single();
+  const { data: last } = await db(supabase).from("job_cost_items").select("position")
+    .eq("project_id", bid.project_id).order("position", { ascending: false }).limit(1).single();
+
+  await db(supabase).from("job_cost_items").insert({
+    project_id: bid.project_id, org_id: bid.org_id,
+    name: rfq?.title ? `${rfq.title} — ${bid.bidder_name}` : bid.bidder_name,
+    category: "subcontract", unit: "usł.",
+    quantity_planned: 1, unit_cost_planned: bid.amount_net,
+    notes: `Zaakceptowana oferta podwykonawcy ${marker}`,
+    position: (last?.position ?? 0) + 10,
+  });
 }
 
 export async function deleteSubBid(id: string, projectId: string): Promise<{ ok: boolean; error?: string }> {

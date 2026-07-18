@@ -17,6 +17,7 @@ import {
   Loader2,
   X,
   Sparkles,
+  AlertTriangle,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -126,6 +127,20 @@ export function OfferWizard({ materials }: { materials: CatalogMaterial[] }) {
     [stages]
   );
   const hasSections = reviewGroups.some((g) => g.label !== null);
+
+  // Non-blocking sanity checks before the offer is created — same idea as
+  // the warnings already surfaced on the public /kosztorys builder.
+  const submissionWarnings = useMemo(() => {
+    const warnings: string[] = [];
+    const namedStages = stages.filter((s) => s.stage_name.trim().length > 0);
+    const zeroCost = namedStages.filter((s) => (Number(s.cost) || 0) <= 0);
+    if (zeroCost.length === 1) {
+      warnings.push(`Stage "${zeroCost[0]!.stage_name}" has a zero net cost.`);
+    } else if (zeroCost.length > 1) {
+      warnings.push(`${zeroCost.length} stages have a zero net cost.`);
+    }
+    return warnings;
+  }, [stages]);
 
   const selectedMaterials = useMemo(
     () =>
@@ -935,6 +950,20 @@ export function OfferWizard({ materials }: { materials: CatalogMaterial[] }) {
                   </tbody>
                 </table>
               </div>
+
+              {submissionWarnings.length > 0 && (
+                <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800">
+                  <p className="mb-1 flex items-center gap-1.5 font-semibold">
+                    <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
+                    Check before creating
+                  </p>
+                  <ul className="list-disc space-y-0.5 pl-4">
+                    {submissionWarnings.map((warning) => (
+                      <li key={warning}>{warning}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
 
               <div className="ml-auto w-full max-w-xs space-y-2 text-sm">
                 <div className="flex justify-between">

@@ -852,6 +852,10 @@ export interface Database {
         Args: Record<string, never>;
         Returns: UserRole;
       };
+      increment_views_count: {
+        Args: { ad_id: string };
+        Returns: void;
+      };
     };
     Enums: {
       user_role: UserRole;
