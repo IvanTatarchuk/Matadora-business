@@ -96,7 +96,7 @@ export async function toggleCRMSync(connectionId: string): Promise<{ ok: boolean
     .eq("id", connectionId)
     .single();
 
-  if (!connection) return { ok: false, error: "Connection not found" };
+  if (!connection) return { ok: false, error: "Nie znaleziono połączenia" };
 
   const { error } = await db(supabase)
     .from("crm_connections")
@@ -150,7 +150,7 @@ export async function triggerCRMSync(connectionId: string): Promise<{ ok: boolea
     .eq("id", connectionId)
     .single();
 
-  if (!connection) return { ok: false, error: "Connection not found" };
+  if (!connection) return { ok: false, error: "Nie znaleziono połączenia" };
 
   const { error } = await db(supabase).from("crm_sync_logs").insert({
     connection_id: connectionId,

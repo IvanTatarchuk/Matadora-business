@@ -173,7 +173,7 @@ export async function toggleApiWebhook(webhookId: string): Promise<{ ok: boolean
     .eq("id", webhookId)
     .single();
 
-  if (!webhook) return { ok: false, error: "Webhook not found" };
+  if (!webhook) return { ok: false, error: "Nie znaleziono webhooka" };
 
   const { error } = await db(supabase)
     .from("api_webhooks")

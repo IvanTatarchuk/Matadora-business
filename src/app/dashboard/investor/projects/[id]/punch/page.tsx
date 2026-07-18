@@ -32,7 +32,7 @@ export default async function InvestorPunchPage({
 
       <div>
         <h1 className="text-2xl font-bold">{project.title}</h1>
-        <p className="text-muted-foreground">Дефекти та зауваження</p>
+        <p className="text-muted-foreground">Usterki i uwagi</p>
       </div>
 
       <PunchList

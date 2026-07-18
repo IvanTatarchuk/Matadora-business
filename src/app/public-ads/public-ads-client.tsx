@@ -10,20 +10,20 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 
 const PROPERTY_TYPES = [
-  { value: "apartment", label: "Квартира" },
-  { value: "house", label: "Будинок" },
-  { value: "office", label: "Офіс" },
-  { value: "commercial", label: "Комерційне приміщення" },
+  { value: "apartment", label: "Mieszkanie" },
+  { value: "house", label: "Dom" },
+  { value: "office", label: "Biuro" },
+  { value: "commercial", label: "Lokal komercyjny" },
 ];
 
 const WORK_TYPES = [
-  { value: "full_repair", label: "Повний ремонт" },
-  { value: "partial", label: "Частковий ремонт" },
-  { value: "electric", label: "Електрика" },
-  { value: "plumbing", label: "Сантехніка" },
-  { value: "painting", label: "Малярні роботи" },
-  { value: "flooring", label: "Підлога" },
-  { value: "other", label: "Інше" },
+  { value: "full_repair", label: "Remont kompleksowy" },
+  { value: "partial", label: "Remont częściowy" },
+  { value: "electric", label: "Elektryka" },
+  { value: "plumbing", label: "Hydraulika" },
+  { value: "painting", label: "Prace malarskie" },
+  { value: "flooring", label: "Podłogi" },
+  { value: "other", label: "Inne" },
 ];
 
 interface Props {
@@ -73,14 +73,14 @@ export function PublicAdsClient({ initialAds, user }: Props) {
 
   function handleCreate() {
     if (!form.title.trim() || !form.city?.trim()) {
-      setError("Заголовок та місто є обов'язковими");
+      setError("Tytuł i miasto są wymagane");
       return;
     }
     setError(null);
     startTransition(async () => {
       const res = await createPublicAd(form);
       if (!res.ok) {
-        setError(res.error ?? "Помилка створення оголошення");
+        setError(res.error ?? "Błąd tworzenia ogłoszenia");
         return;
       }
       setShowForm(false);
@@ -122,22 +122,22 @@ export function PublicAdsClient({ initialAds, user }: Props) {
     const file = files[0];
     if (!file) return;
     
-    // Перевірка кількості фото
+    // Sprawdzenie liczby zdjęć
     if (form.photos && form.photos.length >= 10) {
-      setError("Максимум 10 фото");
+      setError("Maksymalnie 10 zdjęć");
       return;
     }
 
-    // Перевірка розміру
+    // Sprawdzenie rozmiaru
     if (file.size > 5 * 1024 * 1024) {
-      setError("Файл занадто великий (макс 5MB)");
+      setError("Plik jest za duży (maks. 5MB)");
       return;
     }
 
-    // Перевірка типу
+    // Sprawdzenie typu
     const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
     if (!allowedTypes.includes(file.type)) {
-      setError("Непідтримуваний формат (тільки JPG, PNG, WEBP)");
+      setError("Nieobsługiwany format (tylko JPG, PNG, WEBP)");
       return;
     }
 
@@ -145,13 +145,13 @@ export function PublicAdsClient({ initialAds, user }: Props) {
     setError(null);
 
     try {
-      // Створюємо тимчасовий ID для завантаження
+      // Tworzymy tymczasowe ID na potrzeby przesyłania
       const tempId = tempAdId || crypto.randomUUID();
       setTempAdId(tempId);
 
       const res = await uploadAdPhoto(file, tempId);
       if (!res.ok) {
-        setError(res.error ?? "Помилка завантаження");
+        setError(res.error ?? "Błąd przesyłania");
         return;
       }
 
@@ -160,7 +160,7 @@ export function PublicAdsClient({ initialAds, user }: Props) {
         photos: [...(prev.photos || []), res.url!],
       }));
     } catch (err) {
-      setError("Помилка завантаження фото");
+      setError("Błąd przesyłania zdjęcia");
     } finally {
       setUploadingPhoto(false);
     }
@@ -168,11 +168,11 @@ export function PublicAdsClient({ initialAds, user }: Props) {
 
   async function handlePhotoDelete(photoUrl: string) {
     setError(null);
-    
+
     try {
       const res = await deleteAdPhoto(photoUrl);
       if (!res.ok) {
-        setError(res.error ?? "Помилка видалення");
+        setError(res.error ?? "Błąd usuwania");
         return;
       }
 
@@ -181,16 +181,16 @@ export function PublicAdsClient({ initialAds, user }: Props) {
         photos: prev.photos?.filter((p) => p !== photoUrl) || [],
       }));
     } catch (err) {
-      setError("Помилка видалення фото");
+      setError("Błąd usuwania zdjęcia");
     }
   }
 
   return (
     <div className="container mx-auto py-8 px-4">
       <div className="mb-8">
-        <h1 className="text-4xl font-bold mb-2">Оголошення про ремонт</h1>
+        <h1 className="text-4xl font-bold mb-2">Ogłoszenia remontowe</h1>
         <p className="text-muted-foreground">
-          Знайдіть підрядника для ремонту вашого житла або розмістіть власне оголошення
+          Znajdź wykonawcę do remontu swojej nieruchomości lub dodaj własne ogłoszenie
         </p>
       </div>
 
@@ -198,7 +198,7 @@ export function PublicAdsClient({ initialAds, user }: Props) {
       <div className="flex gap-4 mb-6 flex-wrap">
         <Button onClick={() => setShowForm(true)} size="lg">
           <Plus className="h-5 w-5 mr-2" />
-          Додати оголошення
+          Dodaj ogłoszenie
         </Button>
       </div>
 
@@ -209,14 +209,14 @@ export function PublicAdsClient({ initialAds, user }: Props) {
             <div className="relative flex-1 min-w-[200px]">
               <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Пошук за назвою..."
+                placeholder="Szukaj po nazwie..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-9"
               />
             </div>
             <Input
-              placeholder="Місто"
+              placeholder="Miasto"
               value={filterCity}
               onChange={(e) => setFilterCity(e.target.value)}
               className="w-[150px]"
@@ -236,7 +236,7 @@ export function PublicAdsClient({ initialAds, user }: Props) {
               onChange={(e) => setFilterWorkType(e.target.value)}
               className="rounded-md border bg-background px-3 py-2 text-sm"
             >
-              <option value="all">Всі види робіт</option>
+              <option value="all">Wszystkie rodzaje prac</option>
               {WORK_TYPES.map((wt) => (
                 <option key={wt.value} value={wt.value}>{wt.label}</option>
               ))}
@@ -250,7 +250,7 @@ export function PublicAdsClient({ initialAds, user }: Props) {
         <Card className="mb-6 border-primary">
           <CardHeader>
             <div className="flex items-center justify-between">
-              <CardTitle>Створити оголошення</CardTitle>
+              <CardTitle>Utwórz ogłoszenie</CardTitle>
               <Button variant="ghost" size="sm" onClick={() => setShowForm(false)}>
                 <X className="h-4 w-4" />
               </Button>
@@ -259,12 +259,12 @@ export function PublicAdsClient({ initialAds, user }: Props) {
           <CardContent className="space-y-4">
             <div className="grid gap-4 md:grid-cols-2">
               <div className="md:col-span-2">
-                <Label htmlFor="title">Заголовок *</Label>
+                <Label htmlFor="title">Tytuł *</Label>
                 <Input
                   id="title"
                   value={form.title}
                   onChange={(e) => setForm({ ...form, title: e.target.value })}
-                  placeholder="Наприклад: Ремонт 3-кімнатної квартири"
+                  placeholder="Np.: Remont mieszkania 3-pokojowego"
                   className="mt-1"
                 />
               </div>
@@ -282,7 +282,7 @@ export function PublicAdsClient({ initialAds, user }: Props) {
                 </select>
               </div>
               <div>
-                <Label htmlFor="area_size">Площа (м²)</Label>
+                <Label htmlFor="area_size">Powierzchnia (m²)</Label>
                 <Input
                   id="area_size"
                   type="number"
@@ -292,7 +292,7 @@ export function PublicAdsClient({ initialAds, user }: Props) {
                 />
               </div>
               <div>
-                <Label htmlFor="city">Місто *</Label>
+                <Label htmlFor="city">Miasto *</Label>
                 <Input
                   id="city"
                   value={form.city}
@@ -301,7 +301,7 @@ export function PublicAdsClient({ initialAds, user }: Props) {
                 />
               </div>
               <div>
-                <Label htmlFor="address">Адреса</Label>
+                <Label htmlFor="address">Adres</Label>
                 <Input
                   id="address"
                   value={form.address}
@@ -310,7 +310,7 @@ export function PublicAdsClient({ initialAds, user }: Props) {
                 />
               </div>
               <div>
-                <Label htmlFor="budget_min">Мін. бюджет (грн)</Label>
+                <Label htmlFor="budget_min">Min. budżet (zł)</Label>
                 <Input
                   id="budget_min"
                   type="number"
@@ -320,7 +320,7 @@ export function PublicAdsClient({ initialAds, user }: Props) {
                 />
               </div>
               <div>
-                <Label htmlFor="budget_max">Макс. бюджет (грн)</Label>
+                <Label htmlFor="budget_max">Maks. budżet (zł)</Label>
                 <Input
                   id="budget_max"
                   type="number"
@@ -330,17 +330,17 @@ export function PublicAdsClient({ initialAds, user }: Props) {
                 />
               </div>
               <div>
-                <Label htmlFor="phone">Телефон</Label>
+                <Label htmlFor="phone">Telefon</Label>
                 <Input
                   id="phone"
                   value={form.phone}
                   onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                  placeholder="+380 XX XXX XX XX"
+                  placeholder="+48 XXX XXX XXX"
                   className="mt-1"
                 />
               </div>
               <div>
-                <Label htmlFor="start_date">Бажана дата початку</Label>
+                <Label htmlFor="start_date">Preferowana data rozpoczęcia</Label>
                 <Input
                   id="start_date"
                   type="date"
@@ -350,18 +350,18 @@ export function PublicAdsClient({ initialAds, user }: Props) {
                 />
               </div>
               <div className="md:col-span-2">
-                <Label htmlFor="description">Опис</Label>
+                <Label htmlFor="description">Opis</Label>
                 <Textarea
                   id="description"
                   value={form.description}
                   onChange={(e) => setForm({ ...form, description: e.target.value })}
-                  placeholder="Опишіть деталі ремонту, що потрібно зробити..."
+                  placeholder="Opisz szczegóły remontu, jakie prace należy wykonać..."
                   rows={4}
                   className="mt-1"
                 />
               </div>
               <div className="md:col-span-2">
-                <Label>Види робіт</Label>
+                <Label>Rodzaje prac</Label>
                 <div className="flex flex-wrap gap-2 mt-2">
                   {WORK_TYPES.map((wt) => (
                     <button
@@ -380,7 +380,7 @@ export function PublicAdsClient({ initialAds, user }: Props) {
                 </div>
               </div>
               <div className="md:col-span-2">
-                <Label htmlFor="photos">Фото (до 10 шт.)</Label>
+                <Label htmlFor="photos">Zdjęcia (maks. 10 szt.)</Label>
                 <div className="mt-2 space-y-3">
                   {/* Uploaded photos preview */}
                   {form.photos && form.photos.length > 0 && (
@@ -389,7 +389,7 @@ export function PublicAdsClient({ initialAds, user }: Props) {
                         <div key={index} className="relative group">
                           <img
                             src={photo}
-                            alt={`Фото ${index + 1}`}
+                            alt={`Zdjęcie ${index + 1}`}
                             className="w-full h-24 object-cover rounded-lg"
                           />
                           <button
@@ -418,13 +418,13 @@ export function PublicAdsClient({ initialAds, user }: Props) {
                       <label htmlFor="photos" className="cursor-pointer">
                         <Upload className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
                         <p className="text-sm text-muted-foreground">
-                          {uploadingPhoto ? "Завантаження..." : "Натисніть для вибору фото"}
+                          {uploadingPhoto ? "Przesyłanie..." : "Kliknij, aby wybrać zdjęcie"}
                         </p>
                         <p className="text-xs text-muted-foreground mt-1">
-                          JPG, PNG, WEBP до 5MB
+                          JPG, PNG, WEBP do 5MB
                         </p>
                         <p className="text-xs text-muted-foreground">
-                          {form.photos?.length || 0}/10 фото
+                          {form.photos?.length || 0}/10 zdjęć
                         </p>
                       </label>
                     </div>
@@ -435,10 +435,10 @@ export function PublicAdsClient({ initialAds, user }: Props) {
             {error && <p className="text-sm text-destructive">{error}</p>}
             <div className="flex gap-2">
               <Button onClick={handleCreate} disabled={pending}>
-                {pending ? "Створення..." : "Опублікувати"}
+                {pending ? "Tworzenie..." : "Opublikuj"}
               </Button>
               <Button variant="outline" onClick={() => setShowForm(false)}>
-                Скасувати
+                Anuluj
               </Button>
             </div>
           </CardContent>
@@ -469,14 +469,14 @@ export function PublicAdsClient({ initialAds, user }: Props) {
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <Home className="h-4 w-4" />
                 <span>{PROPERTY_TYPES.find((pt) => pt.value === ad.property_type)?.label}</span>
-                {ad.area_size && <span>• {ad.area_size} м²</span>}
+                {ad.area_size && <span>• {ad.area_size} m²</span>}
               </div>
               {ad.budget_min && (
                 <div className="flex items-center gap-2 text-sm">
                   <DollarSign className="h-4 w-4 text-green-600" />
                   <span className="font-medium text-green-600">
-                    {ad.budget_min.toLocaleString()} грн
-                    {ad.budget_max && ` - ${ad.budget_max.toLocaleString()} грн`}
+                    {ad.budget_min.toLocaleString()} zł
+                    {ad.budget_max && ` - ${ad.budget_max.toLocaleString()} zł`}
                   </span>
                 </div>
               )}
@@ -496,12 +496,12 @@ export function PublicAdsClient({ initialAds, user }: Props) {
               )}
               <div className="flex items-center justify-between pt-2">
                 <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                  <span>{ad.views_count} переглядів</span>
+                  <span>{ad.views_count} wyświetleń</span>
                   <span>•</span>
-                  <span>{ad.responses_count} відповідей</span>
+                  <span>{ad.responses_count} odpowiedzi</span>
                 </div>
                 <Button size="sm" asChild>
-                  <a href={`/public-ads/${ad.id}`}>Детальніше</a>
+                  <a href={`/public-ads/${ad.id}`}>Szczegóły</a>
                 </Button>
               </div>
             </CardContent>
@@ -513,8 +513,8 @@ export function PublicAdsClient({ initialAds, user }: Props) {
         <Card className="border-dashed">
           <CardContent className="p-12 text-center text-muted-foreground">
             <Home className="h-12 w-12 mx-auto mb-4 opacity-20" />
-            <p className="font-medium">Оголошень не знайдено</p>
-            <p className="text-sm mt-1">Спробуйте змінити фільтри або створіть нове оголошення</p>
+            <p className="font-medium">Nie znaleziono ogłoszeń</p>
+            <p className="text-sm mt-1">Spróbuj zmienić filtry lub dodaj nowe ogłoszenie</p>
           </CardContent>
         </Card>
       )}

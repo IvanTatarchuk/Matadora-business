@@ -571,12 +571,12 @@ export function AdDetailsClient({ ad, responses, user }: Props) {
                       />
                     </div>
                     <div>
-                      <Label htmlFor="contact-message">Повідомлення *</Label>
+                      <Label htmlFor="contact-message">Wiadomość *</Label>
                       <Textarea
                         id="contact-message"
                         value={contactForm.message}
                         onChange={(e) => setContactForm({ ...contactForm, message: e.target.value })}
-                        placeholder="Ваше повідомлення автору оголошення..."
+                        placeholder="Twoja wiadomość do autora ogłoszenia..."
                         rows={3}
                         className="mt-1"
                       />
@@ -588,13 +588,13 @@ export function AdDetailsClient({ ad, responses, user }: Props) {
                         onClick={handleContactSubmit}
                         disabled={pending}
                       >
-                        {pending ? "Відправка..." : "Надіслати"}
+                        {pending ? "Wysyłanie..." : "Wyślij"}
                       </Button>
                       <Button
                         variant="outline"
                         onClick={() => setShowContactForm(false)}
                       >
-                        Скасувати
+                        Anuluj
                       </Button>
                     </div>
                   </div>

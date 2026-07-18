@@ -82,27 +82,27 @@ export type CreateReviewInput = {
   review?: string;
 };
 
-// Завантаження фото для оголошення
+// Wgrywanie zdjęcia do ogłoszenia
 export async function uploadAdPhoto(file: File, adId: string) {
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
   if (!user) {
-    return { ok: false, error: "Не авторизовано" };
+    return { ok: false, error: "Nie zalogowano" };
   }
 
-  // Перевірка розміру файлу (макс 5MB)
+  // Sprawdzenie rozmiaru pliku (maks. 5MB)
   if (file.size > 5 * 1024 * 1024) {
-    return { ok: false, error: "Файл занадто великий (макс 5MB)" };
+    return { ok: false, error: "Plik jest zbyt duży (maks. 5MB)" };
   }
 
-  // Перевірка типу файлу
+  // Sprawdzenie typu pliku
   const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
   if (!allowedTypes.includes(file.type)) {
-    return { ok: false, error: "Непідтримуваний формат файлу (тільки JPG, PNG, WEBP)" };
+    return { ok: false, error: "Nieobsługiwany format pliku (tylko JPG, PNG, WEBP)" };
   }
 
-  // Генерація унікального імені файлу
+  // Generowanie unikalnej nazwy pliku
   const fileExt = file.name.split('.').pop();
   const fileName = `${adId}/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
 
@@ -114,7 +114,7 @@ export async function uploadAdPhoto(file: File, adId: string) {
     return { ok: false, error: error.message };
   }
 
-  // Отримання публічного URL
+  // Pobranie publicznego URL
   const { data: { publicUrl } } = supabase.storage
     .from('public-ads-photos')
     .getPublicUrl(fileName);
@@ -122,16 +122,16 @@ export async function uploadAdPhoto(file: File, adId: string) {
   return { ok: true, url: publicUrl };
 }
 
-// Видалення фото
+// Usuwanie zdjęcia
 export async function deleteAdPhoto(url: string) {
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
   if (!user) {
-    return { ok: false, error: "Не авторизовано" };
+    return { ok: false, error: "Nie zalogowano" };
   }
 
-  // Витягування шляху з URL
+  // Wyodrębnienie ścieżki z URL
   const urlParts = url.split('/');
   const fileName = urlParts[urlParts.length - 1];
   const path = urlParts[urlParts.length - 2] + '/' + fileName;
@@ -147,7 +147,7 @@ export async function deleteAdPhoto(url: string) {
   return { ok: true };
 }
 
-// Отримати список активних оголошень з фільтрами
+// Pobranie listy aktywnych ogłoszeń z filtrami
 export async function listPublicAds(filters: {
   city?: string;
   property_type?: string;
@@ -197,7 +197,7 @@ export async function listPublicAds(filters: {
   return { ok: true, data: data as PublicAd[] };
 }
 
-// Отримати оголошення за ID
+// Pobranie ogłoszenia po ID
 export async function getPublicAd(id: string) {
   const supabase = createClient();
   
@@ -217,7 +217,7 @@ export async function getPublicAd(id: string) {
   return { ok: true, data: data as PublicAd };
 }
 
-// Отримати оголошення користувача
+// Pobranie ogłoszeń użytkownika
 export async function getUserAds(userId: string) {
   const supabase = createClient();
   
@@ -234,13 +234,13 @@ export async function getUserAds(userId: string) {
   return { ok: true, data: data as PublicAd[] };
 }
 
-// Створити нове оголошення
+// Utworzenie nowego ogłoszenia
 export async function createPublicAd(input: CreateAdInput) {
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
   if (!user) {
-    return { ok: false, error: "Не авторизовано" };
+    return { ok: false, error: "Nie zalogowano" };
   }
 
   // @ts-ignore - Supabase types need to be regenerated after migration
@@ -279,14 +279,14 @@ export async function createPublicAd(input: CreateAdInput) {
   return { ok: true, data: data as PublicAd, id: data.id };
 }
 
-// Оновити оголошення
+// Aktualizacja ogłoszenia
 // @ts-ignore - Supabase types need to be regenerated after migration
 export async function updatePublicAd(id: string, input: Partial<CreateAdInput>) {
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
   if (!user) {
-    return { ok: false, error: "Не авторизовано" };
+    return { ok: false, error: "Nie zalogowano" };
   }
 
   const { data, error } = await supabase
@@ -325,13 +325,13 @@ export async function updatePublicAd(id: string, input: Partial<CreateAdInput>) 
   return { ok: true, data: data as PublicAd };
 }
 
-// Видалити оголошення
+// Usunięcie ogłoszenia
 export async function deletePublicAd(id: string) {
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
   if (!user) {
-    return { ok: false, error: "Не авторизовано" };
+    return { ok: false, error: "Nie zalogowano" };
   }
 
   const { error } = await supabase
@@ -350,13 +350,13 @@ export async function deletePublicAd(id: string) {
   return { ok: true };
 }
 
-// Закрити оголошення
+// Zamknięcie ogłoszenia
 export async function closePublicAd(id: string) {
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
   if (!user) {
-    return { ok: false, error: "Не авторизовано" };
+    return { ok: false, error: "Nie zalogowano" };
   }
 
   const { error } = await supabase
@@ -377,13 +377,13 @@ export async function closePublicAd(id: string) {
   return { ok: true };
 }
 
-// Відповісти на оголошення
+// Odpowiedź na ogłoszenie
 export async function respondToAd(input: CreateResponseInput) {
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
   if (!user) {
-    return { ok: false, error: "Не авторизовано" };
+    return { ok: false, error: "Nie zalogowano" };
   }
 
   // @ts-ignore - Supabase types need to be regenerated after migration
@@ -411,13 +411,13 @@ export async function respondToAd(input: CreateResponseInput) {
   return { ok: true, data: data as AdResponse, id: data.id };
 }
 
-// Отримати відповіді на оголошення
+// Pobranie odpowiedzi na ogłoszenie
 export async function getAdResponses(adId: string) {
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
   if (!user) {
-    return { ok: false, error: "Не авторизовано" };
+    return { ok: false, error: "Nie zalogowano" };
   }
 
   const { data, error } = await supabase
@@ -436,13 +436,13 @@ export async function getAdResponses(adId: string) {
   return { ok: true, data: data as any[] };
 }
 
-// Оновити статус відповіді
+// Aktualizacja statusu odpowiedzi
 export async function updateResponseStatus(responseId: string, status: "accepted" | "rejected" | "completed") {
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
   if (!user) {
-    return { ok: false, error: "Не авторизовано" };
+    return { ok: false, error: "Nie zalogowano" };
   }
 
   const { error } = await supabase
@@ -460,13 +460,13 @@ export async function updateResponseStatus(responseId: string, status: "accepted
   return { ok: true };
 }
 
-// Залишити відгук на підрядника
+// Dodanie opinii o wykonawcy
 export async function createContractorReview(input: CreateReviewInput) {
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
   if (!user) {
-    return { ok: false, error: "Не авторизовано" };
+    return { ok: false, error: "Nie zalogowano" };
   }
 
   // @ts-ignore - Supabase types need to be regenerated after migration
@@ -493,7 +493,7 @@ export async function createContractorReview(input: CreateReviewInput) {
   return { ok: true, data: data as ContractorReview, id: data.id };
 }
 
-// Отримати відгуки на підрядника
+// Pobranie opinii o wykonawcy
 export async function getContractorReviews(contractorId: string) {
   const supabase = createClient();
 
@@ -513,7 +513,7 @@ export async function getContractorReviews(contractorId: string) {
   return { ok: true, data: data as any[] };
 }
 
-// Отримати середній рейтинг підрядника
+// Pobranie średniej oceny wykonawcy
 export async function getContractorRating(contractorId: string) {
   const supabase = createClient();
 

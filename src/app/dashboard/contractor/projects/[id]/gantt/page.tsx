@@ -32,7 +32,7 @@ export default async function GanttPage({
 
       <div>
         <h1 className="text-2xl font-bold">{project.title}</h1>
-        <p className="text-muted-foreground">Графік Gantt</p>
+        <p className="text-muted-foreground">Harmonogram Gantta</p>
       </div>
 
       <GanttView tasks={tasks} projectStart={project.created_at} />

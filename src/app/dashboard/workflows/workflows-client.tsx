@@ -41,11 +41,11 @@ export function WorkflowsClient({ initialWorkflows, initialExecutions, initialSt
   const [filterStatus, setFilterStatus] = useState<"all" | "active" | "inactive">("all");
 
   function handleCreateWorkflow() {
-    if (!workflowForm.name) { setError("Назва є обов'язковою"); return; }
+    if (!workflowForm.name) { setError("Nazwa jest wymagana"); return; }
     setError(null);
     startTransition(async () => {
       const res = await createWorkflowDefinition(workflowForm);
-      if (!res.ok) { setError(res.error ?? "Помилка"); return; }
+      if (!res.ok) { setError(res.error ?? "Błąd"); return; }
       setShowWorkflowForm(false);
       setWorkflowForm({ name: "", description: "", triggerType: "manual", triggerConfig: {} });
       // Reload workflows
@@ -58,7 +58,7 @@ export function WorkflowsClient({ initialWorkflows, initialExecutions, initialSt
     setError(null);
     startTransition(async () => {
       const res = await toggleWorkflow(workflowId);
-      if (!res.ok) { setError(res.error ?? "Помилка"); return; }
+      if (!res.ok) { setError(res.error ?? "Błąd"); return; }
       // Reload workflows
       const newWorkflows = await fetch("/api/workflows/definitions").then(r => r.json());
       setWorkflows(newWorkflows);
@@ -69,7 +69,7 @@ export function WorkflowsClient({ initialWorkflows, initialExecutions, initialSt
     setError(null);
     startTransition(async () => {
       const res = await triggerWorkflow(workflowId);
-      if (!res.ok) { setError(res.error ?? "Помилка"); return; }
+      if (!res.ok) { setError(res.error ?? "Błąd"); return; }
       // Reload executions
       const newExecutions = await fetch("/api/workflows/executions").then(r => r.json());
       setExecutions(newExecutions);
@@ -89,10 +89,10 @@ export function WorkflowsClient({ initialWorkflows, initialExecutions, initialSt
       <div>
         <h1 className="text-2xl font-bold flex items-center gap-2">
           <Workflow className="h-6 w-6" />
-          Автоматизація робочих процесів
+          Automatyzacja procesów roboczych
         </h1>
         <p className="text-sm text-muted-foreground mt-1">
-          Керування workflow та автоматизація бізнес-процесів
+          Zarządzanie workflow i automatyzacja procesów biznesowych
         </p>
       </div>
 
@@ -110,7 +110,7 @@ export function WorkflowsClient({ initialWorkflows, initialExecutions, initialSt
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center justify-between mb-2">
-              <p className="text-sm text-muted-foreground">Виконання</p>
+              <p className="text-sm text-muted-foreground">Wykonania</p>
               <Play className="h-4 w-4 text-purple-500" />
             </div>
             <p className="text-2xl font-bold">{stats.totalExecutions}</p>
@@ -119,7 +119,7 @@ export function WorkflowsClient({ initialWorkflows, initialExecutions, initialSt
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center justify-between mb-2">
-              <p className="text-sm text-muted-foreground">Успішні</p>
+              <p className="text-sm text-muted-foreground">Zakończone sukcesem</p>
               <CheckCircle2 className="h-4 w-4 text-green-500" />
             </div>
             <p className="text-2xl font-bold">{stats.completedExecutions}</p>
@@ -128,7 +128,7 @@ export function WorkflowsClient({ initialWorkflows, initialExecutions, initialSt
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center justify-between mb-2">
-              <p className="text-sm text-muted-foreground">Помилки</p>
+              <p className="text-sm text-muted-foreground">Błędy</p>
               <AlertCircle className="h-4 w-4 text-red-500" />
             </div>
             <p className="text-2xl font-bold">{stats.failedExecutions}</p>
@@ -140,7 +140,7 @@ export function WorkflowsClient({ initialWorkflows, initialExecutions, initialSt
       <div className="flex gap-2 flex-wrap">
         <Button onClick={() => setShowWorkflowForm(true)}>
           <Plus className="h-4 w-4 mr-2" />
-          Новий workflow
+          Nowy workflow
         </Button>
       </div>
 
@@ -149,7 +149,7 @@ export function WorkflowsClient({ initialWorkflows, initialExecutions, initialSt
         <div className="relative flex-1 max-w-sm">
           <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Шукати workflow..."
+            placeholder="Szukaj workflow..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-9"
@@ -160,9 +160,9 @@ export function WorkflowsClient({ initialWorkflows, initialExecutions, initialSt
           onChange={(e) => setFilterStatus(e.target.value as "all" | "active" | "inactive")}
           className="rounded-md border bg-background px-3 py-2 text-sm"
         >
-          <option value="all">Всі статуси</option>
-          <option value="active">Активні</option>
-          <option value="inactive">Неактивні</option>
+          <option value="all">Wszystkie statusy</option>
+          <option value="active">Aktywne</option>
+          <option value="inactive">Nieaktywne</option>
         </select>
       </div>
 
@@ -171,7 +171,7 @@ export function WorkflowsClient({ initialWorkflows, initialExecutions, initialSt
         <Card className="border-primary">
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-base">Створити workflow</CardTitle>
+              <CardTitle className="text-base">Utwórz workflow</CardTitle>
               <Button variant="ghost" size="sm" onClick={() => { setShowWorkflowForm(false); setError(null); }}>
                 <X className="h-4 w-4" />
               </Button>
@@ -179,31 +179,31 @@ export function WorkflowsClient({ initialWorkflows, initialExecutions, initialSt
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <label className="text-sm font-medium">Назва</label>
+              <label className="text-sm font-medium">Nazwa</label>
               <Input value={workflowForm.name} onChange={(e) => setWorkflowForm({ ...workflowForm, name: e.target.value })} className="mt-1" />
             </div>
             <div>
-              <label className="text-sm font-medium">Опис</label>
+              <label className="text-sm font-medium">Opis</label>
               <Input value={workflowForm.description} onChange={(e) => setWorkflowForm({ ...workflowForm, description: e.target.value })} className="mt-1" />
             </div>
             <div>
-              <label className="text-sm font-medium">Тип тригера</label>
+              <label className="text-sm font-medium">Typ wyzwalacza</label>
               <select
                 value={workflowForm.triggerType}
                 onChange={(e) => setWorkflowForm({ ...workflowForm, triggerType: e.target.value as any })}
                 className="mt-1 w-full rounded-md border bg-background px-3 py-2 text-sm"
               >
-                <option value="manual">Ручний</option>
-                <option value="scheduled">За розкладом</option>
-                <option value="event_based">Подійний</option>
+                <option value="manual">Ręczny</option>
+                <option value="scheduled">Wg harmonogramu</option>
+                <option value="event_based">Zdarzeniowy</option>
                 <option value="webhook">Webhook</option>
-                <option value="condition">Умовний</option>
+                <option value="condition">Warunkowy</option>
               </select>
             </div>
             {error && <p className="text-sm text-destructive">{error}</p>}
             <div className="flex gap-2">
-              <Button onClick={handleCreateWorkflow} disabled={pending}>{pending ? "Створення..." : "Створити"}</Button>
-              <Button variant="outline" onClick={() => { setShowWorkflowForm(false); setError(null); }}>Скасувати</Button>
+              <Button onClick={handleCreateWorkflow} disabled={pending}>{pending ? "Tworzenie..." : "Utwórz"}</Button>
+              <Button variant="outline" onClick={() => { setShowWorkflowForm(false); setError(null); }}>Anuluj</Button>
             </div>
           </CardContent>
         </Card>
@@ -217,7 +217,7 @@ export function WorkflowsClient({ initialWorkflows, initialExecutions, initialSt
         <CardContent>
           {filteredWorkflows.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
-              Немає workflow
+              Brak workflow
             </div>
           ) : (
             <div className="space-y-2">
@@ -251,12 +251,12 @@ export function WorkflowsClient({ initialWorkflows, initialExecutions, initialSt
       {/* Executions */}
       <Card>
         <CardHeader>
-          <CardTitle>Виконання</CardTitle>
+          <CardTitle>Wykonania</CardTitle>
         </CardHeader>
         <CardContent>
           {executions.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
-              Немає виконань
+              Brak wykonań
             </div>
           ) : (
             <div className="space-y-2">
@@ -272,7 +272,7 @@ export function WorkflowsClient({ initialWorkflows, initialExecutions, initialSt
                       }`}>
                         {execution.status}
                       </span>
-                      <p className="text-sm font-medium">Крок {execution.current_step}</p>
+                      <p className="text-sm font-medium">Krok {execution.current_step}</p>
                     </div>
                     <p className="text-xs text-muted-foreground">{new Date(execution.started_at).toLocaleString("pl-PL")}</p>
                   </div>

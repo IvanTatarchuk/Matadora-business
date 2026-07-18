@@ -33,7 +33,7 @@ export function WorkerCreateClient({ orgId, crews }: Props) {
   function handleSave() {
     setError(null);
     if (!form.fullName.trim()) {
-      setError("Ім'я є обов'язковим");
+      setError("Imię i nazwisko jest wymagane");
       return;
     }
     startTransition(async () => {
@@ -46,7 +46,7 @@ export function WorkerCreateClient({ orgId, crews }: Props) {
         email: form.email || undefined,
       });
       if (!res.ok) {
-        setError(res.error ?? "Помилка");
+        setError(res.error ?? "Błąd");
         return;
       }
       if (res.id && selectedCrews.length > 0) {
@@ -72,38 +72,38 @@ export function WorkerCreateClient({ orgId, crews }: Props) {
           <ArrowLeft className="h-4 w-4" />
         </Button>
         <div>
-          <h1 className="text-2xl font-bold">Створити працівника</h1>
+          <h1 className="text-2xl font-bold">Utwórz pracownika</h1>
           <p className="text-sm text-muted-foreground">
-            Додайте нового працівника до організації
+            Dodaj nowego pracownika do organizacji
           </p>
         </div>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>Інформація про працівника</CardTitle>
+          <CardTitle>Informacje o pracowniku</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div>
-            <Label>Powne imię i nazwisko</Label>
+            <Label>Pełne imię i nazwisko</Label>
             <Input
               value={form.fullName}
               onChange={(e) => setForm({ ...form, fullName: e.target.value })}
-              placeholder="Іван Петренко"
+              placeholder="Jan Kowalski"
               className="mt-1"
             />
           </div>
           <div>
-            <Label>Спеціальність</Label>
+            <Label>Specjalizacja</Label>
             <Input
               value={form.specialty}
               onChange={(e) => setForm({ ...form, specialty: e.target.value })}
-              placeholder="наприклад, Муляр, Електрик"
+              placeholder="np. Murarz, Elektryk"
               className="mt-1"
             />
           </div>
           <div>
-            <Label>Погодинна ставка (грн/год)</Label>
+            <Label>Stawka godzinowa (zł/godz.)</Label>
             <Input
               type="number"
               value={form.hourlyRate}
@@ -113,11 +113,11 @@ export function WorkerCreateClient({ orgId, crews }: Props) {
             />
           </div>
           <div>
-            <Label>Телефон</Label>
+            <Label>Telefon</Label>
             <Input
               value={form.phone}
               onChange={(e) => setForm({ ...form, phone: e.target.value })}
-              placeholder="+380 50 123 4567"
+              placeholder="+48 500 123 456"
               className="mt-1"
             />
           </div>
@@ -135,10 +135,10 @@ export function WorkerCreateClient({ orgId, crews }: Props) {
           <div className="flex gap-2">
             <Button onClick={handleSave} disabled={pending}>
               <Save className="h-4 w-4 mr-2" />
-              Зберегти
+              Zapisz
             </Button>
             <Button variant="outline" onClick={() => router.back()}>
-              Скасувати
+              Anuluj
             </Button>
           </div>
         </CardContent>
@@ -146,11 +146,11 @@ export function WorkerCreateClient({ orgId, crews }: Props) {
 
       <Card>
         <CardHeader>
-          <CardTitle>Бригади</CardTitle>
+          <CardTitle>Brygady</CardTitle>
         </CardHeader>
         <CardContent>
           {crews.length === 0 ? (
-            <p className="text-sm text-muted-foreground">Немає бригад</p>
+            <p className="text-sm text-muted-foreground">Brak brygad</p>
           ) : (
             <div className="space-y-2">
               {crews.map((crew) => (

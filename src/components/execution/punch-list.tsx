@@ -257,7 +257,7 @@ export function PunchList({ projectId, initialItems, canCreate = true }: Props) 
                   </span>
                   {item.due_date && (
                     <span className="text-xs text-muted-foreground">
-                      До: {item.due_date}
+                      Do: {item.due_date}
                     </span>
                   )}
                   {item.resolved_at && (

@@ -49,7 +49,7 @@ export function WorkerDetailClient({ worker, crews, initialHistory }: Props) {
   function handleSave() {
     setError(null);
     if (!editForm.full_name.trim()) {
-      setError("Ім'я є обов'язковим");
+      setError("Imię i nazwisko jest wymagane");
       return;
     }
     startTransition(async () => {
@@ -61,18 +61,18 @@ export function WorkerDetailClient({ worker, crews, initialHistory }: Props) {
         email: editForm.email || null,
         is_active: editForm.is_active,
       });
-      if (!res.ok) { setError(res.error ?? "Помилка"); return; }
+      if (!res.ok) { setError(res.error ?? "Błąd"); return; }
       setIsEditing(false);
       router.refresh();
     });
   }
 
   function handleDelete() {
-    if (!confirm("Ви впевнені, що хочете видалити цього працівника?")) return;
+    if (!confirm("Czy na pewno chcesz usunąć tego pracownika?")) return;
     setError(null);
     startTransition(async () => {
       const res = await deleteWorker(worker.id);
-      if (!res.ok) { setError(res.error ?? "Помилка"); return; }
+      if (!res.ok) { setError(res.error ?? "Błąd"); return; }
       router.push("/dashboard/workers");
     });
   }
@@ -103,7 +103,7 @@ export function WorkerDetailClient({ worker, crews, initialHistory }: Props) {
   function handleCreateHistory() {
     setError(null);
     if (!historyForm.startDate) {
-      setError("Дата початку є обов'язковою");
+      setError("Data rozpoczęcia jest wymagana");
       return;
     }
     startTransition(async () => {
@@ -117,7 +117,7 @@ export function WorkerDetailClient({ worker, crews, initialHistory }: Props) {
         role: historyForm.role || undefined,
         notes: historyForm.notes || undefined,
       });
-      if (!res.ok) { setError(res.error ?? "Помилка"); return; }
+      if (!res.ok) { setError(res.error ?? "Błąd"); return; }
       setShowHistoryForm(false);
       setHistoryForm({ projectId: "", crewId: "", startDate: "", endDate: "", role: "", notes: "" });
       // Reload history
@@ -130,7 +130,7 @@ export function WorkerDetailClient({ worker, crews, initialHistory }: Props) {
     setError(null);
     startTransition(async () => {
       const res = await deleteWorkerHistory(historyId);
-      if (!res.ok) { setError(res.error ?? "Помилка"); return; }
+      if (!res.ok) { setError(res.error ?? "Błąd"); return; }
       setHistory(history.filter((h) => h.id !== historyId));
     });
   }
@@ -145,19 +145,19 @@ export function WorkerDetailClient({ worker, crews, initialHistory }: Props) {
           <div>
             <h1 className="text-2xl font-bold">{worker.full_name}</h1>
             <p className="text-sm text-muted-foreground">
-              {worker.specialty || "Без спеціальності"} · {worker.is_active ? "Активний" : "Неактивний"}
+              {worker.specialty || "Bez specjalizacji"} · {worker.is_active ? "Aktywny" : "Nieaktywny"}
             </p>
           </div>
         </div>
         <div className="flex gap-2">
           <Button variant="outline" onClick={() => setIsEditing(!isEditing)}>
             {isEditing ? <Save className="h-4 w-4 mr-2" /> : <Settings className="h-4 w-4 mr-2" />}
-            {isEditing ? "Зберегти" : "Редагувати"}
+            {isEditing ? "Zapisz" : "Edytuj"}
           </Button>
           {isEditing && (
             <Button variant="destructive" onClick={handleDelete} disabled={pending}>
               <Trash2 className="h-4 w-4 mr-2" />
-              Видалити
+              Usuń
             </Button>
           )}
         </div>
@@ -166,7 +166,7 @@ export function WorkerDetailClient({ worker, crews, initialHistory }: Props) {
       {isEditing && (
         <Card className="border-primary">
           <CardHeader>
-            <CardTitle>Редагування працівника</CardTitle>
+            <CardTitle>Edycja pracownika</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
@@ -174,15 +174,15 @@ export function WorkerDetailClient({ worker, crews, initialHistory }: Props) {
               <Input value={editForm.full_name} onChange={(e) => setEditForm({ ...editForm, full_name: e.target.value })} className="mt-1" />
             </div>
             <div>
-              <Label>Спеціальність</Label>
+              <Label>Specjalizacja</Label>
               <Input value={editForm.specialty} onChange={(e) => setEditForm({ ...editForm, specialty: e.target.value })} className="mt-1" />
             </div>
             <div>
-              <Label>Погодинна ставка</Label>
+              <Label>Stawka godzinowa</Label>
               <Input type="number" value={editForm.hourly_rate} onChange={(e) => setEditForm({ ...editForm, hourly_rate: e.target.value })} className="mt-1" />
             </div>
             <div>
-              <Label>Телефон</Label>
+              <Label>Telefon</Label>
               <Input value={editForm.phone} onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })} className="mt-1" />
             </div>
             <div>
@@ -196,16 +196,16 @@ export function WorkerDetailClient({ worker, crews, initialHistory }: Props) {
                 checked={editForm.is_active}
                 onChange={(e) => setEditForm({ ...editForm, is_active: e.target.checked })}
               />
-              <label htmlFor="active" className="text-sm">Активний</label>
+              <label htmlFor="active" className="text-sm">Aktywny</label>
             </div>
             {error && <p className="text-sm text-destructive">{error}</p>}
             <div className="flex gap-2">
               <Button onClick={handleSave} disabled={pending}>
                 <Save className="h-4 w-4 mr-2" />
-                Зберегти зміни
+                Zapisz zmiany
               </Button>
               <Button variant="outline" onClick={() => setIsEditing(false)}>
-                Скасувати
+                Anuluj
               </Button>
             </div>
           </CardContent>
@@ -217,7 +217,7 @@ export function WorkerDetailClient({ worker, crews, initialHistory }: Props) {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <User className="h-5 w-5" />
-              Інформація про працівника
+              Informacje o pracowniku
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
@@ -232,7 +232,7 @@ export function WorkerDetailClient({ worker, crews, initialHistory }: Props) {
               <div className="flex items-center gap-3">
                 <User className="h-4 w-4 text-muted-foreground" />
                 <div>
-                  <p className="text-sm text-muted-foreground">Спеціальність</p>
+                  <p className="text-sm text-muted-foreground">Specjalizacja</p>
                   <p className="font-medium">{worker.specialty}</p>
                 </div>
               </div>
@@ -241,8 +241,8 @@ export function WorkerDetailClient({ worker, crews, initialHistory }: Props) {
               <div className="flex items-center gap-3">
                 <DollarSign className="h-4 w-4 text-muted-foreground" />
                 <div>
-                  <p className="text-sm text-muted-foreground">Погодинна ставка</p>
-                  <p className="font-medium">{worker.hourly_rate} грн/год</p>
+                  <p className="text-sm text-muted-foreground">Stawka godzinowa</p>
+                  <p className="font-medium">{worker.hourly_rate} zł/godz.</p>
                 </div>
               </div>
             )}
@@ -250,7 +250,7 @@ export function WorkerDetailClient({ worker, crews, initialHistory }: Props) {
               <div className="flex items-center gap-3">
                 <Phone className="h-4 w-4 text-muted-foreground" />
                 <div>
-                  <p className="text-sm text-muted-foreground">Телефон</p>
+                  <p className="text-sm text-muted-foreground">Telefon</p>
                   <p className="font-medium">{worker.phone}</p>
                 </div>
               </div>
@@ -267,8 +267,8 @@ export function WorkerDetailClient({ worker, crews, initialHistory }: Props) {
             <div className="flex items-center gap-3">
               <Calendar className="h-4 w-4 text-muted-foreground" />
               <div>
-                <p className="text-sm text-muted-foreground">Статус</p>
-                <p className="font-medium">{worker.is_active ? "Активний" : "Неактивний"}</p>
+                <p className="text-sm text-muted-foreground">Status</p>
+                <p className="font-medium">{worker.is_active ? "Aktywny" : "Nieaktywny"}</p>
               </div>
             </div>
           </CardContent>
@@ -278,12 +278,12 @@ export function WorkerDetailClient({ worker, crews, initialHistory }: Props) {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <UsersIcon className="h-5 w-5" />
-              Бригади
+              Brygady
             </CardTitle>
           </CardHeader>
           <CardContent>
             {crews.length === 0 ? (
-              <p className="text-sm text-muted-foreground">Немає бригад</p>
+              <p className="text-sm text-muted-foreground">Brak brygad</p>
             ) : (
               <div className="space-y-2">
                 {crews.map((crew) => (
@@ -307,7 +307,7 @@ export function WorkerDetailClient({ worker, crews, initialHistory }: Props) {
         <CardHeader className="flex flex-row items-center justify-between space-y-0">
           <CardTitle className="flex items-center gap-2">
             <FolderOpen className="h-5 w-5" />
-            Історія роботи
+            Historia zatrudnienia
           </CardTitle>
           <Button variant="outline" size="sm" onClick={() => setShowHistoryForm(!showHistoryForm)}>
             <Plus className="h-4 w-4" />
@@ -334,7 +334,7 @@ export function WorkerDetailClient({ worker, crews, initialHistory }: Props) {
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <Label>Дата початку</Label>
+                  <Label>Data rozpoczęcia</Label>
                   <Input
                     type="date"
                     value={historyForm.startDate}
@@ -343,7 +343,7 @@ export function WorkerDetailClient({ worker, crews, initialHistory }: Props) {
                   />
                 </div>
                 <div>
-                  <Label>Дата завершення</Label>
+                  <Label>Data zakończenia</Label>
                   <Input
                     type="date"
                     value={historyForm.endDate}
@@ -353,7 +353,7 @@ export function WorkerDetailClient({ worker, crews, initialHistory }: Props) {
                 </div>
               </div>
               <div>
-                <Label>Роль</Label>
+                <Label>Rola</Label>
                 <Input
                   value={historyForm.role}
                   onChange={(e) => setHistoryForm({ ...historyForm, role: e.target.value })}
@@ -361,7 +361,7 @@ export function WorkerDetailClient({ worker, crews, initialHistory }: Props) {
                 />
               </div>
               <div>
-                <Label>Примітки</Label>
+                <Label>Notatki</Label>
                 <Input
                   value={historyForm.notes}
                   onChange={(e) => setHistoryForm({ ...historyForm, notes: e.target.value })}
@@ -370,16 +370,16 @@ export function WorkerDetailClient({ worker, crews, initialHistory }: Props) {
               </div>
               <div className="flex gap-2">
                 <Button size="sm" onClick={handleCreateHistory} disabled={pending}>
-                  Додати запис
+                  Dodaj wpis
                 </Button>
                 <Button variant="outline" size="sm" onClick={() => setShowHistoryForm(false)}>
-                  Скасувати
+                  Anuluj
                 </Button>
               </div>
             </div>
           )}
           {history.length === 0 ? (
-            <p className="text-sm text-muted-foreground">Немає історії роботи</p>
+            <p className="text-sm text-muted-foreground">Brak historii zatrudnienia</p>
           ) : (
             <div className="space-y-2">
               {history.map((entry) => (

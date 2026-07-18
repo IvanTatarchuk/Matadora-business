@@ -54,7 +54,7 @@ export async function sendNotificationEmail(
     .eq("id", notificationId)
     .single();
 
-  if (!notification) return { ok: false, error: "Notification not found" };
+  if (!notification) return { ok: false, error: "Nie znaleziono powiadomienia" };
 
   // Get user email
   const { data: profile } = await db(supabase)
@@ -63,7 +63,7 @@ export async function sendNotificationEmail(
     .eq("id", userId)
     .single();
 
-  if (!profile?.email) return { ok: false, error: "User email not found" };
+  if (!profile?.email) return { ok: false, error: "Nie znaleziono adresu e-mail użytkownika" };
 
   const templateMap: Record<string, EmailTemplate> = {
     offer_sent: "offer_sent",
@@ -114,7 +114,7 @@ export async function sendDailyDigest(userId: string): Promise<{ ok: boolean; er
     .eq("id", userId)
     .single();
 
-  if (!profile?.email) return { ok: false, error: "User email not found" };
+  if (!profile?.email) return { ok: false, error: "Nie znaleziono adresu e-mail użytkownika" };
 
   return await sendEmail({
     to: profile.email,

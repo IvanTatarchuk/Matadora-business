@@ -71,7 +71,7 @@ export function AdminAdsClient() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <p className="text-muted-foreground">Завантаження...</p>
+        <p className="text-muted-foreground">Ładowanie...</p>
       </div>
     );
   }
@@ -79,9 +79,9 @@ export function AdminAdsClient() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold mb-2">Модерація оголошень</h1>
+        <h1 className="text-3xl font-bold mb-2">Moderacja ogłoszeń</h1>
         <p className="text-muted-foreground">
-          Керуйте оголошеннями користувачів
+          Zarządzaj ogłoszeniami użytkowników
         </p>
       </div>
 
@@ -92,7 +92,7 @@ export function AdminAdsClient() {
             <div className="relative flex-1 min-w-[200px]">
               <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Пошук за назвою..."
+                placeholder="Szukaj po nazwie..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-9"
@@ -103,11 +103,11 @@ export function AdminAdsClient() {
               onChange={(e) => setFilterStatus(e.target.value)}
               className="rounded-md border bg-background px-3 py-2 text-sm"
             >
-              <option value="all">Всі статуси</option>
-              <option value="active">Активні</option>
-              <option value="pending">Очікують модерації</option>
-              <option value="suspended">Призупинені</option>
-              <option value="closed">Закриті</option>
+              <option value="all">Wszystkie statusy</option>
+              <option value="active">Aktywne</option>
+              <option value="pending">Oczekujące na moderację</option>
+              <option value="suspended">Zawieszone</option>
+              <option value="closed">Zamknięte</option>
             </select>
           </div>
         </CardContent>
@@ -117,13 +117,13 @@ export function AdminAdsClient() {
       <div className="grid gap-4 md:grid-cols-4">
         <Card>
           <CardContent className="p-4">
-            <p className="text-sm text-muted-foreground">Всього оголошень</p>
+            <p className="text-sm text-muted-foreground">Wszystkich ogłoszeń</p>
             <p className="text-2xl font-bold">{ads.length}</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-4">
-            <p className="text-sm text-muted-foreground">Активні</p>
+            <p className="text-sm text-muted-foreground">Aktywne</p>
             <p className="text-2xl font-bold text-green-600">
               {ads.filter((a) => a.status === "active").length}
             </p>
@@ -131,7 +131,7 @@ export function AdminAdsClient() {
         </Card>
         <Card>
           <CardContent className="p-4">
-            <p className="text-sm text-muted-foreground">Очікують модерації</p>
+            <p className="text-sm text-muted-foreground">Oczekujące na moderację</p>
             <p className="text-2xl font-bold text-yellow-600">
               {ads.filter((a) => a.status === "pending").length}
             </p>
@@ -139,7 +139,7 @@ export function AdminAdsClient() {
         </Card>
         <Card>
           <CardContent className="p-4">
-            <p className="text-sm text-muted-foreground">Призупинені</p>
+            <p className="text-sm text-muted-foreground">Zawieszone</p>
             <p className="text-2xl font-bold text-red-600">
               {ads.filter((a) => a.status === "suspended").length}
             </p>
@@ -150,12 +150,12 @@ export function AdminAdsClient() {
       {/* Ads List */}
       <Card>
         <CardHeader>
-          <CardTitle>Оголошення</CardTitle>
+          <CardTitle>Ogłoszenia</CardTitle>
         </CardHeader>
         <CardContent>
           {filteredAds.length === 0 ? (
             <div className="text-center py-12 text-muted-foreground">
-              <p>Оголошень не знайдено</p>
+              <p>Nie znaleziono ogłoszeń</p>
             </div>
           ) : (
             <div className="space-y-4">
@@ -179,22 +179,22 @@ export function AdminAdsClient() {
                         }`}
                       >
                         {ad.status === "active"
-                          ? "Активне"
+                          ? "Aktywne"
                           : ad.status === "pending"
-                          ? "Очікує"
+                          ? "Oczekuje"
                           : ad.status === "suspended"
-                          ? "Призупинено"
-                          : "Закрито"}
+                          ? "Zawieszone"
+                          : "Zamknięte"}
                       </span>
                     </div>
                     <div className="flex items-center gap-4 mt-1 text-sm text-muted-foreground">
                       <span>{ad.city}</span>
                       <span>•</span>
-                      <span>{new Date(ad.created_at).toLocaleDateString("uk-UA")}</span>
+                      <span>{new Date(ad.created_at).toLocaleDateString("pl-PL")}</span>
                       <span>•</span>
-                      <span>{ad.views_count} переглядів</span>
+                      <span>{ad.views_count} wyświetleń</span>
                       <span>•</span>
-                      <span>{ad.responses_count} відповідей</span>
+                      <span>{ad.responses_count} odpowiedzi</span>
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
@@ -252,19 +252,19 @@ export function AdminAdsClient() {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
           <Card className="max-w-md w-full">
             <CardHeader>
-              <CardTitle>Видалити оголошення?</CardTitle>
+              <CardTitle>Usunąć ogłoszenie?</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <p className="text-muted-foreground">
-                Ви впевнені, що хочете видалити оголошення &quot;{selectedAd.title}&quot;? Цю дію неможливо скасувати.
+                Czy na pewno chcesz usunąć ogłoszenie &quot;{selectedAd.title}&quot;? Tej operacji nie można cofnąć.
               </p>
               {error && <p className="text-sm text-destructive">{error}</p>}
               <div className="flex gap-2 justify-end">
                 <Button variant="outline" onClick={() => setShowDeleteDialog(false)}>
-                  Скасувати
+                  Anuluj
                 </Button>
                 <Button variant="destructive" onClick={handleDeleteAd} disabled={pending}>
-                  {pending ? "Видалення..." : "Видалити"}
+                  {pending ? "Usuwanie..." : "Usuń"}
                 </Button>
               </div>
             </CardContent>
@@ -277,28 +277,28 @@ export function AdminAdsClient() {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
           <Card className="max-w-md w-full">
             <CardHeader>
-              <CardTitle>Змінити статус</CardTitle>
+              <CardTitle>Zmień status</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <Label>Новий статус</Label>
+                <Label>Nowy status</Label>
                 <select
                   className="w-full mt-1 rounded-md border bg-background px-3 py-2 text-sm"
                   defaultValue={selectedAd.status}
                 >
-                  <option value="active">Активне</option>
-                  <option value="pending">Очікує модерації</option>
-                  <option value="suspended">Призупинено</option>
-                  <option value="closed">Закрито</option>
+                  <option value="active">Aktywne</option>
+                  <option value="pending">Oczekuje na moderację</option>
+                  <option value="suspended">Zawieszone</option>
+                  <option value="closed">Zamknięte</option>
                 </select>
               </div>
               {error && <p className="text-sm text-destructive">{error}</p>}
               <div className="flex gap-2 justify-end">
                 <Button variant="outline" onClick={() => setShowStatusDialog(false)}>
-                  Скасувати
+                  Anuluj
                 </Button>
                 <Button onClick={() => handleUpdateStatus(selectedAd.status === "active" ? "suspended" : "active")} disabled={pending}>
-                  {pending ? "Оновлення..." : "Змінити"}
+                  {pending ? "Aktualizowanie..." : "Zmień"}
                 </Button>
               </div>
             </CardContent>

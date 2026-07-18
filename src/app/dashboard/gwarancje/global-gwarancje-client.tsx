@@ -73,7 +73,7 @@ export function GlobalGwarancjeClient({ initialWarranties }: { initialWarranties
         <div className="relative flex-1 max-w-sm">
           <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Шукати гарантії..."
+            placeholder="Szukaj gwarancji..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-9"
@@ -84,10 +84,10 @@ export function GlobalGwarancjeClient({ initialWarranties }: { initialWarranties
           onChange={(e) => setFilterStatus(e.target.value as "all" | "active" | "claimed" | "expired")}
           className="rounded-md border bg-background px-3 py-2 text-sm"
         >
-          <option value="all">Всі статуси</option>
-          <option value="active">Активні</option>
-          <option value="claimed">Розглядаються</option>
-          <option value="expired">Завершені</option>
+          <option value="all">Wszystkie statusy</option>
+          <option value="active">Aktywne</option>
+          <option value="claimed">W trakcie rozpatrywania</option>
+          <option value="expired">Zakończone</option>
         </select>
       </div>
 

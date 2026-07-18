@@ -43,7 +43,7 @@ export function InventoryDetailClient({ item, transactions }: Props) {
   function handleSave() {
     setError(null);
     if (!editForm.name.trim()) {
-      setError("Назва є обов'язковою");
+      setError("Nazwa jest wymagana");
       return;
     }
     startTransition(async () => {
@@ -57,7 +57,7 @@ export function InventoryDetailClient({ item, transactions }: Props) {
         unit_cost: editForm.unitCost ? Number(editForm.unitCost) : undefined,
         location: editForm.location,
       });
-      if (!res.ok) { setError(res.error ?? "Помилка"); return; }
+      if (!res.ok) { setError(res.error ?? "Błąd"); return; }
       setIsEditing(false);
       router.refresh();
     });
@@ -66,7 +66,7 @@ export function InventoryDetailClient({ item, transactions }: Props) {
   function handleAddTransaction() {
     setError(null);
     if (transactionForm.quantity <= 0) {
-      setError("Кількість має бути більше 0");
+      setError("Ilość musi być większa niż 0");
       return;
     }
     startTransition(async () => {
@@ -77,7 +77,7 @@ export function InventoryDetailClient({ item, transactions }: Props) {
         unitCost: transactionForm.unitCost ? Number(transactionForm.unitCost) : undefined,
         notes: transactionForm.notes || undefined,
       });
-      if (!res.ok) { setError(res.error ?? "Помилка"); return; }
+      if (!res.ok) { setError(res.error ?? "Błąd"); return; }
       setShowTransactionForm(false);
       setTransactionForm({ type: "purchase", quantity: 0, unitCost: item.unit_cost || "", notes: "" });
       router.refresh();
@@ -86,12 +86,12 @@ export function InventoryDetailClient({ item, transactions }: Props) {
 
   const isLowStock = item.current_stock <= item.min_stock_level;
   const transactionTypeLabels: Record<string, string> = {
-    purchase: "Закупівля",
-    sale: "Продаж",
-    transfer: "Переміщення",
-    adjustment: "Коригування",
-    consumption: "Використання",
-    return: "Повернення",
+    purchase: "Zakup",
+    sale: "Sprzedaż",
+    transfer: "Przeniesienie",
+    adjustment: "Korekta",
+    consumption: "Zużycie",
+    return: "Zwrot",
   };
 
   return (
@@ -104,14 +104,14 @@ export function InventoryDetailClient({ item, transactions }: Props) {
           <div>
             <h1 className="text-2xl font-bold">{item.name}</h1>
             <p className="text-sm text-muted-foreground">
-              SKU: {item.sku} · {item.category || "Без категорії"}
+              SKU: {item.sku} · {item.category || "Bez kategorii"}
             </p>
           </div>
         </div>
         <div className="flex gap-2">
           <Button variant="outline" onClick={() => setIsEditing(!isEditing)}>
             {isEditing ? <Save className="h-4 w-4 mr-2" /> : <Edit className="h-4 w-4 mr-2" />}
-            {isEditing ? "Зберегти" : "Редагувати"}
+            {isEditing ? "Zapisz" : "Edytuj"}
           </Button>
         </div>
       </div>
@@ -119,54 +119,54 @@ export function InventoryDetailClient({ item, transactions }: Props) {
       {isEditing && (
         <Card className="border-primary">
           <CardHeader>
-            <CardTitle>Редагування позиції</CardTitle>
+            <CardTitle>Edycja pozycji</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <Label>Назва</Label>
+              <Label>Nazwa</Label>
               <Input value={editForm.name} onChange={(e) => setEditForm({ ...editForm, name: e.target.value })} className="mt-1" />
             </div>
             <div>
-              <Label>Опис</Label>
+              <Label>Opis</Label>
               <Input value={editForm.description} onChange={(e) => setEditForm({ ...editForm, description: e.target.value })} className="mt-1" />
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <Label>Категорія</Label>
+                <Label>Kategoria</Label>
                 <Input value={editForm.category} onChange={(e) => setEditForm({ ...editForm, category: e.target.value })} className="mt-1" />
               </div>
               <div>
-                <Label>Одиниця виміру</Label>
+                <Label>Jednostka miary</Label>
                 <Input value={editForm.unit} onChange={(e) => setEditForm({ ...editForm, unit: e.target.value })} className="mt-1" />
               </div>
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <Label>Мін. рівень запасу</Label>
+                <Label>Min. poziom zapasu</Label>
                 <Input type="number" value={editForm.minStockLevel} onChange={(e) => setEditForm({ ...editForm, minStockLevel: parseFloat(e.target.value) })} className="mt-1" />
               </div>
               <div>
-                <Label>Макс. рівень запасу</Label>
+                <Label>Maks. poziom zapasu</Label>
                 <Input type="number" value={editForm.maxStockLevel} onChange={(e) => setEditForm({ ...editForm, maxStockLevel: e.target.value })} className="mt-1" />
               </div>
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <Label>Вартість одиниці</Label>
+                <Label>Koszt jednostkowy</Label>
                 <Input type="number" value={editForm.unitCost} onChange={(e) => setEditForm({ ...editForm, unitCost: e.target.value })} className="mt-1" />
               </div>
               <div>
-                <Label>Локація</Label>
+                <Label>Lokalizacja</Label>
                 <Input value={editForm.location} onChange={(e) => setEditForm({ ...editForm, location: e.target.value })} className="mt-1" />
               </div>
             </div>
             {error && <p className="text-sm text-destructive">{error}</p>}
             <div className="flex gap-2">
               <Button onClick={handleSave} disabled={pending}>
-                Зберегти зміни
+                Zapisz zmiany
               </Button>
               <Button variant="outline" onClick={() => setIsEditing(false)}>
-                Скасувати
+                Anuluj
               </Button>
             </div>
           </CardContent>
@@ -178,7 +178,7 @@ export function InventoryDetailClient({ item, transactions }: Props) {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Package className="h-5 w-5" />
-              Поточний стан
+              Aktualny stan
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -188,7 +188,7 @@ export function InventoryDetailClient({ item, transactions }: Props) {
               {isLowStock && (
                 <div className="flex items-center justify-center gap-1 mt-2 text-orange-600">
                   <AlertTriangle className="h-4 w-4" />
-                  <span className="text-sm">Низький рівень</span>
+                  <span className="text-sm">Niski poziom</span>
                 </div>
               )}
             </div>
@@ -199,24 +199,24 @@ export function InventoryDetailClient({ item, transactions }: Props) {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <TrendingUp className="h-5 w-5" />
-              Загальна вартість
+              Wartość całkowita
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-center">
-              <p className="text-4xl font-bold">{item.total_value.toLocaleString("uk-UA")}</p>
-              <p className="text-sm text-muted-foreground">грн</p>
+              <p className="text-4xl font-bold">{item.total_value.toLocaleString("pl-PL")}</p>
+              <p className="text-sm text-muted-foreground">zł</p>
             </div>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader>
-            <CardTitle>Локація</CardTitle>
+            <CardTitle>Lokalizacja</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-center">
-              <p className="text-2xl font-bold">{item.location || "Не вказано"}</p>
+              <p className="text-2xl font-bold">{item.location || "Nie podano"}</p>
             </div>
           </CardContent>
         </Card>
@@ -224,7 +224,7 @@ export function InventoryDetailClient({ item, transactions }: Props) {
 
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0">
-          <CardTitle>Транзакції</CardTitle>
+          <CardTitle>Transakcje</CardTitle>
           <Button variant="outline" size="sm" onClick={() => setShowTransactionForm(!showTransactionForm)}>
             <Plus className="h-4 w-4" />
           </Button>
@@ -233,47 +233,47 @@ export function InventoryDetailClient({ item, transactions }: Props) {
           {showTransactionForm && (
             <div className="space-y-3 mb-4 p-3 bg-muted rounded">
               <div>
-                <Label>Тип транзакції</Label>
+                <Label>Typ transakcji</Label>
                 <select
                   className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm mt-1"
                   value={transactionForm.type}
                   onChange={(e) => setTransactionForm({ ...transactionForm, type: e.target.value as any })}
                 >
-                  <option value="purchase">Закупівля (+)</option>
-                  <option value="sale">Продаж (-)</option>
-                  <option value="consumption">Використання (-)</option>
-                  <option value="return">Повернення (+)</option>
-                  <option value="adjustment">Коригування</option>
-                  <option value="transfer">Переміщення</option>
+                  <option value="purchase">Zakup (+)</option>
+                  <option value="sale">Sprzedaż (-)</option>
+                  <option value="consumption">Zużycie (-)</option>
+                  <option value="return">Zwrot (+)</option>
+                  <option value="adjustment">Korekta</option>
+                  <option value="transfer">Przeniesienie</option>
                 </select>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <Label>Кількість</Label>
+                  <Label>Ilość</Label>
                   <Input type="number" value={transactionForm.quantity} onChange={(e) => setTransactionForm({ ...transactionForm, quantity: parseFloat(e.target.value) })} className="mt-1" />
                 </div>
                 <div>
-                  <Label>Вартість одиниці</Label>
+                  <Label>Koszt jednostkowy</Label>
                   <Input type="number" value={transactionForm.unitCost} onChange={(e) => setTransactionForm({ ...transactionForm, unitCost: e.target.value })} className="mt-1" />
                 </div>
               </div>
               <div>
-                <Label>Примітки</Label>
+                <Label>Notatki</Label>
                 <Input value={transactionForm.notes} onChange={(e) => setTransactionForm({ ...transactionForm, notes: e.target.value })} className="mt-1" />
               </div>
               {error && <p className="text-sm text-destructive">{error}</p>}
               <div className="flex gap-2">
                 <Button size="sm" onClick={handleAddTransaction} disabled={pending}>
-                  Додати транзакцію
+                  Dodaj transakcję
                 </Button>
                 <Button variant="outline" size="sm" onClick={() => setShowTransactionForm(false)}>
-                  Скасувати
+                  Anuluj
                 </Button>
               </div>
             </div>
           )}
           {transactions.length === 0 ? (
-            <p className="text-sm text-muted-foreground text-center py-4">Немає транзакцій</p>
+            <p className="text-sm text-muted-foreground text-center py-4">Brak transakcji</p>
           ) : (
             <div className="space-y-2">
               {transactions.map((tx) => {
@@ -289,7 +289,7 @@ export function InventoryDetailClient({ item, transactions }: Props) {
                       <div>
                         <p className="text-sm font-medium">{transactionTypeLabels[tx.type]}</p>
                         <p className="text-xs text-muted-foreground">
-                          {new Date(tx.created_at).toLocaleString("uk-UA")}
+                          {new Date(tx.created_at).toLocaleString("pl-PL")}
                         </p>
                         {tx.notes && <p className="text-xs text-muted-foreground">{tx.notes}</p>}
                       </div>

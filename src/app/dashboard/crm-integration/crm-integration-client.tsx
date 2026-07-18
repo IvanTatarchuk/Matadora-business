@@ -222,16 +222,16 @@ export function CRMIntegrationClient({ initialConnections, initialSyncLogs, init
                   onChange={(e) => setConnectionForm({ ...connectionForm, syncDirection: e.target.value as any })}
                   className="mt-1 w-full rounded-md border bg-background px-3 py-2 text-sm"
                 >
-                  <option value="bidirectional">Двосторонній</option>
-                  <option value="to_crm">В CRM</option>
-                  <option value="from_crm">З CRM</option>
+                  <option value="bidirectional">Dwukierunkowa</option>
+                  <option value="to_crm">Do CRM</option>
+                  <option value="from_crm">Z CRM</option>
                 </select>
               </div>
             </div>
             {error && <p className="text-sm text-destructive">{error}</p>}
             <div className="flex gap-2">
-              <Button onClick={handleCreateConnection} disabled={pending}>{pending ? "Підключення..." : "Підключити"}</Button>
-              <Button variant="outline" onClick={() => { setShowConnectionForm(false); setError(null); }}>Скасувати</Button>
+              <Button onClick={handleCreateConnection} disabled={pending}>{pending ? "Łączenie..." : "Podłącz"}</Button>
+              <Button variant="outline" onClick={() => { setShowConnectionForm(false); setError(null); }}>Anuluj</Button>
             </div>
           </CardContent>
         </Card>
@@ -240,12 +240,12 @@ export function CRMIntegrationClient({ initialConnections, initialSyncLogs, init
       {/* Connections */}
       <Card>
         <CardHeader>
-          <CardTitle>Підключення CRM</CardTitle>
+          <CardTitle>Połączenia CRM</CardTitle>
         </CardHeader>
         <CardContent>
           {filteredConnections.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
-              Немає підключених CRM
+              Brak podłączonych CRM
             </div>
           ) : (
             <div className="space-y-2">
@@ -258,7 +258,7 @@ export function CRMIntegrationClient({ initialConnections, initialSyncLogs, init
                     </div>
                     <p className="text-sm text-muted-foreground">{connection.sync_direction}</p>
                     {connection.last_sync_at && (
-                      <p className="text-xs text-muted-foreground">Останній синк: {new Date(connection.last_sync_at).toLocaleString("pl-PL")}</p>
+                      <p className="text-xs text-muted-foreground">Ostatnia synchronizacja: {new Date(connection.last_sync_at).toLocaleString("pl-PL")}</p>
                     )}
                   </div>
                   <div className="flex gap-1">
@@ -268,7 +268,7 @@ export function CRMIntegrationClient({ initialConnections, initialSyncLogs, init
                       </Button>
                     )}
                     <Button variant="outline" size="sm" onClick={() => handleToggleSync(connection.id)}>
-                      {connection.sync_enabled ? "Вимкнути" : "Увімкнути"}
+                      {connection.sync_enabled ? "Wyłącz" : "Włącz"}
                     </Button>
                     <Button variant="outline" size="sm" onClick={() => handleDeleteConnection(connection.id)}>
                       <Trash2 className="h-4 w-4" />
@@ -284,12 +284,12 @@ export function CRMIntegrationClient({ initialConnections, initialSyncLogs, init
       {/* Sync Logs */}
       <Card>
         <CardHeader>
-          <CardTitle>Логи синхронізації</CardTitle>
+          <CardTitle>Dzienniki synchronizacji</CardTitle>
         </CardHeader>
         <CardContent>
           {syncLogs.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
-              Немає логів синхронізації
+              Brak dzienników synchronizacji
             </div>
           ) : (
             <div className="space-y-2">
@@ -307,7 +307,7 @@ export function CRMIntegrationClient({ initialConnections, initialSyncLogs, init
                       <p className="text-sm font-medium">{log.entity_type}</p>
                     </div>
                     <p className="text-xs text-muted-foreground">
-                      Синхронізовано: {log.records_synced}, Створено: {log.records_created}, Оновлено: {log.records_updated}
+                      Zsynchronizowano: {log.records_synced}, Utworzono: {log.records_created}, Zaktualizowano: {log.records_updated}
                     </p>
                     <p className="text-xs text-muted-foreground">{new Date(log.started_at).toLocaleString("pl-PL")}</p>
                   </div>

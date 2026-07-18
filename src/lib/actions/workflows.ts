@@ -105,7 +105,7 @@ export async function toggleWorkflow(workflowId: string): Promise<{ ok: boolean;
     .eq("id", workflowId)
     .single();
 
-  if (!workflow) return { ok: false, error: "Workflow not found" };
+  if (!workflow) return { ok: false, error: "Nie znaleziono przepływu pracy" };
 
   const { error } = await db(supabase)
     .from("workflow_definitions")

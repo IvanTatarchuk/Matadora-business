@@ -31,12 +31,12 @@ const FIELDS: { key: FieldKey; label: string; required?: boolean }[] = [
 ];
 
 const GUESS: Record<FieldKey, string[]> = {
-  product_name: ["product", "name", "nazwa", "produkt", "товар", "назва"],
-  price_net: ["price", "net", "cena", "netto", "ціна"],
-  sku: ["sku", "index", "indeks", "kod", "артикул"],
+  product_name: ["product", "name", "nazwa", "produkt"],
+  price_net: ["price", "net", "cena", "netto"],
+  sku: ["sku", "index", "indeks", "kod", "artykuł"],
   external_id: ["ean", "code", "id", "symbol"],
-  unit: ["unit", "jm", "j.m", "jednostka", "од"],
-  stock_status: ["stock", "stan", "dostęp", "наявн"],
+  unit: ["unit", "jm", "j.m", "jednostka"],
+  stock_status: ["stock", "stan", "dostęp"],
 };
 
 const STOCK_VALUES: StockStatus[] = [
@@ -50,9 +50,9 @@ function normalizeStock(raw: string): StockStatus {
   const s = raw.toLowerCase().trim();
   if (!s) return "in_stock";
   if (STOCK_VALUES.includes(s as StockStatus)) return s as StockStatus;
-  if (/(out|brak|немає|нема)/.test(s)) return "out_of_stock";
-  if (/(low|mało|low_stock|мало)/.test(s)) return "low_stock";
-  if (/(order|zamów|замов)/.test(s)) return "on_order";
+  if (/(out|brak)/.test(s)) return "out_of_stock";
+  if (/(low|mało|low_stock)/.test(s)) return "low_stock";
+  if (/(order|zamów)/.test(s)) return "on_order";
   return "in_stock";
 }
 

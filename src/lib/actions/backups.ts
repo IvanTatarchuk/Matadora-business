@@ -162,7 +162,7 @@ export async function toggleBackupSchedule(scheduleId: string): Promise<{ ok: bo
     .eq("id", scheduleId)
     .single();
 
-  if (!schedule) return { ok: false, error: "Schedule not found" };
+  if (!schedule) return { ok: false, error: "Nie znaleziono harmonogramu" };
 
   const { error } = await db(supabase)
     .from("backup_schedules")

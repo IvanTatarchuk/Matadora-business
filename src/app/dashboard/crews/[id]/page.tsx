@@ -4,7 +4,7 @@ import { CrewDetailClient } from "./crew-detail-client";
 export default async function CrewDetailPage({ params }: { params: { id: string } }) {
   const crew = await getCrewById(params.id);
   if (!crew) {
-    return <p className="text-sm text-muted-foreground">Бригаду не знайдено.</p>;
+    return <p className="text-sm text-muted-foreground">Nie znaleziono brygady.</p>;
   }
   const [assignments, schedules, productivityStats] = await Promise.all([
     listCrewAssignments(params.id),
