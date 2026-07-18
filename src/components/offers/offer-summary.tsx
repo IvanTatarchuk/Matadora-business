@@ -38,8 +38,8 @@ export function OfferSummary({
         <table className="w-full text-sm">
           <thead className="bg-muted/60 text-left">
             <tr>
-              <th className="p-3 font-medium">Stage</th>
-              <th className="p-3 text-right font-medium">Net cost</th>
+              <th className="p-3 font-medium">Etap</th>
+              <th className="p-3 text-right font-medium">Koszt netto</th>
             </tr>
           </thead>
           <tbody className="divide-y">
@@ -88,10 +88,10 @@ export function OfferSummary({
           <table className="w-full text-sm">
             <thead className="bg-muted/60 text-left">
               <tr>
-                <th className="p-3 font-medium">Material</th>
-                <th className="p-3 text-right font-medium">Qty</th>
-                <th className="p-3 text-right font-medium">Unit price</th>
-                <th className="p-3 text-right font-medium">Line total</th>
+                <th className="p-3 font-medium">Materiał</th>
+                <th className="p-3 text-right font-medium">Ilość</th>
+                <th className="p-3 text-right font-medium">Cena jednostkowa</th>
+                <th className="p-3 text-right font-medium">Wartość</th>
               </tr>
             </thead>
             <tbody className="divide-y">
@@ -113,7 +113,7 @@ export function OfferSummary({
             <tfoot className="border-t bg-muted/30">
               <tr>
                 <td className="p-3 font-medium" colSpan={3}>
-                  Materials total (net)
+                  Suma materiałów (netto)
                 </td>
                 <td className="p-3 text-right font-semibold">
                   {formatPLN(materialsTotal)}
@@ -126,7 +126,7 @@ export function OfferSummary({
 
       <div className="ml-auto w-full max-w-sm space-y-2 text-sm">
         <div className="flex justify-between">
-          <span className="text-muted-foreground">Net total</span>
+          <span className="text-muted-foreground">Suma netto</span>
           <span>{formatPLN(totalNet)}</span>
         </div>
         <div className="flex justify-between">
@@ -134,7 +134,7 @@ export function OfferSummary({
           <span>{formatPLN(vatAmount)}</span>
         </div>
         <div className="flex justify-between rounded-md bg-primary/5 px-3 py-2 text-base font-bold text-primary">
-          <span>Gross total</span>
+          <span>Suma brutto</span>
           <span>{formatPLN(totalGross)}</span>
         </div>
       </div>

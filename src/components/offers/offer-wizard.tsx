@@ -26,6 +26,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { cn, formatPLN } from "@/lib/utils";
+import { TEMPLATE_PRESETS, type OfferTemplateType, getTemplatesByCategory } from "@/lib/offer-templates";
 import {
   DEFAULT_STAGES,
   VAT_RATES,
@@ -37,10 +38,11 @@ import { createOffer } from "@/lib/actions/offers";
 import type { StockStatus } from "@/types/database";
 
 const STEPS = [
-  { id: 1, title: "Project", icon: Building },
-  { id: 2, title: "Stages", icon: Layers },
-  { id: 3, title: "Materials", icon: Package },
-  { id: 4, title: "Review", icon: Calculator },
+  { id: 0, title: "Szablon", icon: Calculator },
+  { id: 1, title: "Projekt", icon: Building },
+  { id: 2, title: "Etap", icon: Layers },
+  { id: 3, title: "Materiały", icon: Package },
+  { id: 4, title: "Podsumowanie", icon: Calculator },
 ];
 
 export interface CatalogMaterial {
@@ -67,8 +69,9 @@ type AiSuggestedItem = {
 export function OfferWizard({ materials }: { materials: CatalogMaterial[] }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
-  const [step, setStep] = useState(1);
+  const [step, setStep] = useState(0);
   const [error, setError] = useState<string | null>(null);
+  const [selectedTemplate, setSelectedTemplate] = useState<OfferTemplateType>("investor");
 
   // Step 1 — project details
   const [projectTitle, setProjectTitle] = useState("");
@@ -299,6 +302,14 @@ export function OfferWizard({ materials }: { materials: CatalogMaterial[] }) {
       setError("Project title and offer title are required.");
       return;
     }
+    
+    // When moving from template selection to project details, apply the template
+    if (step === 0) {
+      const preset = TEMPLATE_PRESETS[selectedTemplate];
+      setStages(preset.stages);
+      setVatRate(preset.defaultVatRate);
+    }
+    
     setStep((s) => Math.min(4, s + 1));
   }
 
@@ -364,30 +375,156 @@ export function OfferWizard({ materials }: { materials: CatalogMaterial[] }) {
 
       <Card>
         <CardContent className="p-6">
+          {step === 0 && (
+            <div className="space-y-6">
+              <div>
+                <h2 className="text-lg font-semibold">Wybierz typ kosztorysu</h2>
+                <p className="text-sm text-muted-foreground">
+                  Wybierz odpowiedni szablon dla swojego projektu. Zostaną automatycznie ustawione etapy i stawka VAT.
+                </p>
+              </div>
+
+              {/* Client Type Category */}
+              <div>
+                <h3 className="text-sm font-medium text-muted-foreground mb-3">Dla kogo jest oferta?</h3>
+                <div className="grid gap-3 sm:grid-cols-3">
+                  {getTemplatesByCategory("client").map((template) => (
+                    <button
+                      key={template.name}
+                      type="button"
+                      onClick={() => setSelectedTemplate(template.name as OfferTemplateType)}
+                      className={`p-4 rounded-lg border-2 text-left transition-all ${
+                        selectedTemplate === template.name
+                          ? "border-primary bg-primary/5 ring-2 ring-primary/20"
+                          : "border-border hover:border-primary/50 hover:bg-accent"
+                      }`}
+                    >
+                      <div className="font-medium text-sm">{template.name}</div>
+                      <div className="text-xs text-muted-foreground mt-1">{template.description}</div>
+                      <Badge variant="outline" className="mt-2 text-[10px]">
+                        VAT {template.defaultVatRate}%
+                      </Badge>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Project Type Category */}
+              <div>
+                <h3 className="text-sm font-medium text-muted-foreground mb-3">Rodzaj projektu</h3>
+                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                  {getTemplatesByCategory("project_type").map((template) => (
+                    <button
+                      key={template.name}
+                      type="button"
+                      onClick={() => setSelectedTemplate(template.name as OfferTemplateType)}
+                      className={`p-4 rounded-lg border-2 text-left transition-all ${
+                        selectedTemplate === template.name
+                          ? "border-primary bg-primary/5 ring-2 ring-primary/20"
+                          : "border-border hover:border-primary/50 hover:bg-accent"
+                      }`}
+                    >
+                      <div className="font-medium text-sm">{template.name}</div>
+                      <div className="text-xs text-muted-foreground mt-1">{template.description}</div>
+                      <Badge variant="outline" className="mt-2 text-[10px]">
+                        VAT {template.defaultVatRate}%
+                      </Badge>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Method Category */}
+              <div>
+                <h3 className="text-sm font-medium text-muted-foreground mb-3">Metoda kosztorysowania</h3>
+                <div className="grid gap-3 sm:grid-cols-3">
+                  {getTemplatesByCategory("method").map((template) => (
+                    <button
+                      key={template.name}
+                      type="button"
+                      onClick={() => setSelectedTemplate(template.name as OfferTemplateType)}
+                      className={`p-4 rounded-lg border-2 text-left transition-all ${
+                        selectedTemplate === template.name
+                          ? "border-primary bg-primary/5 ring-2 ring-primary/20"
+                          : "border-border hover:border-primary/50 hover:bg-accent"
+                      }`}
+                    >
+                      <div className="font-medium text-sm">{template.name}</div>
+                      <div className="text-xs text-muted-foreground mt-1">{template.description}</div>
+                      <Badge variant="outline" className="mt-2 text-[10px]">
+                        VAT {template.defaultVatRate}%
+                      </Badge>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Sector Category */}
+              <div>
+                <h3 className="text-sm font-medium text-muted-foreground mb-3">Sektor</h3>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  {getTemplatesByCategory("sector").map((template) => (
+                    <button
+                      key={template.name}
+                      type="button"
+                      onClick={() => setSelectedTemplate(template.name as OfferTemplateType)}
+                      className={`p-4 rounded-lg border-2 text-left transition-all ${
+                        selectedTemplate === template.name
+                          ? "border-primary bg-primary/5 ring-2 ring-primary/20"
+                          : "border-border hover:border-primary/50 hover:bg-accent"
+                      }`}
+                    >
+                      <div className="font-medium text-sm">{template.name}</div>
+                      <div className="text-xs text-muted-foreground mt-1">{template.description}</div>
+                      <Badge variant="outline" className="mt-2 text-[10px]">
+                        VAT {template.defaultVatRate}%
+                      </Badge>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Selected Template Info */}
+              {selectedTemplate && (
+                <div className="rounded-lg border border-primary/30 bg-primary/5 p-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="font-medium">{TEMPLATE_PRESETS[selectedTemplate].name}</div>
+                      <div className="text-sm text-muted-foreground mt-1">
+                        {TEMPLATE_PRESETS[selectedTemplate].stages.length} etapów • VAT {TEMPLATE_PRESETS[selectedTemplate].defaultVatRate}%
+                      </div>
+                    </div>
+                    <Check className="h-5 w-5 text-primary" />
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
           {step === 1 && (
             <div className="space-y-4">
-              <h2 className="text-lg font-semibold">Project details</h2>
+              <h2 className="text-lg font-semibold">Szczegóły projektu</h2>
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
-                  <Label htmlFor="projectTitle">Project title</Label>
+                  <Label htmlFor="projectTitle">Tytuł projektu</Label>
                   <Input
                     id="projectTitle"
                     value={projectTitle}
                     onChange={(e) => setProjectTitle(e.target.value)}
-                    placeholder="Apartment renovation — Mokotów"
+                    placeholder="Remont mieszkania — Mokotów"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="offerTitle">Offer title</Label>
+                  <Label htmlFor="offerTitle">Tytuł oferty</Label>
                   <Input
                     id="offerTitle"
                     value={offerTitle}
                     onChange={(e) => setOfferTitle(e.target.value)}
-                    placeholder="Full renovation estimate"
+                    placeholder="Pełny kosztorys remontu"
                   />
                 </div>
                 <div className="space-y-2 sm:col-span-2">
-                  <Label htmlFor="address">Address</Label>
+                  <Label htmlFor="address">Adres</Label>
                   <Input
                     id="address"
                     value={address}
@@ -396,7 +533,7 @@ export function OfferWizard({ materials }: { materials: CatalogMaterial[] }) {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="surface">Surface area (m²)</Label>
+                  <Label htmlFor="surface">Powierzchnia (m²)</Label>
                   <Input
                     id="surface"
                     type="number"
@@ -407,7 +544,7 @@ export function OfferWizard({ materials }: { materials: CatalogMaterial[] }) {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="investor">Investor email (optional)</Label>
+                  <Label htmlFor="investor">Email inwestora (opcjonalnie)</Label>
                   <Input
                     id="investor"
                     type="email"
@@ -586,9 +723,9 @@ export function OfferWizard({ materials }: { materials: CatalogMaterial[] }) {
           {step === 2 && (
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <h2 className="text-lg font-semibold">Estimate stages</h2>
+                <h2 className="text-lg font-semibold">Etapy kosztorysu</h2>
                 <Button variant="outline" size="sm" onClick={addStage}>
-                  <Plus className="h-4 w-4" /> Add stage
+                  <Plus className="h-4 w-4" /> Dodaj etap
                 </Button>
               </div>
 
@@ -604,14 +741,14 @@ export function OfferWizard({ materials }: { materials: CatalogMaterial[] }) {
                         onChange={(e) =>
                           updateStage(i, { stage_name: e.target.value })
                         }
-                        placeholder="Stage name (e.g. Demolition)"
+                        placeholder="Nazwa etapu (np. Demontaż)"
                       />
                       <Textarea
                         value={stage.description ?? ""}
                         onChange={(e) =>
                           updateStage(i, { description: e.target.value })
                         }
-                        placeholder="Short description"
+                        placeholder="Krótki opis"
                         className="min-h-[60px]"
                       />
                       <Input
@@ -619,13 +756,13 @@ export function OfferWizard({ materials }: { materials: CatalogMaterial[] }) {
                         onChange={(e) =>
                           updateStage(i, { group_label: e.target.value })
                         }
-                        placeholder="Section (optional, e.g. Bathroom)"
+                        placeholder="Sekcja (opcjonalnie, np. Łazienka)"
                         className="h-8 text-xs"
                       />
                     </div>
                     <div className="space-y-2">
                       <Label className="text-xs text-muted-foreground">
-                        Net cost (PLN)
+                        Koszt netto (PLN)
                       </Label>
                       <Input
                         type="number"
@@ -641,7 +778,7 @@ export function OfferWizard({ materials }: { materials: CatalogMaterial[] }) {
                         variant="ghost"
                         size="icon"
                         onClick={() => removeStage(i)}
-                        aria-label="Remove stage"
+                        aria-label="Usuń etap"
                       >
                         <Trash2 className="h-4 w-4 text-destructive" />
                       </Button>
@@ -651,7 +788,7 @@ export function OfferWizard({ materials }: { materials: CatalogMaterial[] }) {
               </div>
 
               <div className="space-y-2">
-                <Label>VAT rate</Label>
+                <Label>Stawka VAT</Label>
                 <div className="flex gap-3">
                   {VAT_RATES.map((r) => (
                     <button
@@ -676,27 +813,27 @@ export function OfferWizard({ materials }: { materials: CatalogMaterial[] }) {
           {step === 3 && (
             <div className="space-y-4">
               <div>
-                <h2 className="text-lg font-semibold">Attach materials</h2>
+                <h2 className="text-lg font-semibold">Dołącz materiały</h2>
                 <p className="text-sm text-muted-foreground">
-                  Set a quantity for catalog products used in this project.
-                  Accepting the offer auto-creates orders for each wholesaler.
+                  Ustaw ilość dla produktów z katalogu użytych w tym projekcie.
+                  Przyjęcie oferty automatycznie tworzy zamówienia dla każdego hurtownika.
                 </p>
               </div>
 
               {materials.length === 0 ? (
                 <p className="rounded-lg border border-dashed py-8 text-center text-sm text-muted-foreground">
-                  No catalog materials available yet. You can still create the
-                  offer and attach materials later.
+                  Brak materiałów w katalogu. Możesz nadal utworzyć
+                  ofertę i dołączyć materiały później.
                 </p>
               ) : (
                 <div className="overflow-x-auto rounded-lg border">
                   <table className="w-full text-sm">
                     <thead className="bg-muted/50 text-left">
                       <tr>
-                        <th className="p-3 font-medium">Product</th>
-                        <th className="p-3 text-right font-medium">Net price</th>
-                        <th className="p-3 text-center font-medium">Quantity</th>
-                        <th className="p-3 text-right font-medium">Line net</th>
+                        <th className="p-3 font-medium">Produkt</th>
+                        <th className="p-3 text-right font-medium">Cena netto</th>
+                        <th className="p-3 text-center font-medium">Ilość</th>
+                        <th className="p-3 text-right font-medium">Wartość netto</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y">
@@ -740,7 +877,7 @@ export function OfferWizard({ materials }: { materials: CatalogMaterial[] }) {
 
               {selectedMaterials.length > 0 && (
                 <div className="ml-auto flex w-full max-w-xs justify-between text-sm font-semibold">
-                  <span>Materials net total</span>
+                  <span>Suma netto materiałów</span>
                   <span>{formatPLN(materialsTotal)}</span>
                 </div>
               )}
@@ -749,13 +886,13 @@ export function OfferWizard({ materials }: { materials: CatalogMaterial[] }) {
 
           {step === 4 && (
             <div className="space-y-4">
-              <h2 className="text-lg font-semibold">Review &amp; create</h2>
+              <h2 className="text-lg font-semibold">Podsumowanie i utwórz</h2>
               <div className="rounded-lg border">
                 <table className="w-full text-sm">
                   <thead className="bg-muted/50 text-left">
                     <tr>
-                      <th className="p-3 font-medium">Stage</th>
-                      <th className="p-3 text-right font-medium">Net cost</th>
+                      <th className="p-3 font-medium">Etap</th>
+                      <th className="p-3 text-right font-medium">Koszt netto</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y">
@@ -801,7 +938,7 @@ export function OfferWizard({ materials }: { materials: CatalogMaterial[] }) {
 
               <div className="ml-auto w-full max-w-xs space-y-2 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Net total</span>
+                  <span className="text-muted-foreground">Suma netto</span>
                   <span>{formatPLN(totals.totalNet)}</span>
                 </div>
                 <div className="flex justify-between">
@@ -809,7 +946,7 @@ export function OfferWizard({ materials }: { materials: CatalogMaterial[] }) {
                   <span>{formatPLN(totals.vatAmount)}</span>
                 </div>
                 <div className="flex justify-between border-t pt-2 text-base font-bold">
-                  <span>Gross total</span>
+                  <span>Suma brutto</span>
                   <span>{formatPLN(totals.totalGross)}</span>
                 </div>
               </div>
@@ -823,18 +960,18 @@ export function OfferWizard({ materials }: { materials: CatalogMaterial[] }) {
       <div className="flex justify-between">
         <Button
           variant="outline"
-          onClick={() => setStep((s) => Math.max(1, s - 1))}
-          disabled={step === 1 || pending}
+          onClick={() => setStep((s) => Math.max(0, s - 1))}
+          disabled={step === 0 || pending}
         >
-          <ArrowLeft className="h-4 w-4" /> Back
+          <ArrowLeft className="h-4 w-4" /> Wstecz
         </Button>
         {step < 4 ? (
           <Button onClick={next}>
-            Next <ArrowRight className="h-4 w-4" />
+            Dalej <ArrowRight className="h-4 w-4" />
           </Button>
         ) : (
           <Button onClick={submit} disabled={pending}>
-            {pending ? "Creating..." : "Create offer"}
+            {pending ? "Tworzenie..." : "Utwórz ofertę"}
             <Check className="h-4 w-4" />
           </Button>
         )}
