@@ -185,7 +185,7 @@ export function CrewDetailClient({ crew, initialAssignments, initialSchedules, i
   function handleCreateProductivity() {
     setError(null);
     if (!productivityForm.periodStart || !productivityForm.periodEnd) {
-      setError("Період (початок і кінець) є обов'язковим");
+      setError("Okres (początek i koniec) jest wymagany");
       return;
     }
     startTransition(async () => {
@@ -201,7 +201,7 @@ export function CrewDetailClient({ crew, initialAssignments, initialSchedules, i
         qualityScore: productivityForm.qualityScore ? parseFloat(productivityForm.qualityScore) : undefined,
         notes: productivityForm.notes || undefined,
       });
-      if (!res.ok) { setError(res.error ?? "Помилка"); return; }
+      if (!res.ok) { setError(res.error ?? "Błąd"); return; }
       setShowProductivityForm(false);
       setProductivityForm({
         periodStart: "",
@@ -335,7 +335,7 @@ export function CrewDetailClient({ crew, initialAssignments, initialSchedules, i
               <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800">
                 <p className="mb-1 flex items-center gap-1.5 font-semibold">
                   <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
-                  Перед призначенням перевірте кваліфікації
+                  Przed przypisaniem sprawdź kwalifikacje
                 </p>
                 <ul className="list-disc space-y-0.5 pl-4">
                   {expiringCertifications.map((cert) => {
@@ -343,8 +343,8 @@ export function CrewDetailClient({ crew, initialAssignments, initialSchedules, i
                     const label = cert.certification_type === "custom" ? cert.custom_name : CERT_LABELS[cert.certification_type];
                     return (
                       <li key={cert.id}>
-                        {cert.worker_name ?? "Робітник"} — {label}{" "}
-                        {days !== null && days < 0 ? "(термін дії закінчився)" : `(закінчується через ${days} дн.)`}
+                        {cert.worker_name ?? "Pracownik"} — {label}{" "}
+                        {days !== null && days < 0 ? "(termin ważności minął)" : `(wygasa za ${days} dni)`}
                       </li>
                     );
                   })}
@@ -559,7 +559,7 @@ export function CrewDetailClient({ crew, initialAssignments, initialSchedules, i
             <div className="space-y-3 mb-4 p-3 bg-muted rounded">
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <Label>Початок періоду</Label>
+                  <Label>Początek okresu</Label>
                   <Input
                     type="date"
                     value={productivityForm.periodStart}
@@ -568,7 +568,7 @@ export function CrewDetailClient({ crew, initialAssignments, initialSchedules, i
                   />
                 </div>
                 <div>
-                  <Label>Кінець періоду</Label>
+                  <Label>Koniec okresu</Label>
                   <Input
                     type="date"
                     value={productivityForm.periodEnd}
@@ -578,7 +578,7 @@ export function CrewDetailClient({ crew, initialAssignments, initialSchedules, i
                 </div>
               </div>
               <div>
-                <Label>Відпрацьовано годин</Label>
+                <Label>Przepracowane godziny</Label>
                 <Input
                   type="number"
                   value={productivityForm.totalHoursWorked}
@@ -588,7 +588,7 @@ export function CrewDetailClient({ crew, initialAssignments, initialSchedules, i
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <Label>Завдань виконано</Label>
+                  <Label>Zadania wykonane</Label>
                   <Input
                     type="number"
                     value={productivityForm.tasksCompleted}
@@ -597,7 +597,7 @@ export function CrewDetailClient({ crew, initialAssignments, initialSchedules, i
                   />
                 </div>
                 <div>
-                  <Label>Завдань всього</Label>
+                  <Label>Zadania łącznie</Label>
                   <Input
                     type="number"
                     value={productivityForm.tasksTotal}
@@ -608,7 +608,7 @@ export function CrewDetailClient({ crew, initialAssignments, initialSchedules, i
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <Label>Ефективність (%)</Label>
+                  <Label>Efektywność (%)</Label>
                   <Input
                     type="number"
                     value={productivityForm.efficiencyScore}
@@ -617,7 +617,7 @@ export function CrewDetailClient({ crew, initialAssignments, initialSchedules, i
                   />
                 </div>
                 <div>
-                  <Label>Якість (%)</Label>
+                  <Label>Jakość (%)</Label>
                   <Input
                     type="number"
                     value={productivityForm.qualityScore}
@@ -627,7 +627,7 @@ export function CrewDetailClient({ crew, initialAssignments, initialSchedules, i
                 </div>
               </div>
               <div>
-                <Label>Примітки</Label>
+                <Label>Notatki</Label>
                 <Input
                   value={productivityForm.notes}
                   onChange={(e) => setProductivityForm({ ...productivityForm, notes: e.target.value })}
@@ -636,10 +636,10 @@ export function CrewDetailClient({ crew, initialAssignments, initialSchedules, i
               </div>
               <div className="flex gap-2">
                 <Button size="sm" onClick={handleCreateProductivity} disabled={pending}>
-                  Додати період
+                  Dodaj okres
                 </Button>
                 <Button variant="outline" size="sm" onClick={() => setShowProductivityForm(false)}>
-                  Скасувати
+                  Anuluj
                 </Button>
               </div>
             </div>
@@ -668,7 +668,7 @@ export function CrewDetailClient({ crew, initialAssignments, initialSchedules, i
                 <div key={entry.id} className="flex items-center justify-between p-2 rounded bg-muted text-sm">
                   <span>{entry.period_start} — {entry.period_end}</span>
                   <span className="text-muted-foreground">
-                    {entry.total_hours_worked} год · {entry.tasks_completed}/{entry.tasks_total} завдань
+                    {entry.total_hours_worked} godz. · {entry.tasks_completed}/{entry.tasks_total} zadań
                   </span>
                 </div>
               ))}
