@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { MapPin, Home, Phone, Mail, Calendar, DollarSign, Send, X, Star, MessageSquare, CheckCircle2, Clock, ThumbsUp } from "lucide-react";
-import { respondToAd, updateResponseStatus, createContractorReview, getContractorRating, type PublicAd, type AdResponse } from "@/lib/actions/public-ads";
+import { respondToAd, updateResponseStatus, createContractorReview, type PublicAd, type AdResponse } from "@/lib/actions/public-ads";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -29,10 +29,11 @@ const WORK_TYPES = [
 interface Props {
   ad: PublicAd | null;
   responses: any[];
+  contractorRatings?: Record<string, { rating: number; count: number }>;
   user: any;
 }
 
-export function AdDetailsClient({ ad, responses, user }: Props) {
+export function AdDetailsClient({ ad, responses, contractorRatings = {}, user }: Props) {
   const [showResponseForm, setShowResponseForm] = useState(false);
   const [showReviewForm, setShowReviewForm] = useState(false);
   const [showContactForm, setShowContactForm] = useState(false);
@@ -299,16 +300,29 @@ export function AdDetailsClient({ ad, responses, user }: Props) {
                 <CardTitle>Відповіді ({responses.length})</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                {responses.map((response) => (
+                {responses.map((response) => {
+                  const contractorRating = contractorRatings[response.contractor_id];
+                  return (
                   <div
                     key={response.id}
                     className="p-4 border rounded-lg space-y-3"
                   >
                     <div className="flex items-start justify-between">
                       <div>
-                        <p className="font-medium">
-                          {response.contractor?.full_name || "Підрядник"}
-                        </p>
+                        <div className="flex items-center gap-2">
+                          <p className="font-medium">
+                            {response.contractor?.full_name || "Підрядник"}
+                          </p>
+                          {contractorRating && (
+                            <span className="flex items-center gap-1 px-2 py-0.5 bg-amber-100 text-amber-800 rounded-full text-xs font-medium">
+                              <Star className="h-3 w-3 fill-current" />
+                              {contractorRating.rating.toFixed(1)}
+                              <span className="text-amber-600">
+                                ({contractorRating.count})
+                              </span>
+                            </span>
+                          )}
+                        </div>
                         <p className="text-sm text-muted-foreground">
                           {new Date(response.created_at).toLocaleString("uk-UA")}
                         </p>
@@ -419,7 +433,8 @@ export function AdDetailsClient({ ad, responses, user }: Props) {
                       </div>
                     )}
                   </div>
-                ))}
+                  );
+                })}
               </CardContent>
             </Card>
           )}
