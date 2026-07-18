@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -99,6 +99,24 @@ type AiSuggestedItem = {
 };
 
 const MAX_PDF_MB = 4;
+const AI_ANALYSIS_PRICE_PLN = 500;
+const PDF_STORAGE_KEY = "matadora_kosztorys_pdf_pending";
+
+function fileToBase64(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve((reader.result as string).split(",")[1] ?? "");
+    reader.onerror = () => reject(reader.error);
+    reader.readAsDataURL(file);
+  });
+}
+
+function base64ToFile(base64: string, name: string): File {
+  const binary = atob(base64);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+  return new File([bytes], name, { type: "application/pdf" });
+}
 
 const VAT_RATES = [
   { label: "8% (budownictwo mieszkaniowe)", value: 0.08 },
