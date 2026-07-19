@@ -10,7 +10,7 @@ const FAQ = [
   },
   {
     q: "Za co więc płacę?",
-    a: "Tylko za jedną rzecz: analizę AI dokumentu PDF (rzut, przedmiar, inwentaryzacja lub gotowy kosztorys), która automatycznie wyodrębnia pozycje robót. To jednorazowa opłata 500 zł za dokument — płacisz tylko wtedy, gdy z tego korzystasz.",
+    a: "Wyłącznie za trzy funkcje AI, każda rozliczana jednorazowo, tylko wtedy gdy z niej korzystasz: analiza AI kosztorysu z PDF (500 zł), analiza AI zdjęcia budowy pod kątem BHP (99 zł) oraz sesja Adwokata AI — generator umów i analiza dokumentu prawnego (19,99 zł).",
   },
   {
     q: "Ile kosztuje kosztorysant na rynku?",
@@ -19,6 +19,10 @@ const FAQ = [
   {
     q: "Czy mogę stworzyć kosztorys bez płacenia?",
     a: "Tak — kalkulator KNR (dodawanie pozycji ręcznie, wyszukiwanie w katalogu, eksport PDF, wysyłka do klienta) jest w pełni bezpłatny. Płatna jest wyłącznie automatyczna analiza AI z przesłanego pliku PDF.",
+  },
+  {
+    q: "Czy dostanę fakturę VAT za zakup?",
+    a: "Tak — faktura VAT jest wystawiana i wysyłana automatycznie na Twój adres e-mail od razu po zaksięgowaniu płatności, a dodatkowo zawsze dostępna do pobrania pod stałym linkiem.",
   },
   {
     q: "Co się dzieje, jeśli zapłacę, a analiza się nie powiedzie?",
@@ -56,12 +60,12 @@ export default function PricingPage() {
           <div className="container">
             <div className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-1.5 text-sm font-medium mb-4">
               <Sparkles className="h-3.5 w-3.5 text-yellow-400" />
-              Cała platforma bezpłatna — płacisz tylko za analizę AI
+              Cała platforma bezpłatna — płacisz tylko za funkcje AI
             </div>
             <h1 className="text-4xl font-extrabold sm:text-5xl">Cennik</h1>
             <p className="mt-4 text-xl text-white/70 max-w-xl mx-auto">
-              Matadora jest bezpłatna. Jedyna płatna funkcja to analiza AI kosztorysu
-              z przesłanego PDF — 500 zł za dokument.
+              Matadora jest bezpłatna. Płatne są wyłącznie trzy funkcje AI — analiza kosztorysu z PDF,
+              analiza BHP zdjęcia budowy oraz sesja Adwokata AI — każda rozliczana jednorazowo.
             </p>
             <div className="mt-4 inline-flex items-center gap-2 rounded-full bg-green-500/20 border border-green-500/30 px-4 py-2 text-sm text-green-300">
               <CheckCircle2 className="h-4 w-4" />
@@ -108,35 +112,38 @@ export default function PricingPage() {
         <section className="container py-16">
           <div className="text-center mb-10">
             <h2 className="text-2xl font-bold">Prosty podział: platforma bezpłatna, AI płatne</h2>
-            <p className="mt-2 text-muted-foreground">Bez tarów, bez subskrypcji — płacisz tylko wtedy, gdy korzystasz z analizy AI</p>
+            <p className="mt-2 text-muted-foreground">Bez taryf, bez subskrypcji — płacisz tylko wtedy, gdy korzystasz z konkretnej funkcji AI</p>
           </div>
-          <div className="grid gap-6 sm:grid-cols-2 max-w-3xl mx-auto">
-            <div className="rounded-xl border border-green-200 bg-green-50/50 p-6">
-              <p className="text-xs font-bold uppercase tracking-widest text-green-700 mb-3">Bezpłatnie, zawsze</p>
-              <ul className="space-y-2 text-sm">
-                {[
-                  "Konto i pełny dostęp do dashboardu",
-                  "Kalkulator KNR — ręczne tworzenie kosztorysu",
-                  "Zarządzanie projektami, harmonogram, finanse",
-                  "Brygady, podwykonawcy, sprzęt, CRM",
-                  "Eksport PDF, wysyłka do klienta, podpis elektroniczny",
-                  "Faktury KSeF, portal inwestora",
-                ].map((f) => (
-                  <li key={f} className="flex items-start gap-2">
-                    <CheckCircle2 className="h-4 w-4 mt-0.5 shrink-0 text-green-600" />
-                    {f}
-                  </li>
-                ))}
-              </ul>
-            </div>
+
+          <div className="mx-auto mb-6 max-w-3xl rounded-xl border border-green-200 bg-green-50/50 p-6">
+            <p className="text-xs font-bold uppercase tracking-widest text-green-700 mb-3">Bezpłatnie, zawsze</p>
+            <ul className="grid gap-2 text-sm sm:grid-cols-2">
+              {[
+                "Konto i pełny dostęp do dashboardu",
+                "Kalkulator KNR — ręczne tworzenie kosztorysu",
+                "Zarządzanie projektami, harmonogram, finanse",
+                "Brygady, podwykonawcy, sprzęt, CRM",
+                "Eksport PDF, wysyłka do klienta, podpis elektroniczny",
+                "Faktury KSeF, portal inwestora",
+              ].map((f) => (
+                <li key={f} className="flex items-start gap-2">
+                  <CheckCircle2 className="h-4 w-4 mt-0.5 shrink-0 text-green-600" />
+                  {f}
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <div className="mx-auto grid max-w-4xl gap-6 sm:grid-cols-3">
             <div className="rounded-xl border border-primary/30 bg-primary/5 p-6">
-              <p className="text-xs font-bold uppercase tracking-widest text-primary mb-3">Płatne — 500 zł / dokument</p>
+              <p className="text-xs font-bold uppercase tracking-widest text-primary mb-1">Analiza AI kosztorysu</p>
+              <p className="text-2xl font-extrabold">500 zł</p>
+              <p className="mb-3 text-xs text-muted-foreground">za dokument</p>
               <ul className="space-y-2 text-sm">
                 {[
                   "Analiza AI przesłanego PDF (rzut, przedmiar, inwentaryzacja)",
-                  "Automatyczne wyodrębnienie pozycji robót z ilościami",
+                  "Wyodrębnienie pozycji robót z ilościami",
                   "Dopasowanie kodów KNR i orientacyjnych stawek",
-                  "Gotowe pozycje od razu w kalkulatorze — do edycji",
                 ].map((f) => (
                   <li key={f} className="flex items-start gap-2">
                     <CheckCircle2 className="h-4 w-4 mt-0.5 shrink-0 text-primary" />
@@ -146,7 +153,53 @@ export default function PricingPage() {
               </ul>
               <Button className="mt-6 w-full" asChild>
                 <Link href="/kosztorys">
-                  Wypróbuj na /kosztorys <ArrowRight className="ml-1 h-3.5 w-3.5" />
+                  Wypróbuj <ArrowRight className="ml-1 h-3.5 w-3.5" />
+                </Link>
+              </Button>
+            </div>
+
+            <div className="rounded-xl border border-primary/30 bg-primary/5 p-6">
+              <p className="text-xs font-bold uppercase tracking-widest text-primary mb-1">Analiza BHP zdjęcia</p>
+              <p className="text-2xl font-extrabold">99 zł</p>
+              <p className="mb-3 text-xs text-muted-foreground">za zdjęcie</p>
+              <ul className="space-y-2 text-sm">
+                {[
+                  "Analiza AI zdjęcia placu budowy",
+                  "Wykrycie naruszeń przepisów BHP",
+                  "Podstawa prawna i rekomendacje naprawcze",
+                ].map((f) => (
+                  <li key={f} className="flex items-start gap-2">
+                    <CheckCircle2 className="h-4 w-4 mt-0.5 shrink-0 text-primary" />
+                    {f}
+                  </li>
+                ))}
+              </ul>
+              <Button className="mt-6 w-full" variant="outline" asChild>
+                <Link href="/login">
+                  Zaloguj się, aby skorzystać <ArrowRight className="ml-1 h-3.5 w-3.5" />
+                </Link>
+              </Button>
+            </div>
+
+            <div className="rounded-xl border border-primary/30 bg-primary/5 p-6">
+              <p className="text-xs font-bold uppercase tracking-widest text-primary mb-1">Adwokat AI — sesja</p>
+              <p className="text-2xl font-extrabold">19,99 zł</p>
+              <p className="mb-3 text-xs text-muted-foreground">za sesję</p>
+              <ul className="space-y-2 text-sm">
+                {[
+                  "Wygenerowanie jednego projektu umowy",
+                  "Analiza jednego dokumentu prawnego",
+                  "Obie funkcje w ramach tej samej sesji",
+                ].map((f) => (
+                  <li key={f} className="flex items-start gap-2">
+                    <CheckCircle2 className="h-4 w-4 mt-0.5 shrink-0 text-primary" />
+                    {f}
+                  </li>
+                ))}
+              </ul>
+              <Button className="mt-6 w-full" variant="outline" asChild>
+                <Link href="/login">
+                  Zaloguj się, aby skorzystać <ArrowRight className="ml-1 h-3.5 w-3.5" />
                 </Link>
               </Button>
             </div>
