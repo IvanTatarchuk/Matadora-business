@@ -28,6 +28,7 @@ import {
   Receipt,
   BookOpen,
   Scale,
+  LifeBuoy,
   type LucideIcon,
 } from "lucide-react";
 
@@ -81,7 +82,7 @@ const NAV: Record<UserRole, NavItem[]> = {
   ],
 };
 
-export function Sidebar({ role }: { role: UserRole }) {
+export function Sidebar({ role, isAdmin = false }: { role: UserRole; isAdmin?: boolean }) {
   const pathname = usePathname();
   const items = NAV[role];
 
@@ -127,6 +128,20 @@ export function Sidebar({ role }: { role: UserRole }) {
           <Settings className="h-4 w-4" />
           Ustawienia
         </Link>
+        {isAdmin && (
+          <Link
+            href="/dashboard/support-inbox"
+            className={cn(
+              "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
+              pathname.startsWith("/dashboard/support-inbox")
+                ? "bg-primary text-primary-foreground"
+                : "text-secondary-foreground/80 hover:bg-white/10"
+            )}
+          >
+            <LifeBuoy className="h-4 w-4" />
+            Skrzynka wsparcia
+          </Link>
+        )}
       </nav>
       <div className="border-t border-white/10 p-4 text-xs text-secondary-foreground/60">
         <span className="capitalize">

@@ -161,6 +161,46 @@ export function emailInvoice(opts: {
   });
 }
 
+export function emailNewSupportTicket(opts: {
+  ticketId: string;
+  reporterEmail: string;
+  reporterRole: string;
+  pageUrl: string | null;
+  message: string;
+}) {
+  const adminEmails = (process.env.SUPPORT_ADMIN_EMAILS ?? "itatarchuk1202@gmail.com,vanbud.felix@gmail.com")
+    .split(",")
+    .map((e) => e.trim())
+    .filter(Boolean);
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://matadora.business";
+
+  return sendEmail({
+    to: adminEmails,
+    subject: `🆘 Nowe zgłoszenie — ${opts.reporterRole}`,
+    html: baseTemplate(`
+      <h2>Nowe zgłoszenie problemu</h2>
+      <p><strong>Od:</strong> ${opts.reporterEmail} (${opts.reporterRole})</p>
+      ${opts.pageUrl ? `<p><strong>Strona:</strong> ${opts.pageUrl}</p>` : ""}
+      <blockquote>${opts.message}</blockquote>
+      <a href="${siteUrl}/dashboard/support-inbox" class="btn">Otwórz skrzynkę zgłoszeń</a>
+    `),
+  });
+}
+
+export function emailTicketReply(opts: { reporterEmail: string; reply: string }) {
+  return sendEmail({
+    to: opts.reporterEmail,
+    subject: "💬 Odpowiedź na Twoje zgłoszenie — matadora.business",
+    html: baseTemplate(`
+      <h2>Odpowiedź na Twoje zgłoszenie</h2>
+      <p>Dziękujemy za zgłoszenie problemu. Oto nasza odpowiedź:</p>
+      <blockquote>${opts.reply}</blockquote>
+      <p style="margin-top:16px;font-size:13px;color:#64748b;">Jeśli sprawa nadal wymaga uwagi, odpisz
+         na ten e-mail lub zgłoś to ponownie w aplikacji.</p>
+    `),
+  });
+}
+
 export function emailPunchItemOpened(opts: {
   contractorEmail: string;
   contractorName: string;
