@@ -32,6 +32,10 @@ yarn-error.log*
 # claude code local settings
 .claude/settings.local.json
 
+# nested agent worktrees (isolated git checkouts created by the Agent tool /
+# feature-dev-agent harness) — never real content of this repo's own tree
+.claude/worktrees/
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts
