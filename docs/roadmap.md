@@ -87,16 +87,24 @@
    НЕ потрібна нова міграція для цього пункту.
    Джерело: `openconstructionerp-analysis.md` §2.1.
 
-2. **Розширений каталог позицій із пошуком** — зараз `KNR_ITEMS` це
-   захардкоджений масив із 12 записів. Перенести в таблицю `cost_items` у
-   Supabase + повнотекстовий пошук (`tsvector`) замість підрядкового.
-   Складність: мала (full-text) — велика (якщо додавати семантичний пошук).
+2. ~~**Розширений каталог позицій із пошуком**~~ — **зроблено 2026-07-19**:
+   `supabase/migrations/0056_cost_items_catalog.sql` (чекає на `db:apply`
+   власником) створює таблицю `cost_items` (107 позицій, різні категорії:
+   posadzki, tynki, instalacje, roboty rozbiórkowe/murowe/fundamentowe,
+   dekarskie, elewacje, HVAC, niskoprądowe, konstrukcyjne) з `pg_trgm`
+   GIN-індексами на `name`/`code` для швидкого підрядкового пошуку.
+   `src/lib/actions/cost-items.ts` → `searchCostItems(query)`, підключено в
+   `kosztorys/page.tsx` через debounced-пошук (250ms) замість синхронного
+   `KNR_ITEMS.filter`. Три дефолтні позиції в новому кошторисі й пороги
+   для outlier-детекції досі беруть локальний 12-записовий масив — цього
+   достатньо, окремо мігрувати не треба.
    Джерело: `openconstructionerp-analysis.md` §2.2.
 
 3. **Версіонування цін по кварталах/регіонах** — зараз статичний напис
-   "orientacyjne, region centralny, Q1 2026" прямо в коді. Залежить від
-   таблиці `cost_items` з п.2 — додає `region`/`quarter` колонки і просту
-   адмін-форму оновлення без деплою коду.
+   "orientacyjne, region centralny, Q1 2026" прямо в коді. Тепер можна
+   спиратись на таблицю `cost_items` з п.2 (вже існує) — додати
+   `region`/`quarter` колонки і просту адмін-форму оновлення без деплою
+   коду.
    Джерело: `openconstructionerp-analysis.md` §2.6.
 
 ## Технічні завдання (інші модулі, нижчий пріоритет зараз)

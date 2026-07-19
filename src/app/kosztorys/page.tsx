@@ -29,7 +29,11 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { formatPLN } from "@/lib/utils";
 import { validateEstimateForSubmission, findOutlierRates } from "@/lib/offer-calc";
+import { searchCostItems, type CostItem } from "@/lib/actions/cost-items";
 
+/** Small local fallback used only for the 3 default-seeded line items and the
+ * outlier-rate sanity bounds — the searchable catalog itself now lives in the
+ * `cost_items` table (100+ items) and is queried via `searchCostItems`. */
 const KNR_ITEMS = [
   { code: "KNR 4-01 0501-01", name: "Posadzki z płytek ceramicznych na kleju — 30×30 cm", unit: "m²", laborRate: 35, materialRate: 55 },
   { code: "KNR 4-01 0502-01", name: "Posadzki z płytek ceramicznych na kleju — 60×60 cm", unit: "m²", laborRate: 42, materialRate: 85 },
@@ -135,6 +139,8 @@ export default function KosztorysPage() {
   ]);
   const [search, setSearch] = useState("");
   const [showCatalog, setShowCatalog] = useState(false);
+  const [catalogResults, setCatalogResults] = useState<CostItem[]>([]);
+  const [catalogLoading, setCatalogLoading] = useState(false);
   const [showSaveModal, setShowSaveModal] = useState(false);
   const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set());
 
@@ -177,14 +183,31 @@ export default function KosztorysPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const filtered = KNR_ITEMS.filter(
-    (k) =>
-      k.name.toLowerCase().includes(search.toLowerCase()) ||
-      k.code.toLowerCase().includes(search.toLowerCase())
-  );
+  // Debounced server-backed search against the cost_items catalog.
+  useEffect(() => {
+    if (!showCatalog) return;
+    setCatalogLoading(true);
+    const handle = setTimeout(() => {
+      searchCostItems(search)
+        .then(setCatalogResults)
+        .finally(() => setCatalogLoading(false));
+    }, 250);
+    return () => clearTimeout(handle);
+  }, [search, showCatalog]);
 
-  function addItem(knr: typeof KNR_ITEMS[0]) {
-    setItems((prev) => [...prev, { id: newId(), ...knr, qty: 1 }]);
+  function addItem(item: CostItem) {
+    setItems((prev) => [
+      ...prev,
+      {
+        id: newId(),
+        code: item.code,
+        name: item.name,
+        unit: item.unit,
+        laborRate: item.labor_rate,
+        materialRate: item.material_rate,
+        qty: 1,
+      },
+    ]);
     setShowCatalog(false);
     setSearch("");
   }
@@ -860,19 +883,26 @@ export default function KosztorysPage() {
                     />
                   </CardHeader>
                   <CardContent className="max-h-72 overflow-y-auto space-y-1">
-                    {filtered.map((k) => (
+                    {catalogLoading && catalogResults.length === 0 && (
+                      <p className="py-4 text-center text-sm text-muted-foreground">Szukam...</p>
+                    )}
+                    {!catalogLoading && catalogResults.length === 0 && (
+                      <p className="py-4 text-center text-sm text-muted-foreground">Brak pozycji dla tego zapytania</p>
+                    )}
+                    {catalogResults.map((k) => (
                       <button
-                        key={k.code}
+                        key={k.id}
                         onClick={() => addItem(k)}
                         className="w-full rounded-lg border p-3 text-left hover:bg-primary/5 hover:border-primary transition-colors"
                       >
                         <div className="flex items-center justify-between">
                           <span className="text-xs font-mono text-muted-foreground">{k.code}</span>
                           <span className="text-xs text-muted-foreground">
-                            {formatPLN(k.laborRate + k.materialRate)}/{k.unit}
+                            {formatPLN(k.labor_rate + k.material_rate)}/{k.unit}
                           </span>
                         </div>
                         <p className="mt-0.5 text-sm font-medium">{k.name}</p>
+                        <p className="text-xs text-muted-foreground">{k.category}</p>
                       </button>
                     ))}
                   </CardContent>
