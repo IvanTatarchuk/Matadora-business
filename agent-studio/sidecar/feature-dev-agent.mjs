@@ -231,6 +231,22 @@ async function main() {
       return;
     }
 
+    // `git worktree add` gives a fresh checkout with no `node_modules` — it's
+    // gitignored, never part of the tree being checked out — so `npm run
+    // typecheck/lint/build` would fail immediately with MODULE_NOT_FOUND
+    // without this. Uses the same npm cache as the main checkout (npm's
+    // global cache, not node_modules itself), so this is normally fast, not
+    // a full from-scratch download.
+    emitLog("Installing dependencies in the isolated worktree ...");
+    const installResult = await runNpm(worktreePath, ["install"], "npm install");
+    if (installResult.code !== 0) {
+      await report(dbTaskId, "error", {
+        message: `npm install failed in the isolated worktree (exit ${installResult.code})`,
+      });
+      process.exitCode = 1;
+      return;
+    }
+
     emitLog("Running verification: npm run typecheck && npm run lint && npm run build ...");
     const checksOk = await runChecks(worktreePath);
     if (!checksOk) {
