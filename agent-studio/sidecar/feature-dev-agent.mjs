@@ -8,18 +8,29 @@
 //
 // Usage:
 //   node feature-dev-agent.mjs <targetRepoPath> <task description...>
+//   node feature-dev-agent.mjs --task-id <agent_tasks.id uuid> <targetRepoPath> <task description...>
 //
 // Emits newline-delimited JSON on stdout, one of:
 //   {"type":"log","line":"..."}
 //   {"type":"status","status":"...", ...extra fields}
 // matching the event shape Phase 0's Rust side already forwards as
-// `sidecar-log` / `sidecar-status` Tauri events.
+// `sidecar-log` / `sidecar-status` Tauri events. This NDJSON shape and the
+// set of lifecycle statuses below is UNCHANGED by the optional --task-id
+// flag — the Phase 1 Tauri command (`run_feature_dev_agent`) and its
+// App.tsx button never pass one, and behave exactly as before.
 //
 // Lifecycle statuses emitted (in order, on the happy path):
 //   running -> worktree_created -> agent_working -> checks_passed
 //   -> pushed -> awaiting_review
 // (or: worktree_created -> agent_working -> no_changes; or ... ->
 //  checks_failed; or "error" at any point.)
+//
+// Phase 2: when --task-id is given, each of those lifecycle statuses is
+// ALSO mirrored (mapped onto the coarser public.agent_task_status enum) into
+// the matching public.agent_tasks row via a direct Supabase REST PATCH — see
+// lib/supabase-task.mjs and DB_STATUS_MAP below. Without --task-id, that
+// module is never called and this script behaves exactly as it did before
+// Phase 2 (NDJSON-to-stdout only, no Supabase calls, no env vars required).
 
 import { spawn } from "node:child_process";
 import path from "node:path";
@@ -29,8 +40,83 @@ import crypto from "node:crypto";
 
 import { emitLog, emitStatus } from "./lib/events.mjs";
 import { evaluateBashCommand } from "./lib/bash-guard.mjs";
+import { updateAgentTask, supabaseTaskReportingConfigured } from "./lib/supabase-task.mjs";
 
 const COMPARE_URL_REPO = "IvanTatarchuk/Matadora-business";
+
+// Maps this sidecar's fine-grained lifecycle status vocabulary (emitted to
+// stdout unchanged, for the Tauri UI) onto the DB's coarser
+// agent_task_status enum (idle | processing | completed | error |
+// awaiting_review | blocked — the last two added by
+// supabase/migrations/0058_agent_task_queue_extend.sql). Only consulted
+// when a --task-id was given.
+const DB_STATUS_MAP = {
+  running: "processing",
+  worktree_created: "processing",
+  agent_working: "processing",
+  checks_passed: "processing",
+  checks_failed: "blocked",
+  pushed: "processing",
+  awaiting_review: "awaiting_review",
+  no_changes: "completed",
+  error: "error",
+};
+
+/**
+ * Emit a status event exactly as before (`emitStatus`, unchanged NDJSON
+ * shape/behavior), and — only when `dbTaskId` is set — additionally PATCH
+ * the matching `public.agent_tasks` row via the Supabase REST API. Never
+ * throws and never changes this process's control flow: a Supabase failure
+ * (missing env vars, network error, etc.) is logged as a plain log line and
+ * otherwise ignored, exactly like a failed `emitLog` would be.
+ *
+ * @param {string | null} dbTaskId
+ * @param {string} status
+ * @param {Record<string, unknown>} [extra]
+ */
+async function report(dbTaskId, status, extra = {}) {
+  emitStatus(status, extra);
+  if (!dbTaskId) return;
+
+  const dbStatus = DB_STATUS_MAP[status];
+  if (!dbStatus) return;
+
+  const patch = { status: dbStatus };
+  if (extra.branch) patch.branch = extra.branch;
+  if (extra.worktreePath) patch.worktree_path = extra.worktreePath;
+  if (extra.compareUrl) patch.compare_url = extra.compareUrl;
+  if (status === "error" && extra.message) patch.error = String(extra.message);
+  if (status === "checks_failed") {
+    patch.error =
+      "Verification failed: npm run typecheck / lint / build did not all pass in the isolated worktree.";
+  }
+  if (dbStatus === "completed" || dbStatus === "error") {
+    patch.completed_at = new Date().toISOString();
+  }
+
+  const result = await updateAgentTask(dbTaskId, patch);
+  if (!result.ok) {
+    emitLog(`[supabase] failed to update agent_tasks ${dbTaskId}: ${result.error}`);
+  }
+}
+
+/**
+ * Parse the optional `--task-id <uuid>` flag out of argv, wherever it
+ * appears, leaving the rest of the positional args (`<targetRepoPath>
+ * <task description...>`) untouched and in order — so this is fully
+ * backward compatible with the Phase 1 invocation that never passes it.
+ *
+ * @param {string[]} argv
+ * @returns {{ dbTaskId: string | null, rest: string[] }}
+ */
+function extractTaskIdFlag(argv) {
+  const args = argv.slice(2);
+  const idx = args.indexOf("--task-id");
+  if (idx === -1) return { dbTaskId: null, rest: args };
+  const dbTaskId = args[idx + 1] ?? null;
+  const rest = [...args.slice(0, idx), ...args.slice(idx + 2)];
+  return { dbTaskId, rest };
+}
 
 // Tools this agent is never allowed to reach for, on top of the
 // PreToolUse Bash guard below. Per the approved plan, `disallowedTools`
@@ -39,13 +125,23 @@ const COMPARE_URL_REPO = "IvanTatarchuk/Matadora-business";
 const DISALLOWED_TOOLS = ["WebSearch", "WebFetch", "Task", "NotebookEdit", "SlashCommand"];
 
 async function main() {
-  const [, , repoPathArg, ...taskParts] = process.argv;
+  const { dbTaskId, rest } = extractTaskIdFlag(process.argv);
+  const [repoPathArg, ...taskParts] = rest;
   const taskDescription = taskParts.join(" ").trim();
 
+  if (dbTaskId && !supabaseTaskReportingConfigured()) {
+    emitLog(
+      "[supabase] --task-id was given but NEXT_PUBLIC_SUPABASE_URL / " +
+        "SUPABASE_SERVICE_ROLE_KEY (or SUPABASE_SECRET_KEY) are not set — " +
+        "status will NOT be persisted to Supabase for this run (stdout NDJSON " +
+        "output is unaffected)."
+    );
+  }
+
   if (!repoPathArg || !taskDescription) {
-    emitStatus("error", {
+    await report(dbTaskId, "error", {
       message:
-        "Usage: node feature-dev-agent.mjs <targetRepoPath> <task description...>",
+        "Usage: node feature-dev-agent.mjs [--task-id <uuid>] <targetRepoPath> <task description...>",
     });
     process.exitCode = 1;
     return;
@@ -56,7 +152,7 @@ async function main() {
   // the SDK throw an opaque auth error deep in the run.
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey || !apiKey.trim()) {
-    emitStatus("error", {
+    await report(dbTaskId, "error", {
       message:
         "ANTHROPIC_API_KEY is not set in this process's environment. " +
         "This sidecar runs as a separate Node process and does not inherit " +
@@ -69,7 +165,7 @@ async function main() {
 
   const repoPath = path.resolve(repoPathArg);
   if (!fs.existsSync(repoPath)) {
-    emitStatus("error", { message: `Target repo path does not exist: ${repoPath}` });
+    await report(dbTaskId, "error", { message: `Target repo path does not exist: ${repoPath}` });
     process.exitCode = 1;
     return;
   }
@@ -79,7 +175,7 @@ async function main() {
   const worktreeRoot = path.resolve(repoPath, "..", "matadora-agent-runs");
   const worktreePath = path.join(worktreeRoot, taskId);
 
-  emitStatus("running", { taskId, branch });
+  await report(dbTaskId, "running", { taskId, branch });
   emitLog(`Task: ${taskDescription}`);
   emitLog(`Target repo: ${repoPath}`);
 
@@ -95,18 +191,18 @@ async function main() {
       branch,
     ]);
     if (worktreeResult.code !== 0) {
-      emitStatus("error", {
+      await report(dbTaskId, "error", {
         message: `git worktree add failed with exit code ${worktreeResult.code}`,
       });
       process.exitCode = 1;
       return;
     }
-    emitStatus("worktree_created", { worktreePath, branch, taskId });
+    await report(dbTaskId, "worktree_created", { worktreePath, branch, taskId });
 
-    emitStatus("agent_working", { taskId });
+    await report(dbTaskId, "agent_working", { taskId });
     const agentOutcome = await runFeatureDevAgent({ worktreePath, taskDescription });
     if (agentOutcome.error) {
-      emitStatus("error", { message: agentOutcome.error });
+      await report(dbTaskId, "error", { message: agentOutcome.error });
       process.exitCode = 1;
       return;
     }
@@ -119,7 +215,7 @@ async function main() {
     const hasChanges = statusResult.stdout.trim().length > 0;
     if (!hasChanges) {
       emitLog("Agent run finished but produced no file changes in the worktree.");
-      emitStatus("no_changes", { worktreePath, branch, taskId });
+      await report(dbTaskId, "no_changes", { worktreePath, branch, taskId });
       return;
     }
 
@@ -128,7 +224,7 @@ async function main() {
     const commitMessage = `agent(feature-dev): ${taskDescription}`.slice(0, 200);
     const commitResult = await runGit(worktreePath, ["commit", "-m", commitMessage]);
     if (commitResult.code !== 0) {
-      emitStatus("error", {
+      await report(dbTaskId, "error", {
         message: `git commit failed after agent run (exit ${commitResult.code})`,
       });
       process.exitCode = 1;
@@ -138,10 +234,10 @@ async function main() {
     emitLog("Running verification: npm run typecheck && npm run lint && npm run build ...");
     const checksOk = await runChecks(worktreePath);
     if (!checksOk) {
-      emitStatus("checks_failed", { worktreePath, branch, taskId });
+      await report(dbTaskId, "checks_failed", { worktreePath, branch, taskId });
       return;
     }
-    emitStatus("checks_passed", { worktreePath, branch, taskId });
+    await report(dbTaskId, "checks_passed", { worktreePath, branch, taskId });
 
     const compareUrl = `https://github.com/${COMPARE_URL_REPO}/compare/main...${branch}?expand=1`;
 
@@ -163,10 +259,10 @@ async function main() {
       );
     }
 
-    emitStatus("pushed", { pushed, branch, worktreePath, taskId });
-    emitStatus("awaiting_review", { compareUrl, branch, worktreePath, pushed, taskId });
+    await report(dbTaskId, "pushed", { pushed, branch, worktreePath, taskId });
+    await report(dbTaskId, "awaiting_review", { compareUrl, branch, worktreePath, pushed, taskId });
   } catch (err) {
-    emitStatus("error", { message: err?.stack || String(err) });
+    await report(dbTaskId, "error", { message: err?.stack || String(err) });
     process.exitCode = 1;
   }
 }

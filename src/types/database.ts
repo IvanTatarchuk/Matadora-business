@@ -21,7 +21,13 @@ export type OrderStatus =
 export type StockStatus = "in_stock" | "low_stock" | "out_of_stock" | "on_order";
 export type OrgMemberRole = "owner" | "admin" | "manager" | "member";
 export type ProjectTaskStatus = "todo" | "in_progress" | "blocked" | "done";
-export type AgentTaskStatus = "idle" | "processing" | "completed" | "error";
+export type AgentTaskStatus =
+  | "idle"
+  | "processing"
+  | "completed"
+  | "error"
+  | "awaiting_review"
+  | "blocked";
 export type AgentMessageType = "request" | "response" | "notification";
 
 export interface Database {
@@ -806,6 +812,9 @@ export interface Database {
           status: AgentTaskStatus;
           result: unknown;
           error: string | null;
+          branch: string | null;
+          compare_url: string | null;
+          worktree_path: string | null;
           created_at: string;
           completed_at: string | null;
         };
@@ -819,6 +828,9 @@ export interface Database {
           status?: AgentTaskStatus;
           result?: unknown;
           error?: string | null;
+          branch?: string | null;
+          compare_url?: string | null;
+          worktree_path?: string | null;
           completed_at?: string | null;
         };
         Update: Partial<Database["public"]["Tables"]["agent_tasks"]["Insert"]>;

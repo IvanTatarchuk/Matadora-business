@@ -30,6 +30,7 @@ import {
   Scale,
   LifeBuoy,
   Megaphone,
+  Bot,
   type LucideIcon,
 } from "lucide-react";
 
@@ -154,6 +155,18 @@ export function Sidebar({ role, isAdmin = false }: { role: UserRole; isAdmin?: b
             >
               <Megaphone className="h-4 w-4" />
               Marketing AI
+            </Link>
+            <Link
+              href="/dashboard/agent-studio"
+              className={cn(
+                "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
+                pathname.startsWith("/dashboard/agent-studio")
+                  ? "bg-primary text-primary-foreground"
+                  : "text-secondary-foreground/80 hover:bg-white/10"
+              )}
+            >
+              <Bot className="h-4 w-4" />
+              Agent Studio
             </Link>
           </>
         )}
