@@ -41,10 +41,10 @@ export default async function InvestorProjectsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">My projects</h1>
+        <h1 className="text-2xl font-bold">Moje projekty</h1>
         <p className="text-sm text-muted-foreground">
-          Create a project and publish it to the marketplace so contractors can
-          submit competitive bids.
+          Utwórz projekt i opublikuj go na rynku ofert, aby wykonawcy mogli
+          składać konkurencyjne oferty.
         </p>
       </div>
 
