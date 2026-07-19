@@ -89,11 +89,11 @@ export function Sidebar({ role, isAdmin = false }: { role: UserRole; isAdmin?: b
 
   return (
     <aside className="hidden w-64 shrink-0 border-r bg-secondary text-secondary-foreground md:flex md:flex-col">
-      <div className="flex h-16 items-center gap-2 border-b border-white/10 px-4 font-bold text-sm">
+      <div className="flex h-16 items-center gap-2 whitespace-nowrap border-b border-white/10 px-4 font-extrabold text-sm tracking-tight">
         <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary">
           <HardHat className="h-4 w-4 text-white" />
         </div>
-        <span>matadora<span className="text-primary">.business</span></span>
+        <span>MATADORA<span className="text-primary">.business</span></span>
       </div>
       <nav className="flex-1 space-y-1 p-4">
         {items.map((item) => {

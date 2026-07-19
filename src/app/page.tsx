@@ -127,7 +127,7 @@ const COMPARISON = [
   { feature: "Portal inwestora real-time", us: true, norma: false, planradar: true },
   { feature: "Zarządzanie projektem", us: true, norma: false, planradar: true },
   { feature: "Mobile / offline", us: true, norma: false, planradar: true },
-  { feature: "Cena miesięczna", us: "99 zł", norma: "167 zł", planradar: "420 zł" },
+  { feature: "Cena miesięczna", us: "0 zł", norma: "167 zł", planradar: "420 zł" },
 ];
 
 export default function HomePage() {
@@ -136,12 +136,13 @@ export default function HomePage() {
       {/* HEADER */}
       <header className="sticky top-0 z-50 border-b bg-white/95 backdrop-blur">
         <div className="container flex h-16 items-center justify-between">
-          <div className="flex items-center gap-2 font-bold text-xl">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
+          <div className="flex items-center gap-2 whitespace-nowrap font-extrabold text-xl tracking-tight">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary">
               <HardHat className="h-5 w-5 text-white" />
             </div>
-            <span>matadora</span>
-            <span className="text-primary">.business</span>
+            <span>
+              MATADORA<span className="text-primary">.business</span>
+            </span>
           </div>
           <nav className="hidden items-center gap-6 text-sm font-medium md:flex">
             <Link href="/kosztorys" className="text-muted-foreground hover:text-foreground">Kosztorys</Link>
@@ -278,7 +279,7 @@ export default function HomePage() {
               Porównanie z konkurencją
             </h2>
             <p className="mt-3 text-muted-foreground">
-              Dlaczego tysiące firm przechodzi z Norma PRO i PlanRadar
+              Zobacz, dlaczego warto zamienić Norma PRO i PlanRadar na matadora.business
             </p>
           </div>
           <div className="mt-10 overflow-x-auto rounded-xl border">
@@ -349,11 +350,10 @@ export default function HomePage() {
               Pierwsi użytkownicy
             </h2>
             <p className="mt-4 text-lg text-muted-foreground leading-relaxed">
-              Matadora jest w fazie beta. Pierwsze{" "}
-              <strong className="text-foreground">50 firm</strong>, które
-              założą konto, otrzymują{" "}
-              <strong className="text-foreground">1 bezpłatną analizę AI kosztorysu</strong>{" "}
-              (wartość 500 zł) — bez karty kredytowej, bez zobowiązań.
+              Matadora jest w fazie beta. Załóż konto{" "}
+              <strong className="text-foreground">bezpłatnie</strong>, bez karty kredytowej i bez
+              zobowiązań — cała platforma jest darmowa, płacisz tylko za funkcje AI, jeśli z nich
+              skorzystasz.
             </p>
             <p className="mt-3 text-sm text-muted-foreground">
               W zamian prosimy o szczery feedback, który pomoże nam budować

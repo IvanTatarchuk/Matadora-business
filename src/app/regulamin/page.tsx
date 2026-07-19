@@ -12,12 +12,13 @@ export default function RegulaminPage() {
     <div className="flex min-h-screen flex-col bg-white">
       <header className="sticky top-0 z-50 border-b bg-white/95 backdrop-blur">
         <div className="container flex h-16 items-center justify-between">
-          <Link href="/" className="flex items-center gap-2 font-bold text-xl">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
+          <Link href="/" className="flex items-center gap-2 whitespace-nowrap font-extrabold text-xl tracking-tight">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary">
               <HardHat className="h-5 w-5 text-white" />
             </div>
-            <span>matadora</span>
-            <span className="text-primary">.business</span>
+            <span>
+              MATADORA<span className="text-primary">.business</span>
+            </span>
           </Link>
           <nav className="hidden items-center gap-6 text-sm font-medium md:flex">
             <Link href="/kosztorys" className="text-muted-foreground hover:text-foreground">Kosztorys</Link>

@@ -418,12 +418,13 @@ export default function KosztorysPage() {
       {/* HEADER */}
       <header className="sticky top-0 z-50 border-b bg-white/95 backdrop-blur">
         <div className="container flex h-16 items-center justify-between">
-          <Link href="/" className="flex items-center gap-2 font-bold text-xl">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
+          <Link href="/" className="flex items-center gap-2 whitespace-nowrap font-extrabold text-xl tracking-tight">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary">
               <HardHat className="h-5 w-5 text-white" />
             </div>
-            <span>matadora</span>
-            <span className="text-primary">.business</span>
+            <span>
+              MATADORA<span className="text-primary">.business</span>
+            </span>
           </Link>
           <div className="flex items-center gap-3">
             <Button variant="ghost" size="sm" asChild>
@@ -979,13 +980,12 @@ export default function KosztorysPage() {
                 </CardContent>
               </Card>
 
-              {/* UPSELL */}
+              {/* SEND TO CLIENT — free, part of the base platform */}
               <Card className="border-orange-200 bg-orange-50/60">
                 <CardContent className="p-4 space-y-3">
                   <p className="font-bold text-sm text-orange-900">Wyślij do klienta i zbierz podpis</p>
                   <p className="text-xs text-orange-700">
-                    Pierwszy kosztorys <strong>bezpłatny</strong>.
-                    Kolejne od <strong>149 zł / szt.</strong> — zamiast 900 zł u kosztorysanta.
+                    Bezpłatnie, bez limitu — założenie konta i cała platforma nic nie kosztują.
                   </p>
                   <ul className="space-y-1.5">
                     {[
