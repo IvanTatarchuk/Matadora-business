@@ -29,6 +29,7 @@ import {
   BookOpen,
   Scale,
   LifeBuoy,
+  Megaphone,
   type LucideIcon,
 } from "lucide-react";
 
@@ -129,18 +130,32 @@ export function Sidebar({ role, isAdmin = false }: { role: UserRole; isAdmin?: b
           Ustawienia
         </Link>
         {isAdmin && (
-          <Link
-            href="/dashboard/support-inbox"
-            className={cn(
-              "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
-              pathname.startsWith("/dashboard/support-inbox")
-                ? "bg-primary text-primary-foreground"
-                : "text-secondary-foreground/80 hover:bg-white/10"
-            )}
-          >
-            <LifeBuoy className="h-4 w-4" />
-            Skrzynka wsparcia
-          </Link>
+          <>
+            <Link
+              href="/dashboard/support-inbox"
+              className={cn(
+                "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
+                pathname.startsWith("/dashboard/support-inbox")
+                  ? "bg-primary text-primary-foreground"
+                  : "text-secondary-foreground/80 hover:bg-white/10"
+              )}
+            >
+              <LifeBuoy className="h-4 w-4" />
+              Skrzynka wsparcia
+            </Link>
+            <Link
+              href="/dashboard/marketing"
+              className={cn(
+                "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
+                pathname.startsWith("/dashboard/marketing")
+                  ? "bg-primary text-primary-foreground"
+                  : "text-secondary-foreground/80 hover:bg-white/10"
+              )}
+            >
+              <Megaphone className="h-4 w-4" />
+              Marketing AI
+            </Link>
+          </>
         )}
       </nav>
       <div className="border-t border-white/10 p-4 text-xs text-secondary-foreground/60">
