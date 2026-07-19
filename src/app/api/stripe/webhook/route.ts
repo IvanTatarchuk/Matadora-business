@@ -68,6 +68,8 @@ export async function POST(req: NextRequest) {
     const amountTotal = (session.amount_total as number) ?? 0;
     const paymentIntent = session.payment_intent as string | null;
 
+    const sessionProduct = (session.metadata as Record<string, string> | null)?.product;
+
     try {
       const { createAdminClient } = await import("@/lib/supabase/admin");
       const supabase = createAdminClient();
@@ -77,9 +79,11 @@ export async function POST(req: NextRequest) {
       // Upsert: session may already exist as pending
       const { data: existing } = await db(supabase)
         .from("kosztorys_purchases")
-        .select("id")
+        .select("id, status, metadata")
         .eq("stripe_session_id", sessionId)
         .maybeSingle();
+
+      const wasAlreadyPaid = existing?.status === "paid";
 
       if (existing) {
         await db(supabase)
@@ -90,6 +94,7 @@ export async function POST(req: NextRequest) {
             stripe_payment_id: paymentIntent,
             amount_pln: amountTotal,
             paid_at: new Date().toISOString(),
+            metadata: { ...(existing.metadata ?? {}), product: existing.metadata?.product ?? sessionProduct },
           })
           .eq("stripe_session_id", sessionId);
       } else {
@@ -103,10 +108,26 @@ export async function POST(req: NextRequest) {
             amount_pln: amountTotal,
             status: "paid",
             paid_at: new Date().toISOString(),
+            metadata: sessionProduct ? { product: sessionProduct } : null,
           });
       }
 
       console.log(`[stripe] purchase recorded: ${tier} ${email}`);
+
+      // Fire the VAT invoice email exactly once, the first time a session
+      // transitions into "paid" — Stripe may re-deliver this event.
+      if (!wasAlreadyPaid && email && email !== "unknown") {
+        const { emailInvoice } = await import("@/lib/email");
+        const { PRODUCT_LABEL } = await import("@/lib/invoice");
+        const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://matadora.business";
+        const productLabel = PRODUCT_LABEL[sessionProduct ?? "kosztorys"] ?? "Usługa cyfrowa";
+        await emailInvoice({
+          buyerEmail: email,
+          productLabel,
+          amountPln: amountTotal / 100,
+          invoiceUrl: `${siteUrl}/faktura/${sessionId}`,
+        });
+      }
     } catch (err) {
       console.error("[stripe] db error:", err);
       // Return 200 anyway — Stripe will not retry on 200

@@ -78,6 +78,7 @@ export function AnalizaZdjeciaClient({
   const [analyzing, setAnalyzing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<AnalysisResult | null>(null);
+  const [paidSessionId, setPaidSessionId] = useState<string | null>(null);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -190,6 +191,7 @@ export function AnalizaZdjeciaClient({
   async function runAnalysis(file: File, sessionId: string, projectIdForRequest: string) {
     setAnalyzing(true);
     setError(null);
+    setPaidSessionId(sessionId);
     try {
       const formData = new FormData();
       formData.append("file", file);
@@ -376,10 +378,15 @@ export function AnalizaZdjeciaClient({
                 <FileText className="h-3.5 w-3.5" /> Wynik zapisano w dokumentacji BHP.
               </div>
 
-              <div className="flex gap-2">
+              <div className="flex flex-wrap gap-2">
                 <Button size="sm" variant="outline" onClick={startOver}>
                   <Upload className="mr-1.5 h-3.5 w-3.5" /> Przeanalizuj kolejne zdjęcie
                 </Button>
+                {paidSessionId && (
+                  <Button size="sm" variant="outline" asChild>
+                    <a href={`/faktura/${paidSessionId}`}>Pobierz fakturę VAT</a>
+                  </Button>
+                )}
                 <Button size="sm" variant="ghost" asChild>
                   <a href="/dashboard/contractor/bhp">
                     <X className="mr-1.5 h-3.5 w-3.5" /> Zamknij

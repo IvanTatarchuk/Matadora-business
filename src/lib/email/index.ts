@@ -140,6 +140,27 @@ export function emailProjectComplete(opts: {
   });
 }
 
+export function emailInvoice(opts: {
+  buyerEmail: string;
+  productLabel: string;
+  amountPln: number;
+  invoiceUrl: string;
+}) {
+  return sendEmail({
+    to: opts.buyerEmail,
+    subject: `🧾 Faktura VAT — ${opts.productLabel}`,
+    html: baseTemplate(`
+      <h2>Dziękujemy za zakup</h2>
+      <p>Twoja płatność za usługę <strong>${opts.productLabel}</strong> na kwotę
+         <strong>${formatPLN(opts.amountPln)}</strong> brutto została zaksięgowana.</p>
+      <p>Faktura VAT jest już dostępna do pobrania:</p>
+      <a href="${opts.invoiceUrl}" class="btn">Pobierz fakturę VAT</a>
+      <p style="margin-top:20px;font-size:13px;color:#64748b;">Link do faktury zachowaj na przyszłość —
+         możesz ją w każdej chwili pobrać ponownie pod tym samym adresem.</p>
+    `),
+  });
+}
+
 export function emailPunchItemOpened(opts: {
   contractorEmail: string;
   contractorName: string;

@@ -126,15 +126,20 @@ export default function RegulaminPage() {
                   brutto (zawierają podatek VAT wg obowiązującej stawki).
                 </li>
                 <li>
-                  Korzystanie z Platformy jest bezpłatne. Jedyną odpłatną Usługą jest analiza AI kosztorysu
-                  z przesłanego dokumentu PDF, rozliczana jednorazowo za dokument (<strong>„płać za użycie&rdquo;</strong>,
-                  pay-per-use), zgodnie z cennikiem dostępnym na stronie{" "}
-                  <Link href="/pricing" className="text-primary underline">/pricing</Link>. Platforma nie oferuje
-                  planów abonamentowych ani cyklicznych opłat subskrypcyjnych.
+                  Korzystanie z Platformy jest bezpłatne. Odpłatne są wyłącznie następujące Usługi, rozliczane
+                  jednorazowo (<strong>„płać za użycie&rdquo;</strong>, pay-per-use), zgodnie z cennikiem dostępnym
+                  na stronie <Link href="/pricing" className="text-primary underline">/pricing</Link>:
+                  analiza AI kosztorysu z przesłanego dokumentu PDF, analiza AI zdjęcia budowy pod kątem
+                  zgodności z przepisami BHP oraz sesja modułu Adwokat AI (generowanie projektu umowy i
+                  analiza dokumentu prawnego). Platforma nie oferuje planów abonamentowych ani cyklicznych
+                  opłat subskrypcyjnych.
                 </li>
                 <li>
-                  Po zaksięgowaniu płatności Użytkownik otrzymuje dostęp do zakupionej Usługi. Na żądanie
-                  Użytkownika, w szczególności dla celów księgowych, Operator wystawia fakturę zgodnie z
+                  Po zaksięgowaniu płatności Użytkownik otrzymuje dostęp do zakupionej Usługi. Faktura VAT
+                  jest wystawiana i przesyłana automatycznie na adres e-mail Użytkownika niezwłocznie po
+                  zaksięgowaniu płatności, a dodatkowo dostępna jest do pobrania na stronie Platformy pod
+                  unikalnym adresem przekazanym w wiadomości e-mail. Na żądanie Użytkownika, w szczególności
+                  dla celów księgowych, Operator wystawia fakturę korygującą lub duplikat zgodnie z
                   obowiązującymi przepisami, w tym — jeśli dotyczy — w formacie ustrukturyzowanym zgodnym z
                   Krajowym Systemem e-Faktur (KSeF).
                 </li>

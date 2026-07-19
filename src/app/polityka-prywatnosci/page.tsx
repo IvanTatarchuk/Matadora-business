@@ -31,7 +31,7 @@ export default function PolitykaPrywatnosciPage() {
       <main className="flex-1 bg-white">
         <div className="container max-w-3xl py-12">
           <h1 className="text-3xl font-extrabold sm:text-4xl">Polityka prywatności</h1>
-          <p className="mt-2 text-sm text-muted-foreground">Data ostatniej aktualizacji: 2 lipca 2026 r.</p>
+          <p className="mt-2 text-sm text-muted-foreground">Data ostatniej aktualizacji: 19 lipca 2026 r.</p>
           <p className="mt-4 text-sm leading-relaxed text-slate-700">
             Niniejsza Polityka prywatności opisuje zasady przetwarzania danych osobowych Użytkowników
             platformy matadora.business, zgodnie z Rozporządzeniem Parlamentu Europejskiego i Rady (UE)
@@ -84,8 +84,12 @@ export default function PolitykaPrywatnosciPage() {
                       <td className="px-3 py-2">art. 6 ust. 1 lit. b) i c) — wykonanie umowy, obowiązek prawny (przepisy podatkowe)</td>
                     </tr>
                     <tr>
-                      <td className="px-3 py-2">Analiza dokumentów PDF (kosztorysy, rzuty) z wykorzystaniem AI (Claude API)</td>
-                      <td className="px-3 py-2">art. 6 ust. 1 lit. b) — wykonanie umowy, na wyraźne żądanie Użytkownika (wgranie pliku)</td>
+                      <td className="px-3 py-2">Analiza dokumentów PDF (kosztorysy, rzuty), zdjęć placu budowy (BHP) oraz dokumentów i umów prawnych (Adwokat AI) z wykorzystaniem AI (Claude API)</td>
+                      <td className="px-3 py-2">art. 6 ust. 1 lit. b) — wykonanie umowy, na wyraźne żądanie Użytkownika (wgranie pliku lub zdjęcia)</td>
+                    </tr>
+                    <tr>
+                      <td className="px-3 py-2">Generowanie projektów umów przez AI (Adwokat AI) na podstawie danych podanych przez Użytkownika</td>
+                      <td className="px-3 py-2">art. 6 ust. 1 lit. b) — wykonanie umowy, na wyraźne żądanie Użytkownika</td>
                     </tr>
                     <tr>
                       <td className="px-3 py-2">Wysyłka wiadomości transakcyjnych i powitalnych e-mail</td>
@@ -113,10 +117,19 @@ export default function PolitykaPrywatnosciPage() {
               <p className="mt-3">W zależności od zakresu korzystania z Platformy, Administrator może przetwarzać:</p>
               <ul className="mt-3 list-disc space-y-1.5 pl-5">
                 <li>dane identyfikacyjne i kontaktowe: imię, nazwisko, adres e-mail, numer telefonu, nazwa firmy, NIP;</li>
-                <li>dane związane z realizacją usługi: treść kosztorysów, projektów, ofert, wiadomości w ramach Platformy, dokumenty wgrywane w celu analizy (np. pliki PDF);</li>
+                <li>dane związane z realizacją usługi: treść kosztorysów, projektów, ofert, wiadomości w ramach Platformy, dokumenty i zdjęcia wgrywane w celu analizy AI (np. pliki PDF, zdjęcia placu budowy w module BHP), treść umów i dokumentów prawnych wprowadzana do modułu Adwokat AI — która może obejmować dane osób trzecich (np. drugiej strony umowy) wskazane przez Użytkownika, za których prawidłowość i podstawę prawną przetwarzania odpowiada Użytkownik jako podmiot wprowadzający te dane;</li>
                 <li>dane dotyczące płatności (w zakresie przetwarzanym po stronie Stripe — Administrator nie przechowuje pełnych danych karty płatniczej);</li>
                 <li>dane techniczne: adres IP, identyfikatory urządzenia, dane z plików cookies, logi systemowe.</li>
               </ul>
+              <p className="mt-3">
+                W przypadku modułu Adwokat AI (generator umów oraz analiza dokumentów prawnych) Użytkownik
+                może samodzielnie wprowadzić dane osób trzecich (np. danych drugiej strony umowy) w celu
+                wygenerowania lub przeanalizowania dokumentu. W tym zakresie to Użytkownik decyduje o
+                zakresie wprowadzanych danych i ponosi odpowiedzialność za posiadanie odpowiedniej podstawy
+                prawnej do ich przetwarzania, natomiast Administrator przetwarza te dane wyłącznie w celu
+                technicznej realizacji żądanej funkcji (przekazanie do modelu AI i zwrócenie wyniku
+                Użytkownikowi), bez ich dalszego wykorzystywania ani trwałego przechowywania.
+              </p>
             </section>
 
             <section>
@@ -146,7 +159,7 @@ export default function PolitykaPrywatnosciPage() {
               <ul className="mt-3 list-disc space-y-1.5 pl-5">
                 <li>Dane związane z Kontem Użytkownika przechowywane są przez okres jego aktywności oraz przez okres do 3 lat po usunięciu Konta, w celu obrony przed ewentualnymi roszczeniami.</li>
                 <li>Dane związane z transakcjami i dokumentami księgowymi (faktury) przechowywane są przez okres wymagany przepisami prawa podatkowego — co do zasady 5 lat, licząc od końca roku kalendarzowego, w którym upłynął termin płatności podatku.</li>
-                <li>Dokumenty PDF wgrywane w celu analizy AI przetwarzane są jednorazowo, w celu wygenerowania wyniku analizy, i nie są trwale przechowywane przez Administratora dłużej niż jest to konieczne do realizacji tej usługi.</li>
+                <li>Dokumenty PDF i zdjęcia wgrywane w celu analizy AI (kosztorys, BHP, Adwokat AI) przetwarzane są jednorazowo, w celu wygenerowania wyniku analizy, i nie są trwale przechowywane przez Administratora dłużej niż jest to konieczne do realizacji tej usługi — sam plik nie jest zapisywany po zakończeniu analizy. W module BHP zapisywany jest wyłącznie tekstowy wynik analizy (nie zdjęcie) w dokumentacji BHP Użytkownika. Wyniki wygenerowane w module Adwokat AI (projekt umowy, wynik analizy dokumentu) nie są przechowywane przez Administratora po zakończeniu sesji — ich zapisanie leży w gestii Użytkownika (pobranie/skopiowanie wyniku).</li>
                 <li>Dane przetwarzane na podstawie zgody (np. newsletter, alerty przetargowe) przechowywane są do czasu wycofania zgody.</li>
               </ul>
             </section>

@@ -314,9 +314,14 @@ export function PrawnikAiClient() {
             ? "Obie funkcje zostały już wykorzystane w tej sesji."
             : "Możesz skorzystać z generatora umów i analizy dokumentu."}
         </p>
-        <Button size="sm" variant="ghost" onClick={endSession}>
-          Zakończ sesję
-        </Button>
+        <div className="flex shrink-0 items-center gap-2">
+          <Button size="sm" variant="outline" asChild>
+            <a href={`/faktura/${session.sessionId}`}>Faktura VAT</a>
+          </Button>
+          <Button size="sm" variant="ghost" onClick={endSession}>
+            Zakończ sesję
+          </Button>
+        </div>
       </div>
 
       <div className="flex gap-2 print:hidden">
