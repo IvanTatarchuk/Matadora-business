@@ -7,9 +7,10 @@ import {
   AlertTriangle, CheckCircle2, BarChart3,
 } from "lucide-react";
 import {
-  createRisk, updateRiskStatus, deleteRisk, RISK_LEVEL,
+  createRisk, updateRiskStatus, deleteRisk,
   type ProjectRisk, type RiskCategory, type RiskStatus, type ResponseStrategy,
 } from "@/lib/actions/risks";
+import { RISK_LEVEL } from "@/lib/risk-level";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";

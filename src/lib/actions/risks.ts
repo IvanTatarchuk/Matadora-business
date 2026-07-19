@@ -44,13 +44,6 @@ export type ProjectRisk = {
   updated_at: string;
 };
 
-export const RISK_LEVEL = (score: number) => {
-  if (score <= 4) return { label: "Niskie", color: "bg-green-100 text-green-700" };
-  if (score <= 9) return { label: "Umiarkowane", color: "bg-yellow-100 text-yellow-700" };
-  if (score <= 16) return { label: "Wysokie", color: "bg-orange-100 text-orange-700" };
-  return { label: "Krytyczne", color: "bg-red-100 text-red-700" };
-};
-
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const db = (s: any) => s as any;
 
