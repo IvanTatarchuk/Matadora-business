@@ -21,6 +21,14 @@ const PRODUCTS = {
     cancelUrl: (siteUrl: string) => `${siteUrl}/dashboard/contractor/bhp/analiza-zdjecia`,
     requiresAuth: true,
   },
+  adwokat: {
+    name: "Adwokat AI — sesja",
+    description: "Jednorazowa sesja: wygenerowanie umowy przez AI oraz analiza jednego przesłanego dokumentu pod kątem ryzyk prawnych.",
+    amount: 1999, // 19,99 zł
+    successUrl: (siteUrl: string) => `${siteUrl}/dashboard/prawnik-ai?session_id={CHECKOUT_SESSION_ID}`,
+    cancelUrl: (siteUrl: string) => `${siteUrl}/dashboard/prawnik-ai`,
+    requiresAuth: true,
+  },
 } as const;
 
 type ProductKey = keyof typeof PRODUCTS;
@@ -38,7 +46,10 @@ export async function POST(req: NextRequest) {
 
   const body = await req.json().catch(() => ({}));
 
-  const productKey: ProductKey = body.product === "bhp_photo" ? "bhp_photo" : "kosztorys";
+  const productKey: ProductKey =
+    typeof body.product === "string" && body.product in PRODUCTS
+      ? (body.product as ProductKey)
+      : "kosztorys";
   const product = PRODUCTS[productKey];
 
   // Optional buyer NIP (Polish tax ID), for invoicing — sanitize to digits/dashes, max 20 chars

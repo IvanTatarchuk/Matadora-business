@@ -27,6 +27,7 @@ import {
   CalendarDays,
   Receipt,
   BookOpen,
+  Scale,
   type LucideIcon,
 } from "lucide-react";
 
@@ -40,12 +41,14 @@ const NAV: Record<UserRole, NavItem[]> = {
     { href: "/dashboard/investor", label: "Przegląd", icon: LayoutDashboard },
     { href: "/dashboard/investor/projects", label: "Moje projekty", icon: FolderKanban },
     { href: "/dashboard/investor/offers", label: "Oferty", icon: FileText },
+    { href: "/dashboard/prawnik-ai", label: "Adwokat AI", icon: Scale },
     { href: "/dashboard/team", label: "Zespół", icon: Building2 },
   ],
   contractor: [
     { href: "/dashboard/contractor", label: "Przegląd", icon: LayoutDashboard },
     { href: "/dashboard/analytics", label: "Analytics BI", icon: BarChart3 },
     { href: "/dashboard/contractor/insights", label: "Rekomendacje", icon: Lightbulb },
+    { href: "/dashboard/prawnik-ai", label: "Adwokat AI", icon: Scale },
     { href: "/dashboard/contractor/projects", label: "Projekty", icon: FolderKanban },
     { href: "/dashboard/contractor/offers", label: "Kosztorysy", icon: FileText },
     { href: "/dashboard/contractor/protokoly", label: "Protokoły odbioru", icon: FileSignature },
@@ -72,6 +75,7 @@ const NAV: Record<UserRole, NavItem[]> = {
     { href: "/dashboard/wholesaler/catalog", label: "Katalog", icon: Package },
     { href: "/dashboard/wholesaler/import", label: "Import", icon: Upload },
     { href: "/dashboard/wholesaler/orders", label: "Zamówienia", icon: ShoppingCart },
+    { href: "/dashboard/prawnik-ai", label: "Adwokat AI", icon: Scale },
     { href: "/dashboard/team", label: "Firma", icon: Building2 },
   ],
 };
