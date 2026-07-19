@@ -122,7 +122,7 @@ const COMPARISON = [
   { feature: "Kosztorys online (przeglądarka)", us: true, norma: false, planradar: false },
   { feature: "Alerty przetargowe AI", us: true, norma: false, planradar: false },
   { feature: "Protokół odbioru cyfrowy", us: true, norma: false, planradar: true },
-  { feature: "Faktury KSeF automatyczne", us: true, norma: false, planradar: false },
+  { feature: "Automatyczne generowanie faktur KSeF", us: true, norma: false, planradar: false },
   { feature: "BHP dokumentacja", us: true, norma: false, planradar: false },
   { feature: "Portal inwestora real-time", us: true, norma: false, planradar: true },
   { feature: "Zarządzanie projektem", us: true, norma: false, planradar: true },

@@ -102,7 +102,7 @@ export default async function ContractorDashboard() {
             </div>
             <span className="font-semibold text-sm">Protokoły odbioru</span>
           </div>
-          <p className="text-xs text-muted-foreground">Cyfrowe podpisanie — faktura KSeF automatycznie</p>
+          <p className="text-xs text-muted-foreground">Cyfrowe podpisanie — faktura KSeF generuje się automatycznie</p>
         </Link>
         <Link href="/dashboard/contractor/bhp" className="group rounded-xl border bg-gradient-to-br from-red-50 to-red-100/50 p-4 hover:shadow-md transition-all">
           <div className="flex items-center gap-2 mb-2">
