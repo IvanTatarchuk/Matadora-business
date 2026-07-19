@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
  * Triggers the browser's native print dialog so the branded offer can be
  * saved as a PDF. Hidden from the printed output via `print:hidden`.
  */
-export function PrintButton({ label = "Download PDF" }: { label?: string }) {
+export function PrintButton({ label = "Pobierz PDF" }: { label?: string }) {
   return (
     <Button
       type="button"
