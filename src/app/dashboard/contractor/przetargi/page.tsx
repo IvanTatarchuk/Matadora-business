@@ -2,36 +2,10 @@ import Link from "next/link";
 import { Search, Bell, MapPin, Clock, TrendingUp, ExternalLink, ArrowRight } from "lucide-react";
 
 import { createClient } from "@/lib/supabase/server";
+import { fetchConstructionTenders } from "@/lib/przetargi/fetch-tenders";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-
-type Tender = {
-  id: string;
-  title: string;
-  buyer: string;
-  location: string;
-  voivodeship: string;
-  valueMin: number | null;
-  deadline: string | null;
-  publishedAt: string;
-  category: string;
-  source: string;
-  url: string;
-};
-
-async function fetchTenders(): Promise<{ tenders: Tender[]; isDemo: boolean }> {
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
-  try {
-    const res = await fetch(`${siteUrl}/api/przetargi?limit=6`, {
-      next: { revalidate: 3600 },
-    });
-    const data = await res.json();
-    return { tenders: data.tenders ?? [], isDemo: data.success === false };
-  } catch {
-    return { tenders: [], isDemo: true };
-  }
-}
 
 export default async function PrzetargiDashboardPage() {
   const supabase = createClient();
@@ -39,15 +13,17 @@ export default async function PrzetargiDashboardPage() {
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const db = (s: any) => s as any;
-  const [{ tenders, isDemo }, { data: subscription }] = await Promise.all([
-    fetchTenders(),
-    db(supabase)
-      .from("przetargi_subscriptions")
-      .select("id, is_active")
-      .eq("email", (user?.email ?? "").toLowerCase().trim())
-      .eq("is_active", true)
-      .maybeSingle(),
-  ]);
+  const { data: subscription } = await db(supabase)
+    .from("przetargi_subscriptions")
+    .select("id, is_active, voivodeship")
+    .eq("email", (user?.email ?? "").toLowerCase().trim())
+    .eq("is_active", true)
+    .maybeSingle();
+
+  const { tenders, isDemo } = await fetchConstructionTenders({
+    limit: 6,
+    voivodeship: subscription?.voivodeship,
+  });
 
   const isNew = (publishedAt: string) =>
     Date.now() - new Date(publishedAt).getTime() < 48 * 60 * 60 * 1000;
@@ -142,10 +118,10 @@ export default async function PrzetargiDashboardPage() {
       {isDemo && (
         <Card className="border-amber-200 bg-amber-50">
           <CardContent className="p-3 text-sm text-amber-800">
-            Rejestr przetargów publicznych (BZP) jest chwilowo niedostępny — poniżej dane
+            Rejestr przetargów publicznych (e-Zamówienia) jest chwilowo niedostępny — poniżej dane
             demonstracyjne. Spróbuj ponownie później lub sprawdź{" "}
-            <a href="https://bzp.uzp.gov.pl" target="_blank" rel="noreferrer" className="underline">
-              bzp.uzp.gov.pl
+            <a href="https://ezamowienia.gov.pl" target="_blank" rel="noreferrer" className="underline">
+              ezamowienia.gov.pl
             </a>{" "}
             bezpośrednio.
           </CardContent>
@@ -158,7 +134,7 @@ export default async function PrzetargiDashboardPage() {
           <div className="flex items-center justify-between">
             <CardTitle>Aktualne przetargi budowlane</CardTitle>
             <Badge variant="secondary" className="text-xs">
-              {isDemo ? "Dane demonstracyjne" : "Źródło: BZP"}
+              {isDemo ? "Dane demonstracyjne" : "Źródło: e-Zamówienia"}
             </Badge>
           </div>
         </CardHeader>
