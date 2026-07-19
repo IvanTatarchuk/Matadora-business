@@ -6,87 +6,52 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
-const SAMPLE_TENDERS = [
-  {
-    id: "1",
-    title: "Budowa hali magazynowej wraz z infrastrukturą techniczną",
-    location: "Warszawa, Mazowieckie",
-    value: "2 400 000 zł",
-    deadline: "2026-06-15",
-    category: "Roboty budowlane",
-    source: "e-Zamówienia",
-    match: 98,
-    isNew: true,
-    url: "https://ezamowienia.gov.pl",
-  },
-  {
-    id: "2",
-    title: "Remont elewacji budynku szkolnego — termomodernizacja",
-    location: "Kraków, Małopolskie",
-    value: "890 000 zł",
-    deadline: "2026-06-18",
-    category: "Roboty remontowe",
-    source: "BZP",
-    match: 94,
-    isNew: true,
-    url: "https://bzp.uzp.gov.pl",
-  },
-  {
-    id: "3",
-    title: "Instalacja systemu fotowoltaicznego na obiektach użyteczności publicznej",
-    location: "Gdańsk, Pomorskie",
-    value: "650 000 zł",
-    deadline: "2026-06-22",
-    category: "Instalacje elektryczne",
-    source: "TED",
-    match: 91,
-    isNew: true,
-    url: "https://ted.europa.eu",
-  },
-  {
-    id: "4",
-    title: "Przebudowa drogi gminnej z budową chodnika i oświetlenia",
-    location: "Wrocław, Dolnośląskie",
-    value: "1 200 000 zł",
-    deadline: "2026-06-20",
-    category: "Infrastruktura drogowa",
-    source: "BZP",
-    match: 87,
-    isNew: false,
-    url: "https://bzp.uzp.gov.pl",
-  },
-  {
-    id: "5",
-    title: "Budowa przedszkola — stan surowy zamknięty i wykończenie wnętrz",
-    location: "Poznań, Wielkopolskie",
-    value: "3 800 000 zł",
-    deadline: "2026-06-25",
-    category: "Budownictwo kubaturowe",
-    source: "e-Zamówienia",
-    match: 85,
-    isNew: false,
-    url: "https://ezamowienia.gov.pl",
-  },
-  {
-    id: "6",
-    title: "Remont kapitalny budynku wielorodzinnego — instalacje sanitarne",
-    location: "Łódź, Łódzkie",
-    value: "420 000 zł",
-    deadline: "2026-06-28",
-    category: "Instalacje sanitarne",
-    source: "BZP",
-    match: 82,
-    isNew: false,
-    url: "https://bzp.uzp.gov.pl",
-  },
-];
+type Tender = {
+  id: string;
+  title: string;
+  buyer: string;
+  location: string;
+  voivodeship: string;
+  valueMin: number | null;
+  deadline: string | null;
+  publishedAt: string;
+  category: string;
+  source: string;
+  url: string;
+};
+
+async function fetchTenders(): Promise<{ tenders: Tender[]; isDemo: boolean }> {
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+  try {
+    const res = await fetch(`${siteUrl}/api/przetargi?limit=6`, {
+      next: { revalidate: 3600 },
+    });
+    const data = await res.json();
+    return { tenders: data.tenders ?? [], isDemo: data.success === false };
+  } catch {
+    return { tenders: [], isDemo: true };
+  }
+}
 
 export default async function PrzetargiDashboardPage() {
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
-  const newCount = SAMPLE_TENDERS.filter((t) => t.isNew).length;
-  const subscription = null; // Will be populated after migration 0012 is applied
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const db = (s: any) => s as any;
+  const [{ tenders, isDemo }, { data: subscription }] = await Promise.all([
+    fetchTenders(),
+    db(supabase)
+      .from("przetargi_subscriptions")
+      .select("id, is_active")
+      .eq("email", (user?.email ?? "").toLowerCase().trim())
+      .eq("is_active", true)
+      .maybeSingle(),
+  ]);
+
+  const isNew = (publishedAt: string) =>
+    Date.now() - new Date(publishedAt).getTime() < 48 * 60 * 60 * 1000;
+  const newCount = tenders.filter((t) => isNew(t.publishedAt)).length;
 
   return (
     <div className="space-y-6">
@@ -94,7 +59,7 @@ export default async function PrzetargiDashboardPage() {
         <div>
           <h1 className="text-2xl font-bold">Przetargi AI</h1>
           <p className="text-sm text-muted-foreground mt-1">
-            Przetargi z e-Zamówienia, BZP i TED dopasowane do Twojego profilu
+            Aktualne przetargi budowlane z Biuletynu Zamówień Publicznych
           </p>
         </div>
         <Button asChild>
@@ -112,8 +77,8 @@ export default async function PrzetargiDashboardPage() {
               <TrendingUp className="h-5 w-5 text-orange-600" />
             </div>
             <div>
-              <p className="text-2xl font-bold">{SAMPLE_TENDERS.length}</p>
-              <p className="text-xs text-muted-foreground">Przetargów dziś</p>
+              <p className="text-2xl font-bold">{tenders.length}</p>
+              <p className="text-xs text-muted-foreground">Przetargów na liście</p>
             </div>
           </CardContent>
         </Card>
@@ -165,9 +130,24 @@ export default async function PrzetargiDashboardPage() {
           <CardContent className="p-4 flex items-center gap-3">
             <Bell className="h-5 w-5 text-green-600" />
             <p className="text-sm text-green-800">
-              <strong>Alerty aktywne</strong> — dostajesz codzienne powiadomienia o przetargach.
-              Ostatnia wysyłka: dzisiaj o 07:00.
+              <strong>Alerty aktywne</strong> — dostajesz codzienne powiadomienia o przetargach.{" "}
+              <Link href="/dashboard/contractor/przetargi/settings" className="underline">
+                Zmień ustawienia
+              </Link>
             </p>
+          </CardContent>
+        </Card>
+      )}
+
+      {isDemo && (
+        <Card className="border-amber-200 bg-amber-50">
+          <CardContent className="p-3 text-sm text-amber-800">
+            Rejestr przetargów publicznych (BZP) jest chwilowo niedostępny — poniżej dane
+            demonstracyjne. Spróbuj ponownie później lub sprawdź{" "}
+            <a href="https://bzp.uzp.gov.pl" target="_blank" rel="noreferrer" className="underline">
+              bzp.uzp.gov.pl
+            </a>{" "}
+            bezpośrednio.
           </CardContent>
         </Card>
       )}
@@ -176,56 +156,69 @@ export default async function PrzetargiDashboardPage() {
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
-            <CardTitle>Przetargi dopasowane do Twojego profilu</CardTitle>
+            <CardTitle>Aktualne przetargi budowlane</CardTitle>
             <Badge variant="secondary" className="text-xs">
-              Aktualizacja: dziś 07:00
+              {isDemo ? "Dane demonstracyjne" : "Źródło: BZP"}
             </Badge>
           </div>
         </CardHeader>
         <CardContent>
-          <div className="space-y-3">
-            {SAMPLE_TENDERS.map((t) => (
-              <div
-                key={t.id}
-                className="rounded-lg border p-4 hover:shadow-sm transition-shadow"
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap mb-1">
-                      {t.isNew && (
-                        <Badge className="bg-green-500 text-white text-xs">NOWE</Badge>
+          {tenders.length === 0 ? (
+            <p className="py-10 text-center text-sm text-muted-foreground">
+              Brak przetargów do wyświetlenia. Spróbuj ponownie później.
+            </p>
+          ) : (
+            <div className="space-y-3">
+              {tenders.map((t) => (
+                <div
+                  key={t.id}
+                  className="rounded-lg border p-4 hover:shadow-sm transition-shadow"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap mb-1">
+                        {isNew(t.publishedAt) && (
+                          <Badge className="bg-green-500 text-white text-xs">NOWE</Badge>
+                        )}
+                        <Badge variant="outline" className="text-xs">{t.source}</Badge>
+                        <span className="text-xs text-muted-foreground">{t.category}</span>
+                      </div>
+                      <p className="font-semibold text-sm">{t.title}</p>
+                      {t.buyer && (
+                        <p className="text-xs text-muted-foreground">{t.buyer}</p>
                       )}
-                      <Badge variant="outline" className="text-xs">{t.source}</Badge>
-                      <span className="text-xs text-muted-foreground">{t.category}</span>
+                      <div className="mt-1.5 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
+                        {t.location && (
+                          <span className="flex items-center gap-1">
+                            <MapPin className="h-3 w-3" /> {t.location}
+                          </span>
+                        )}
+                        {t.deadline && (
+                          <span className="flex items-center gap-1">
+                            <Clock className="h-3 w-3" /> do {new Date(t.deadline).toLocaleDateString("pl-PL")}
+                          </span>
+                        )}
+                      </div>
                     </div>
-                    <p className="font-semibold text-sm">{t.title}</p>
-                    <div className="mt-1.5 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
-                      <span className="flex items-center gap-1">
-                        <MapPin className="h-3 w-3" /> {t.location}
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <Clock className="h-3 w-3" /> do {new Date(t.deadline).toLocaleDateString("pl-PL")}
-                      </span>
-                    </div>
+                    {t.valueMin != null && (
+                      <div className="text-right shrink-0">
+                        <p className="font-bold text-primary">
+                          {new Intl.NumberFormat("pl-PL").format(t.valueMin)} zł
+                        </p>
+                      </div>
+                    )}
                   </div>
-                  <div className="text-right shrink-0">
-                    <p className="font-bold text-primary">{t.value}</p>
-                    <div className="flex items-center gap-1 justify-end mt-1">
-                      <TrendingUp className="h-3 w-3 text-green-500" />
-                      <span className="text-xs font-semibold text-green-600">{t.match}% match</span>
-                    </div>
+                  <div className="mt-3 flex justify-end">
+                    <Button size="sm" variant="outline" asChild>
+                      <a href={t.url} target="_blank" rel="noopener noreferrer">
+                        <ExternalLink className="mr-1 h-3 w-3" /> Otwórz ogłoszenie
+                      </a>
+                    </Button>
                   </div>
                 </div>
-                <div className="mt-3 flex justify-end">
-                  <Button size="sm" variant="outline" asChild>
-                    <a href={t.url} target="_blank" rel="noopener noreferrer">
-                      <ExternalLink className="mr-1 h-3 w-3" /> Otwórz ogłoszenie
-                    </a>
-                  </Button>
-                </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>
