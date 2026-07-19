@@ -72,14 +72,47 @@ button:disabled {
   border-radius: 999px;
   background: #e5e5e5;
 }
-.status-running {
+.status-running,
+.status-worktree_created,
+.status-agent_working {
   background: #fde68a;
 }
-.status-exited {
+.status-exited,
+.status-checks_passed,
+.status-pushed {
   background: #bbf7d0;
 }
-.status-failed_to_spawn {
+.status-awaiting_review {
+  background: #93c5fd;
+}
+.status-no_changes {
+  background: #e5e5e5;
+}
+.status-failed_to_spawn,
+.status-checks_failed,
+.status-error {
   background: #fecaca;
+}
+
+.form-column {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.6rem;
+}
+
+input[type="text"] {
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  padding: 0.6em 0.8em;
+  font-size: 1em;
+  font-family: inherit;
+  color: #0f0f0f;
+  background-color: #ffffff;
+}
+input[type="text"]:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .log-output {
@@ -116,5 +149,11 @@ button:disabled {
 
   .status-badge {
     background: #444;
+  }
+
+  input[type="text"] {
+    color: #f6f6f6;
+    background-color: #0f0f0f98;
+    border-color: #555;
   }
 }
