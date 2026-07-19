@@ -1,4 +1,13 @@
-import { Fragment } from "react";
+import {
+  Truck,
+  Hammer,
+  Package,
+  Users,
+  Zap,
+  PaintBucket,
+  Layers,
+  type LucideIcon,
+} from "lucide-react";
 
 import { formatPLN } from "@/lib/utils";
 import { groupStagesByLabel } from "@/lib/offer-calc";
@@ -9,6 +18,19 @@ export interface OfferMaterialLine {
   unit: string;
   quantity: number;
   price_net: number;
+}
+
+/** Picks a representative icon for a stage/section based on its label — purely
+ * cosmetic, falls back to a generic layers icon for anything unrecognized. */
+function iconFor(label: string): LucideIcon {
+  const s = label.toLowerCase();
+  if (/(transport|logistyk|dostaw)/.test(s)) return Truck;
+  if (/(rozbiór|demonta|wyburz)/.test(s)) return Hammer;
+  if (/(materia)/.test(s)) return Package;
+  if (/(robocizn|monta|pracown|ekipa)/.test(s)) return Users;
+  if (/(elektr|instalacj)/.test(s)) return Zap;
+  if (/(malow|tynk|wykończ|posadzk|glazur)/.test(s)) return PaintBucket;
+  return Layers;
 }
 
 export function OfferSummary({
@@ -30,112 +52,112 @@ export function OfferSummary({
     0
   );
   const groups = groupStagesByLabel(stages);
-  const hasSections = groups.some((g) => g.label !== null);
 
   return (
     <div className="space-y-6">
-      <div className="overflow-hidden rounded-lg border">
-        <table className="w-full text-sm">
-          <thead className="bg-muted/60 text-left">
-            <tr>
-              <th className="p-3 font-medium">Etap</th>
-              <th className="p-3 text-right font-medium">Koszt netto</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y">
-            {groups.map((group, gi) => (
-              <Fragment key={`group-${gi}`}>
-                {hasSections && (
-                  <tr key={`group-${gi}`} className="bg-muted/30">
-                    <td className="p-3 font-semibold" colSpan={2}>
-                      {group.label ?? "Inne pozycje"}
-                    </td>
-                  </tr>
-                )}
+      <div className="space-y-3">
+        {groups.map((group, gi) => {
+          const label = group.label ?? "Pozostałe pozycje";
+          const Icon = iconFor(label);
+          return (
+            <div
+              key={`group-${gi}`}
+              className="overflow-hidden rounded-xl border print:break-inside-avoid"
+            >
+              <div className="flex items-center gap-2.5 border-b bg-primary/5 px-4 py-2.5">
+                <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary text-white">
+                  <Icon className="h-3.5 w-3.5" />
+                </div>
+                <p className="font-semibold text-primary">{label}</p>
+              </div>
+              <div className="divide-y">
                 {group.items.map((s, i) => (
-                  <tr key={`item-${gi}-${i}`}>
-                    <td className="p-3">
+                  <div
+                    key={`item-${gi}-${i}`}
+                    className="flex items-start justify-between gap-4 px-4 py-2.5"
+                  >
+                    <div className="min-w-0">
                       <p className="font-medium">{s.stage_name}</p>
                       {s.description && (
                         <p className="text-xs text-muted-foreground">
                           {s.description}
                         </p>
                       )}
-                    </td>
-                    <td className="p-3 text-right font-medium">
+                    </div>
+                    <p className="shrink-0 font-medium tabular-nums">
                       {formatPLN(Number(s.cost))}
-                    </td>
-                  </tr>
+                    </p>
+                  </div>
                 ))}
-                {hasSections && group.items.length > 1 && (
-                  <tr key={`subtotal-${gi}`}>
-                    <td className="p-3 text-right text-xs text-muted-foreground">
-                      Razem: {group.label ?? "Inne pozycje"}
-                    </td>
-                    <td className="p-3 text-right text-xs font-semibold text-muted-foreground">
-                      {formatPLN(group.subtotal)}
-                    </td>
-                  </tr>
-                )}
-              </Fragment>
-            ))}
-          </tbody>
-        </table>
+              </div>
+              {group.items.length > 1 && (
+                <div className="flex justify-between bg-muted/40 px-4 py-2 text-xs">
+                  <span className="text-muted-foreground">Razem: {label}</span>
+                  <span className="font-semibold tabular-nums">
+                    {formatPLN(group.subtotal)}
+                  </span>
+                </div>
+              )}
+            </div>
+          );
+        })}
       </div>
 
       {materials.length > 0 && (
-        <div className="overflow-hidden rounded-lg border">
+        <div className="overflow-hidden rounded-xl border print:break-inside-avoid">
+          <div className="flex items-center gap-2.5 border-b bg-primary/5 px-4 py-2.5">
+            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary text-white">
+              <Package className="h-3.5 w-3.5" />
+            </div>
+            <p className="font-semibold text-primary">Materiały</p>
+          </div>
           <table className="w-full text-sm">
-            <thead className="bg-muted/60 text-left">
+            <thead className="text-left text-xs text-muted-foreground">
               <tr>
-                <th className="p-3 font-medium">Materiał</th>
-                <th className="p-3 text-right font-medium">Ilość</th>
-                <th className="p-3 text-right font-medium">Cena jednostkowa</th>
-                <th className="p-3 text-right font-medium">Wartość</th>
+                <th className="px-4 pt-3 font-medium">Materiał</th>
+                <th className="px-4 pt-3 text-right font-medium">Ilość</th>
+                <th className="px-4 pt-3 text-right font-medium">Cena jedn.</th>
+                <th className="px-4 pt-3 text-right font-medium">Wartość</th>
               </tr>
             </thead>
             <tbody className="divide-y">
               {materials.map((m, i) => (
                 <tr key={i}>
-                  <td className="p-3 font-medium">{m.product_name}</td>
-                  <td className="p-3 text-right">
+                  <td className="px-4 py-2 font-medium">{m.product_name}</td>
+                  <td className="px-4 py-2 text-right tabular-nums">
                     {m.quantity} {m.unit}
                   </td>
-                  <td className="p-3 text-right">
+                  <td className="px-4 py-2 text-right tabular-nums">
                     {formatPLN(Number(m.price_net))}
                   </td>
-                  <td className="p-3 text-right font-medium">
+                  <td className="px-4 py-2 text-right font-medium tabular-nums">
                     {formatPLN(Number(m.quantity) * Number(m.price_net))}
                   </td>
                 </tr>
               ))}
             </tbody>
-            <tfoot className="border-t bg-muted/30">
-              <tr>
-                <td className="p-3 font-medium" colSpan={3}>
-                  Suma materiałów (netto)
-                </td>
-                <td className="p-3 text-right font-semibold">
-                  {formatPLN(materialsTotal)}
-                </td>
-              </tr>
-            </tfoot>
           </table>
+          <div className="flex justify-between bg-muted/40 px-4 py-2 text-xs">
+            <span className="text-muted-foreground">Suma materiałów (netto)</span>
+            <span className="font-semibold tabular-nums">
+              {formatPLN(materialsTotal)}
+            </span>
+          </div>
         </div>
       )}
 
-      <div className="ml-auto w-full max-w-sm space-y-2 text-sm">
+      <div className="ml-auto w-full max-w-sm space-y-2 text-sm print:break-inside-avoid">
         <div className="flex justify-between">
           <span className="text-muted-foreground">Suma netto</span>
-          <span>{formatPLN(totalNet)}</span>
+          <span className="tabular-nums">{formatPLN(totalNet)}</span>
         </div>
         <div className="flex justify-between">
           <span className="text-muted-foreground">VAT ({vatRate}%)</span>
-          <span>{formatPLN(vatAmount)}</span>
+          <span className="tabular-nums">{formatPLN(vatAmount)}</span>
         </div>
-        <div className="flex justify-between rounded-md bg-primary/5 px-3 py-2 text-base font-bold text-primary">
+        <div className="flex justify-between rounded-lg bg-primary px-4 py-3 text-base font-bold text-white">
           <span>Suma brutto</span>
-          <span>{formatPLN(totalGross)}</span>
+          <span className="tabular-nums">{formatPLN(totalGross)}</span>
         </div>
       </div>
     </div>
