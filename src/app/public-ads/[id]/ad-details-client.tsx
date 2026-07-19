@@ -30,13 +30,15 @@ interface Props {
   ad: PublicAd | null;
   responses: any[];
   contractorRatings?: Record<string, { rating: number; count: number }>;
+  contractorReviews?: Record<string, any[]>;
   user: any;
 }
 
-export function AdDetailsClient({ ad, responses, contractorRatings = {}, user }: Props) {
+export function AdDetailsClient({ ad, responses, contractorRatings = {}, contractorReviews = {}, user }: Props) {
   const [showResponseForm, setShowResponseForm] = useState(false);
   const [showReviewForm, setShowReviewForm] = useState(false);
   const [showContactForm, setShowContactForm] = useState(false);
+  const [expandedReviews, setExpandedReviews] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   
@@ -314,13 +316,21 @@ export function AdDetailsClient({ ad, responses, contractorRatings = {}, user }:
                             {response.contractor?.full_name || "Wykonawca"}
                           </p>
                           {contractorRating && (
-                            <span className="flex items-center gap-1 px-2 py-0.5 bg-amber-100 text-amber-800 rounded-full text-xs font-medium">
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setExpandedReviews(
+                                  expandedReviews === response.contractor_id ? null : response.contractor_id
+                                )
+                              }
+                              className="flex items-center gap-1 px-2 py-0.5 bg-amber-100 text-amber-800 rounded-full text-xs font-medium hover:bg-amber-200"
+                            >
                               <Star className="h-3 w-3 fill-current" />
                               {contractorRating.rating.toFixed(1)}
                               <span className="text-amber-600">
                                 ({contractorRating.count})
                               </span>
-                            </span>
+                            </button>
                           )}
                         </div>
                         <p className="text-sm text-muted-foreground">
@@ -385,6 +395,34 @@ export function AdDetailsClient({ ad, responses, contractorRatings = {}, user }:
                         </span>
                       )}
                     </div>
+                    {/* Reviews list */}
+                    {expandedReviews === response.contractor_id && (
+                      <div className="mt-3 pt-3 border-t space-y-3">
+                        {(contractorReviews[response.contractor_id] ?? []).length === 0 ? (
+                          <p className="text-sm text-muted-foreground">Brak opinii</p>
+                        ) : (
+                          (contractorReviews[response.contractor_id] ?? []).map((review: any) => (
+                            <div key={review.id} className="text-sm space-y-1">
+                              <div className="flex items-center gap-2">
+                                <span className="flex items-center gap-0.5 text-amber-600">
+                                  {Array.from({ length: 5 }).map((_, i) => (
+                                    <Star
+                                      key={i}
+                                      className={`h-3 w-3 ${i < review.rating ? "fill-current" : ""}`}
+                                    />
+                                  ))}
+                                </span>
+                                <span className="font-medium">{review.author?.full_name || "Klient"}</span>
+                                <span className="text-xs text-muted-foreground">
+                                  {new Date(review.created_at).toLocaleDateString("pl-PL")}
+                                </span>
+                              </div>
+                              {review.review && <p className="text-muted-foreground">{review.review}</p>}
+                            </div>
+                          ))
+                        )}
+                      </div>
+                    )}
                     {/* Review Form */}
                     {showReviewForm === response.id && (
                       <div className="mt-3 pt-3 border-t space-y-3">
