@@ -29,7 +29,6 @@ export default function KsefSettingsPage() {
   const [token, setToken] = useState("");
   const [env, setEnv] = useState<"prod" | "test">("test");
   const [saved, setSaved] = useState(false);
-  const [testResult, setTestResult] = useState<"idle" | "testing" | "ok" | "error">("idle");
 
   function handleSave(e: React.FormEvent) {
     e.preventDefault();
@@ -38,14 +37,6 @@ export default function KsefSettingsPage() {
     localStorage.setItem("ksef_env", env);
     setSaved(true);
     setTimeout(() => setSaved(false), 3000);
-  }
-
-  async function testConnection() {
-    setTestResult("testing");
-    // In production, this would call our API route which calls KSeF
-    // For now, simulate a test after 1.5s
-    await new Promise((r) => setTimeout(r, 1500));
-    setTestResult(nip.length === 10 && token.length > 10 ? "ok" : "error");
   }
 
   const KSEF_BASE = env === "prod"
