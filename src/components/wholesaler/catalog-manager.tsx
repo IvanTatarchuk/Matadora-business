@@ -19,11 +19,18 @@ import {
 import type { Material, StockStatus } from "@/types/database";
 
 const STOCK_OPTIONS: { value: StockStatus; label: string }[] = [
-  { value: "in_stock", label: "In stock" },
-  { value: "low_stock", label: "Low stock" },
-  { value: "out_of_stock", label: "Out of stock" },
-  { value: "on_order", label: "On order" },
+  { value: "in_stock", label: "Dostępny" },
+  { value: "low_stock", label: "Niski stan" },
+  { value: "out_of_stock", label: "Brak w magazynie" },
+  { value: "on_order", label: "Zamówiony" },
 ];
+
+const STOCK_LABEL: Record<StockStatus, string> = {
+  in_stock: "Dostępny",
+  low_stock: "Niski stan",
+  out_of_stock: "Brak w magazynie",
+  on_order: "Zamówiony",
+};
 
 const STOCK_VARIANT: Record<StockStatus, "success" | "warning" | "secondary" | "default"> = {
   in_stock: "success",
@@ -72,7 +79,7 @@ export function CatalogManager({ materials }: { materials: Material[] }) {
   function submit() {
     setError(null);
     if (!form.product_name.trim()) {
-      setError("Product name is required.");
+      setError("Nazwa produktu jest wymagana.");
       return;
     }
     startTransition(async () => {
@@ -80,7 +87,7 @@ export function CatalogManager({ materials }: { materials: Material[] }) {
         ? await updateMaterial(editingId, form)
         : await createMaterial(form);
       if (!res.ok) {
-        setError(res.error ?? "Something went wrong");
+        setError(res.error ?? "Coś poszło nie tak");
         return;
       }
       cancelEdit();
@@ -93,7 +100,7 @@ export function CatalogManager({ materials }: { materials: Material[] }) {
     startTransition(async () => {
       const res = await deleteMaterial(id);
       if (!res.ok) {
-        setError(res.error ?? "Could not delete");
+        setError(res.error ?? "Nie udało się usunąć");
         return;
       }
       if (editingId === id) cancelEdit();
@@ -105,12 +112,12 @@ export function CatalogManager({ materials }: { materials: Material[] }) {
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle>{editingId ? "Edit product" : "Add product"}</CardTitle>
+          <CardTitle>{editingId ? "Edytuj produkt" : "Dodaj produkt"}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2 sm:col-span-2">
-              <Label htmlFor="product_name">Product name</Label>
+              <Label htmlFor="product_name">Nazwa produktu</Label>
               <Input
                 id="product_name"
                 value={form.product_name}
@@ -128,7 +135,7 @@ export function CatalogManager({ materials }: { materials: Material[] }) {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="price_net">Net price (PLN)</Label>
+              <Label htmlFor="price_net">Cena netto (PLN)</Label>
               <Input
                 id="price_net"
                 type="number"
@@ -140,7 +147,7 @@ export function CatalogManager({ materials }: { materials: Material[] }) {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="unit">Unit</Label>
+              <Label htmlFor="unit">Jednostka</Label>
               <Input
                 id="unit"
                 value={form.unit}
@@ -149,7 +156,7 @@ export function CatalogManager({ materials }: { materials: Material[] }) {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="stock_status">Stock status</Label>
+              <Label htmlFor="stock_status">Stan magazynowy</Label>
               <select
                 id="stock_status"
                 value={form.stock_status}
@@ -173,17 +180,17 @@ export function CatalogManager({ materials }: { materials: Material[] }) {
             <Button onClick={submit} disabled={pending}>
               {editingId ? (
                 <>
-                  <Pencil className="h-4 w-4" /> Save changes
+                  <Pencil className="h-4 w-4" /> Zapisz zmiany
                 </>
               ) : (
                 <>
-                  <Plus className="h-4 w-4" /> Add product
+                  <Plus className="h-4 w-4" /> Dodaj produkt
                 </>
               )}
             </Button>
             {editingId && (
               <Button variant="outline" onClick={cancelEdit} disabled={pending}>
-                <X className="h-4 w-4" /> Cancel
+                <X className="h-4 w-4" /> Anuluj
               </Button>
             )}
           </div>
@@ -192,24 +199,24 @@ export function CatalogManager({ materials }: { materials: Material[] }) {
 
       <Card>
         <CardHeader>
-          <CardTitle>Catalog ({materials.length})</CardTitle>
+          <CardTitle>Katalog ({materials.length})</CardTitle>
         </CardHeader>
         <CardContent>
           {materials.length === 0 ? (
             <p className="py-8 text-center text-sm text-muted-foreground">
-              No products yet. Add your first product above.
+              Brak produktów. Dodaj pierwszy produkt powyżej.
             </p>
           ) : (
             <div className="overflow-x-auto rounded-lg border">
               <table className="w-full text-sm">
                 <thead className="bg-muted/50 text-left">
                   <tr>
-                    <th className="p-3 font-medium">Product</th>
+                    <th className="p-3 font-medium">Produkt</th>
                     <th className="p-3 font-medium">SKU</th>
-                    <th className="p-3 text-right font-medium">Net price</th>
-                    <th className="p-3 font-medium">Unit</th>
-                    <th className="p-3 font-medium">Stock</th>
-                    <th className="p-3 text-right font-medium">Actions</th>
+                    <th className="p-3 text-right font-medium">Cena netto</th>
+                    <th className="p-3 font-medium">Jednostka</th>
+                    <th className="p-3 font-medium">Stan</th>
+                    <th className="p-3 text-right font-medium">Akcje</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y">
@@ -228,7 +235,7 @@ export function CatalogManager({ materials }: { materials: Material[] }) {
                       <td className="p-3 text-muted-foreground">{m.unit}</td>
                       <td className="p-3">
                         <Badge variant={STOCK_VARIANT[m.stock_status]}>
-                          {m.stock_status.replace("_", " ")}
+                          {STOCK_LABEL[m.stock_status] ?? m.stock_status}
                         </Badge>
                       </td>
                       <td className="p-3">
@@ -237,7 +244,7 @@ export function CatalogManager({ materials }: { materials: Material[] }) {
                             variant="ghost"
                             size="icon"
                             onClick={() => startEdit(m)}
-                            aria-label="Edit"
+                            aria-label="Edytuj"
                             disabled={pending}
                           >
                             <Pencil className="h-4 w-4" />
@@ -246,7 +253,7 @@ export function CatalogManager({ materials }: { materials: Material[] }) {
                             variant="ghost"
                             size="icon"
                             onClick={() => remove(m.id)}
-                            aria-label="Delete"
+                            aria-label="Usuń"
                             disabled={pending}
                           >
                             <Trash2 className="h-4 w-4 text-destructive" />

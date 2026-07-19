@@ -20,30 +20,30 @@ export default async function WholesalerOrdersPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">Orders</h1>
+        <h1 className="text-2xl font-bold">Zamówienia</h1>
         <p className="text-sm text-muted-foreground">
-          Orders are created automatically when a contractor offer that
-          references your materials is accepted.
+          Zamówienia są tworzone automatycznie, gdy zostanie zaakceptowana
+          oferta wykonawcy zawierająca Twoje materiały.
         </p>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>Incoming orders ({list.length})</CardTitle>
+          <CardTitle>Przychodzące zamówienia ({list.length})</CardTitle>
         </CardHeader>
         <CardContent>
           {list.length === 0 ? (
             <p className="py-8 text-center text-sm text-muted-foreground">
-              No orders yet.
+              Brak zamówień.
             </p>
           ) : (
             <div className="overflow-x-auto rounded-lg border">
               <table className="w-full text-sm">
                 <thead className="bg-muted/50 text-left">
                   <tr>
-                    <th className="p-3 font-medium">Order</th>
-                    <th className="p-3 font-medium">Date</th>
-                    <th className="p-3 text-right font-medium">Amount</th>
+                    <th className="p-3 font-medium">Zamówienie</th>
+                    <th className="p-3 font-medium">Data</th>
+                    <th className="p-3 text-right font-medium">Kwota</th>
                     <th className="p-3 text-right font-medium">Status</th>
                   </tr>
                 </thead>
@@ -53,7 +53,7 @@ export default async function WholesalerOrdersPage() {
                       <td className="p-3 font-medium">
                         #{o.id.slice(0, 8)}
                         <p className="text-xs font-normal text-muted-foreground">
-                          offer {o.offer_id.slice(0, 8)}
+                          oferta {o.offer_id.slice(0, 8)}
                         </p>
                       </td>
                       <td className="p-3 text-muted-foreground">
