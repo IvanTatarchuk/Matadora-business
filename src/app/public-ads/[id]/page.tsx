@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
-import { getPublicAd, getAdResponses, getContractorRating } from "@/lib/actions/public-ads";
+import { getPublicAd, getAdResponses, getContractorRating, getContractorReviews } from "@/lib/actions/public-ads";
 import { AdDetailsClient } from "./ad-details-client";
 
 export default async function AdDetailsPage({
@@ -15,13 +15,20 @@ export default async function AdDetailsPage({
   const responseList = okResponses && responses ? responses : [];
 
   const contractorIds = Array.from(new Set(responseList.map((r: any) => r.contractor_id)));
-  const ratingResults = await Promise.all(
-    contractorIds.map(async (id) => ({ id, res: await getContractorRating(id) }))
-  );
+  const [ratingResults, reviewResults] = await Promise.all([
+    Promise.all(contractorIds.map(async (id) => ({ id, res: await getContractorRating(id) }))),
+    Promise.all(contractorIds.map(async (id) => ({ id, res: await getContractorReviews(id) }))),
+  ]);
   const contractorRatings: Record<string, { rating: number; count: number }> = {};
   for (const { id, res } of ratingResults) {
     if (res.ok && res.count) {
       contractorRatings[id] = { rating: res.rating ?? 0, count: res.count };
+    }
+  }
+  const contractorReviews: Record<string, any[]> = {};
+  for (const { id, res } of reviewResults) {
+    if (res.ok && res.data) {
+      contractorReviews[id] = res.data;
     }
   }
 
@@ -31,6 +38,7 @@ export default async function AdDetailsPage({
         ad={ok && ad ? ad : null}
         responses={responseList}
         contractorRatings={contractorRatings}
+        contractorReviews={contractorReviews}
         user={user}
       />
     </div>
