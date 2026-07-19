@@ -1,7 +1,8 @@
 import Link from "next/link";
-import { Plus, ShieldCheck, AlertTriangle, Clock, CheckCircle2 } from "lucide-react";
+import { Plus, ShieldCheck, AlertTriangle, Clock, CheckCircle2, Camera, Sparkles } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { listBhpDocuments, type BhpDocType } from "@/lib/actions/bhp";
 
@@ -96,6 +97,34 @@ export default async function BhpPage() {
           </Link>
         </Button>
       </div>
+
+      {/* AI PHOTO ANALYSIS CTA */}
+      <Card className="border-primary/30 bg-gradient-to-br from-primary/5 to-transparent">
+        <CardContent className="flex flex-wrap items-center justify-between gap-4 p-5">
+          <div className="flex items-start gap-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary text-white">
+              <Camera className="h-5 w-5" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <p className="font-semibold">Analiza BHP zdjęcia budowy</p>
+                <Badge className="bg-primary/15 text-primary hover:bg-primary/15">
+                  <Sparkles className="mr-1 h-3 w-3" /> AI
+                </Badge>
+              </div>
+              <p className="mt-0.5 text-sm text-muted-foreground">
+                Wgraj zdjęcie placu budowy — AI wskaże naruszenia przepisów BHP z podstawą prawną i
+                zaleceniami. 99 zł za jedną analizę.
+              </p>
+            </div>
+          </div>
+          <Button asChild>
+            <Link href="/dashboard/contractor/bhp/analiza-zdjecia">
+              <Camera className="mr-2 h-4 w-4" /> Analizuj zdjęcie
+            </Link>
+          </Button>
+        </CardContent>
+      </Card>
 
       {/* WARNING BANNER */}
       {(missing > 0 || expiring > 0) && (
