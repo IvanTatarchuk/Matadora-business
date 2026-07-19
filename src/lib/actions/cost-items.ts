@@ -29,12 +29,14 @@ export async function searchCostItems(query: string): Promise<CostItem[]> {
     return (data ?? []) as CostItem[];
   }
 
-  const { data } = await supabase
-    .from("cost_items")
-    .select("id, code, name, category, unit, labor_rate, material_rate")
-    .or(`name.ilike.%${trimmed}%,code.ilike.%${trimmed}%`)
-    .order("name", { ascending: true })
-    .limit(DEFAULT_LIMIT);
+  // Plain substring matching misses inflected Polish forms (e.g. searching
+  // "pompa ciepła" wouldn't find "Montaż pompy ciepła..." — genitive case).
+  // search_cost_items() combines ILIKE with pg_trgm word_similarity so
+  // close/declined forms still match.
+  const { data } = await supabase.rpc("search_cost_items", {
+    q: trimmed,
+    result_limit: DEFAULT_LIMIT,
+  });
 
   return (data ?? []) as CostItem[];
 }
