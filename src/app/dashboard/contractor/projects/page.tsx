@@ -13,6 +13,14 @@ const STATUS_VARIANT: Record<string, "default" | "secondary" | "success"> = {
   cancelled: "secondary",
 };
 
+const STATUS_LABEL: Record<string, string> = {
+  draft: "Szkic",
+  open: "Otwarty",
+  in_progress: "W trakcie",
+  completed: "Zakończony",
+  cancelled: "Anulowany",
+};
+
 export default async function ContractorProjectsPage() {
   const supabase = createClient();
   const {
@@ -30,10 +38,10 @@ export default async function ContractorProjectsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">Projects</h1>
+        <h1 className="text-2xl font-bold">Projekty</h1>
         <p className="text-sm text-muted-foreground">
-          Projects you&apos;re executing. Open one to manage tasks, crews and
-          progress reports.
+          Projekty, które realizujesz. Otwórz jeden, aby zarządzać zadaniami,
+          brygadami i raportami postępu.
         </p>
       </div>
 
@@ -42,7 +50,7 @@ export default async function ContractorProjectsPage() {
           <CardContent className="flex flex-col items-center gap-2 py-12 text-center text-muted-foreground">
             <FolderKanban className="h-8 w-8" />
             <p className="text-sm">
-              No assigned projects yet. Win a bid to start executing.
+              Brak przypisanych projektów. Wygraj przetarg, aby zacząć realizację.
             </p>
           </CardContent>
         </Card>
@@ -63,7 +71,7 @@ export default async function ContractorProjectsPage() {
                 )}
               </div>
               <Badge variant={STATUS_VARIANT[p.status] ?? "secondary"}>
-                {p.status.replace("_", " ")}
+                {STATUS_LABEL[p.status] ?? p.status}
               </Badge>
             </Link>
           ))}
