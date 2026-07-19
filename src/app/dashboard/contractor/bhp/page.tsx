@@ -1,66 +1,85 @@
 import Link from "next/link";
-import { Plus, ShieldCheck, AlertTriangle, Clock, CheckCircle2, ArrowRight } from "lucide-react";
+import { Plus, ShieldCheck, AlertTriangle, Clock, CheckCircle2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { listBhpDocuments, type BhpDocType } from "@/lib/actions/bhp";
 
-const BHP_TEMPLATES = [
+const REQUIRED_TYPES: { type: BhpDocType; title: string; desc: string }[] = [
   {
     type: "szkolenie_bhp",
     title: "Instruktaż ogólny BHP",
     desc: "Obowiązkowy dla każdego nowego pracownika. Ważność: 1 rok.",
-    urgency: "high",
-    daysLeft: null,
-    status: "missing",
   },
   {
     type: "instrukcja_stanowiskowa",
-    title: "Instrukcja stanowiskowa — Murarz",
-    desc: "Bezpieczne wykonywanie robót murarskich.",
-    urgency: "medium",
-    daysLeft: 45,
-    status: "active",
+    title: "Instrukcja stanowiskowa",
+    desc: "Bezpieczne wykonywanie robót dla danego stanowiska.",
   },
   {
     type: "ocena_ryzyka",
     title: "Ocena ryzyka zawodowego",
     desc: "Wymagana dla każdego stanowiska na budowie.",
-    urgency: "high",
-    daysLeft: 12,
-    status: "expiring",
   },
   {
-    type: "instrukcja_stanowiskowa",
-    title: "Instrukcja stanowiskowa — Tynkarz",
-    desc: "Bezpieczne wykonywanie robót tynkarskich.",
-    urgency: "low",
-    daysLeft: 280,
-    status: "active",
+    type: "lista_pracownikow",
+    title: "Lista pracowników z potwierdzeniem szkoleń",
+    desc: "Ewidencja przeszkolonych pracowników.",
   },
   {
     type: "protokol_bhp",
     title: "Protokół kontroli BHP na budowie",
     desc: "Tygodniowy protokół inspekcji bezpieczeństwa.",
-    urgency: "medium",
-    daysLeft: null,
-    status: "missing",
   },
 ];
 
-const STATUS_CONFIG = {
-  active:    { label: "Aktywny",    color: "bg-green-100 text-green-700" },
-  expiring:  { label: "Wygasa!",    color: "bg-orange-100 text-orange-700" },
-  missing:   { label: "Brakuje",    color: "bg-red-100 text-red-700" },
-  expired:   { label: "Wygasł",     color: "bg-red-100 text-red-700" },
+type RowStatus = "active" | "expiring" | "missing" | "expired";
+
+const STATUS_CONFIG: Record<RowStatus, { label: string; color: string }> = {
+  active: { label: "Aktywny", color: "bg-green-100 text-green-700" },
+  expiring: { label: "Wygasa!", color: "bg-orange-100 text-orange-700" },
+  missing: { label: "Brakuje", color: "bg-red-100 text-red-700" },
+  expired: { label: "Wygasł", color: "bg-red-100 text-red-700" },
 };
 
 const PIP_FINE = "100 000 zł";
 
-export default function BhpPage() {
-  const missing = BHP_TEMPLATES.filter((d) => d.status === "missing").length;
-  const expiring = BHP_TEMPLATES.filter((d) => d.status === "expiring").length;
-  const active = BHP_TEMPLATES.filter((d) => d.status === "active").length;
+export default async function BhpPage() {
+  const documents = await listBhpDocuments();
+
+  function latestFor(type: BhpDocType) {
+    return documents
+      .filter((d) => d.doc_type === type && d.status !== "archived")
+      .sort((a, b) => (b.valid_until ?? "").localeCompare(a.valid_until ?? ""))[0];
+  }
+
+  const requiredRows = REQUIRED_TYPES.map((req) => {
+    const doc = latestFor(req.type);
+    let status: RowStatus = "missing";
+    let daysLeft: number | null = null;
+
+    if (doc) {
+      if (doc.valid_until) {
+        daysLeft = Math.floor(
+          (new Date(doc.valid_until).getTime() - Date.now()) / 86400000
+        );
+        status = daysLeft < 0 ? "expired" : daysLeft <= 30 ? "expiring" : "active";
+      } else {
+        status = "active";
+      }
+    }
+
+    return { ...req, doc, status, daysLeft };
+  });
+
+  const missing = requiredRows.filter((r) => r.status === "missing").length;
+  const expiring = requiredRows.filter((r) => r.status === "expiring" || r.status === "expired").length;
+  const active = requiredRows.filter((r) => r.status === "active").length;
+
+  // Documents beyond the one shown per required type (older versions, extra
+  // instrukcje stanowiskowe for other trades, "other" type docs, etc.)
+  const shownIds = new Set(requiredRows.map((r) => r.doc?.id).filter(Boolean));
+  const additionalDocs = documents.filter((d) => !shownIds.has(d.id));
 
   return (
     <div className="space-y-6">
@@ -116,7 +135,7 @@ export default function BhpPage() {
             </div>
             <div>
               <p className="text-2xl font-bold">{expiring}</p>
-              <p className="text-xs text-muted-foreground">Wygasa w 30 dni</p>
+              <p className="text-xs text-muted-foreground">Wygasa w 30 dni lub wygasło</p>
             </div>
           </CardContent>
         </Card>
@@ -133,47 +152,45 @@ export default function BhpPage() {
         </Card>
       </div>
 
-      {/* DOCUMENT LIST */}
+      {/* REQUIRED DOCUMENT LIST */}
       <Card>
         <CardHeader>
-          <CardTitle>Dokumenty BHP</CardTitle>
+          <CardTitle>Wymagane dokumenty BHP</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
-            {BHP_TEMPLATES.map((doc, i) => {
-              const cfg = STATUS_CONFIG[doc.status as keyof typeof STATUS_CONFIG];
+            {requiredRows.map((row) => {
+              const cfg = STATUS_CONFIG[row.status];
               return (
                 <div
-                  key={i}
-                  className={`rounded-lg border p-4 ${doc.status === "missing" ? "border-red-200 bg-red-50/50" : doc.status === "expiring" ? "border-orange-200 bg-orange-50/50" : ""}`}
+                  key={row.type}
+                  className={`rounded-lg border p-4 ${row.status === "missing" ? "border-red-200 bg-red-50/50" : row.status === "expiring" || row.status === "expired" ? "border-orange-200 bg-orange-50/50" : ""}`}
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <p className="font-semibold text-sm">{doc.title}</p>
+                        <p className="font-semibold text-sm">{row.doc?.title ?? row.title}</p>
                         <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${cfg.color}`}>
                           {cfg.label}
                         </span>
                       </div>
-                      <p className="mt-1 text-xs text-muted-foreground">{doc.desc}</p>
-                      {doc.daysLeft !== null && (
-                        <p className={`mt-1 text-xs font-medium ${doc.daysLeft <= 30 ? "text-orange-600" : "text-muted-foreground"}`}>
-                          Ważny jeszcze {doc.daysLeft} dni
+                      <p className="mt-1 text-xs text-muted-foreground">{row.desc}</p>
+                      {row.daysLeft !== null && (
+                        <p className={`mt-1 text-xs font-medium ${row.daysLeft <= 30 ? "text-orange-600" : "text-muted-foreground"}`}>
+                          {row.daysLeft < 0
+                            ? `Wygasł ${Math.abs(row.daysLeft)} dni temu`
+                            : `Ważny jeszcze ${row.daysLeft} dni`}
                         </p>
                       )}
                     </div>
                     <div className="shrink-0">
-                      {doc.status === "missing" ? (
+                      {row.status === "missing" ? (
                         <Button size="sm" variant="destructive" asChild>
-                          <Link href="/dashboard/contractor/bhp/new">
-                            Dodaj
-                          </Link>
+                          <Link href={`/dashboard/contractor/bhp/new?type=${row.type}`}>Dodaj</Link>
                         </Button>
                       ) : (
                         <Button size="sm" variant="outline" asChild>
-                          <Link href="/dashboard/contractor/bhp/new">
-                            Edytuj
-                          </Link>
+                          <Link href={`/dashboard/contractor/bhp/new?id=${row.doc!.id}`}>Edytuj</Link>
                         </Button>
                       )}
                     </div>
@@ -184,6 +201,31 @@ export default function BhpPage() {
           </div>
         </CardContent>
       </Card>
+
+      {/* ADDITIONAL DOCUMENTS */}
+      {additionalDocs.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Pozostałe dokumenty</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              {additionalDocs.map((doc) => (
+                <Link
+                  key={doc.id}
+                  href={`/dashboard/contractor/bhp/new?id=${doc.id}`}
+                  className="flex items-center justify-between rounded-lg border p-3 text-sm hover:bg-muted/40"
+                >
+                  <span className="font-medium">{doc.title}</span>
+                  <span className="text-xs text-muted-foreground">
+                    {new Date(doc.created_at).toLocaleDateString("pl-PL")}
+                  </span>
+                </Link>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* REQUIRED DOCS INFO */}
       <Card className="border-blue-200 bg-blue-50">
