@@ -32,6 +32,7 @@ import {
 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
+import { APP_VERSION } from "@/lib/version";
 import type { UserRole } from "@/types/database";
 
 type NavItem = { href: string; label: string; icon: LucideIcon };
@@ -127,8 +128,13 @@ export function Sidebar({ role }: { role: UserRole }) {
           Ustawienia
         </Link>
       </nav>
-      <div className="border-t border-white/10 p-4 text-xs capitalize text-secondary-foreground/60">
-        Panel {role === "contractor" ? "wykonawcy" : role === "investor" ? "inwestora" : "hurtowni"}
+      <div className="border-t border-white/10 p-4 text-xs text-secondary-foreground/60">
+        <span className="capitalize">
+          Panel {role === "contractor" ? "wykonawcy" : role === "investor" ? "inwestora" : "hurtowni"}
+        </span>
+        <Link href="/changelog" className="mt-1 block hover:text-secondary-foreground">
+          matadora.business v{APP_VERSION}
+        </Link>
       </div>
     </aside>
   );
