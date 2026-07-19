@@ -113,6 +113,36 @@ fn run_node_version_check(app: tauri::AppHandle) -> Result<(), String> {
     Ok(())
 }
 
+/// Reads a single `KEY=value` from a dotenv-style file (`.env.local`),
+/// without pulling in a crate dependency for something this small. Only
+/// used to forward a short, explicit allowlist of keys (see call site) into
+/// the sidecar's process env — never the whole file — so secrets the agent
+/// has no reason to see (Stripe, Resend, etc.) never end up in its
+/// environment even though the Bash guard would also block their misuse.
+fn read_env_value(env_file: &PathBuf, key: &str) -> Option<String> {
+    let contents = std::fs::read_to_string(env_file).ok()?;
+    for line in contents.lines() {
+        let line = line.trim();
+        if line.is_empty() || line.starts_with('#') {
+            continue;
+        }
+        let Some((k, v)) = line.split_once('=') else {
+            continue;
+        };
+        if k.trim() != key {
+            continue;
+        }
+        let mut value = v.trim().to_string();
+        if (value.starts_with('"') && value.ends_with('"') && value.len() >= 2)
+            || (value.starts_with('\'') && value.ends_with('\'') && value.len() >= 2)
+        {
+            value = value[1..value.len() - 1].to_string();
+        }
+        return Some(value);
+    }
+    None
+}
+
 /// Absolute path to the feature-dev sidecar script. `CARGO_MANIFEST_DIR` is
 /// `agent-studio/src-tauri` at both `tauri dev` and build time, and the
 /// sidecar lives at `agent-studio/sidecar/feature-dev-agent.mjs` — a sibling
@@ -175,8 +205,29 @@ fn run_feature_dev_agent(app: tauri::AppHandle, repo_path: String, task: String)
         let script = sidecar_script_path();
         let sidecar_dir = script.parent().and_then(|p| p.parent()).map(PathBuf::from);
 
+        // Reuse the target platform's own credentials rather than asking for
+        // separate ones: the sidecar is a bare Node process with no inherited
+        // Claude Code / browser session, so it needs ANTHROPIC_API_KEY (for
+        // the SDK call) and the Supabase URL/service-role key (for Phase 2's
+        // agent_tasks status reporting) explicitly. Only these three specific
+        // keys are forwarded — never the whole .env.local — so secrets the
+        // agent has no reason to see (Stripe, Resend, etc.) never reach it.
+        let env_file = PathBuf::from(&repo_path).join(".env.local");
         let mut command = Command::new("node");
         command.arg(&script).arg(&repo_path).arg(&task);
+        for key in [
+            "ANTHROPIC_API_KEY",
+            "NEXT_PUBLIC_SUPABASE_URL",
+            "SUPABASE_SERVICE_ROLE_KEY",
+        ] {
+            // Scoped to this child process only — never mutates the running
+            // Tauri app's own environment (`Command::env`, not `env::set_var`).
+            if std::env::var(key).is_err() {
+                if let Some(value) = read_env_value(&env_file, key) {
+                    command.env(key, value);
+                }
+            }
+        }
         if let Some(dir) = &sidecar_dir {
             command.current_dir(dir);
         }
