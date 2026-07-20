@@ -31,6 +31,7 @@ export function ProjectSubnav({
           { href: `/dashboard/contractor/projects/${projectId}/zamowienia`, label: "Zamówienia" },
           { href: `/dashboard/contractor/projects/${projectId}/podwykonawcy`, label: "Podwykonawcy" },
           { href: `/dashboard/contractor/projects/${projectId}/inspekcje`, label: "Inspekcje" },
+          { href: `/dashboard/contractor/projects/${projectId}/obserwacje`, label: "Obserwacje" },
           { href: `/dashboard/contractor/projects/${projectId}/sprzet`, label: "Sprzęt" },
           { href: `/dashboard/contractor/projects/${projectId}/raporty`, label: "Raporty" },
           { href: `/dashboard/contractor/projects/${projectId}/submittals`, label: "Submittals" },
