@@ -35,6 +35,14 @@ const STATUS_LABELS: Record<ProjectTaskStatus, string> = {
   done: "Gotowe",
 };
 
+const PROJECT_STATUS_LABELS: Record<string, string> = {
+  draft: "Szkic",
+  open: "Otwarty",
+  in_progress: "W trakcie",
+  completed: "Zakończony",
+  cancelled: "Anulowany",
+};
+
 type Project = {
   id: string;
   title: string;
@@ -160,7 +168,7 @@ export function ExecutionBoard({
             <Badge
               variant={project.status === "completed" ? "success" : "default"}
             >
-              {project.status.replace("_", " ")}
+              {PROJECT_STATUS_LABELS[project.status] ?? project.status}
             </Badge>
           </div>
           {project.address && (

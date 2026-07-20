@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, ShieldCheck, ExternalLink, CheckCircle2, AlertTriangle, Info, Key } from "lucide-react";
+import { ArrowLeft, ShieldCheck, ExternalLink, CheckCircle2, AlertTriangle, Key } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -29,7 +29,6 @@ export default function KsefSettingsPage() {
   const [token, setToken] = useState("");
   const [env, setEnv] = useState<"prod" | "test">("test");
   const [saved, setSaved] = useState(false);
-  const [testResult, setTestResult] = useState<"idle" | "testing" | "ok" | "error">("idle");
 
   function handleSave(e: React.FormEvent) {
     e.preventDefault();
@@ -38,14 +37,6 @@ export default function KsefSettingsPage() {
     localStorage.setItem("ksef_env", env);
     setSaved(true);
     setTimeout(() => setSaved(false), 3000);
-  }
-
-  async function testConnection() {
-    setTestResult("testing");
-    // In production, this would call our API route which calls KSeF
-    // For now, simulate a test after 1.5s
-    await new Promise((r) => setTimeout(r, 1500));
-    setTestResult(nip.length === 10 && token.length > 10 ? "ok" : "error");
   }
 
   const KSEF_BASE = env === "prod"
@@ -60,7 +51,7 @@ export default function KsefSettingsPage() {
         </Button>
         <div>
           <h1 className="text-2xl font-bold">Integracja KSeF</h1>
-          <p className="text-sm text-muted-foreground">Krajowy System e-Faktur — konfiguracja automatycznego wysyłania</p>
+          <p className="text-sm text-muted-foreground">Krajowy System e-Faktur — przygotowanie do integracji wysyłkowej</p>
         </div>
       </div>
 
@@ -162,28 +153,21 @@ export default function KsefSettingsPage() {
           <Button type="submit" disabled={saved}>
             {saved ? <><CheckCircle2 className="mr-2 h-4 w-4 text-green-400" /> Zapisano!</> : "Zapisz konfigurację"}
           </Button>
-          <Button
-            type="button"
-            variant="outline"
-            onClick={testConnection}
-            disabled={testResult === "testing" || !nip || !token}
-          >
-            {testResult === "testing" ? "Testowanie..." : "Testuj połączenie"}
-          </Button>
         </div>
 
-        {testResult === "ok" && (
-          <div className="flex items-center gap-2 text-sm text-green-700 bg-green-50 rounded-lg p-3">
-            <CheckCircle2 className="h-4 w-4" />
-            Połączenie z KSeF aktywne. Faktury będą wysyłane automatycznie.
+        <div className="flex items-start gap-2 text-sm text-amber-800 bg-amber-50 border border-amber-200 rounded-lg p-3">
+          <AlertTriangle className="h-4 w-4 mt-0.5 shrink-0" />
+          <div>
+            <p className="font-semibold">Automatyczne wysyłanie do systemu Ministerstwa Finansów nie jest jeszcze podłączone.</p>
+            <p className="mt-1">
+              Platforma generuje poprawną fakturę FA(2) w formacie XML (patrz protokoły odbioru) — wysyłkę do
+              KSeF wykonujesz obecnie samodzielnie przez{" "}
+              <a href="https://ksef.podatki.gov.pl" target="_blank" rel="noopener noreferrer" className="underline">ksef.podatki.gov.pl</a>{" "}
+              lub swój program księgowy. NIP i token zapisane tutaj służą na razie tylko do przygotowania się do
+              integracji — żadne dane nie są jeszcze wysyłane do KSeF z tego formularza.
+            </p>
           </div>
-        )}
-        {testResult === "error" && (
-          <div className="flex items-center gap-2 text-sm text-red-700 bg-red-50 rounded-lg p-3">
-            <AlertTriangle className="h-4 w-4" />
-            Błąd połączenia. Sprawdź NIP i token. Token mógł wygasnąć (ważność 24h).
-          </div>
-        )}
+        </div>
       </form>
 
       {/* SECURITY NOTE */}
@@ -193,8 +177,8 @@ export default function KsefSettingsPage() {
           <div className="text-xs text-blue-700">
             <p className="font-semibold">Bezpieczeństwo danych</p>
             <p className="mt-1">
-              Token KSeF jest przechowywany wyłącznie w localStorage Twojej przeglądarki i nigdy nie trafia na nasze serwery.
-              Połączenie z KSeF jest nawiązywane bezpośrednio z Twojej przeglądarki lub serwera Next.js przez HTTPS.
+              Token KSeF jest przechowywany wyłącznie w localStorage Twojej przeglądarki i nigdy nie trafia na nasze serwery —
+              dopóki nie uruchomimy realnej integracji wysyłkowej, token służy tylko do przygotowania konfiguracji.
               Zgodność z RODO: przetwarzamy tylko dane faktur niezbędne do wystawienia dokumentu.
             </p>
           </div>

@@ -16,10 +16,10 @@ export default async function WholesalerCatalogPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">Materials catalog</h1>
+        <h1 className="text-2xl font-bold">Katalog materiałów</h1>
         <p className="text-sm text-muted-foreground">
-          Products you list here can be added to contractor offers. Orders are
-          generated automatically when such an offer is accepted.
+          Produkty dodane tutaj mogą być wykorzystane w ofertach wykonawców.
+          Zamówienia są generowane automatycznie po zaakceptowaniu takiej oferty.
         </p>
       </div>
 

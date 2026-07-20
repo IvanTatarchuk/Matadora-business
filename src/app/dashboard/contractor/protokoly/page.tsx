@@ -50,7 +50,7 @@ export default async function ProtokolyPage() {
         <div>
           <h1 className="text-2xl font-bold">Protokoły odbioru</h1>
           <p className="text-sm text-muted-foreground mt-1">
-            Cyfrowe protokoły odbioru robót — klient podpisuje na telefonie, faktura KSeF automatycznie
+            Cyfrowe protokoły odbioru robót — klient podpisuje na telefonie, faktura KSeF generuje się automatycznie
           </p>
         </div>
         <Button asChild>

@@ -168,7 +168,7 @@ export async function reserveInventory(input: {
 }): Promise<{ ok: boolean; error?: string }> {
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { ok: false, error: "Nie zalogowано" };
+  if (!user) return { ok: false, error: "Nie zalogowano" };
 
   const { error } = await db(supabase).from("inventory_reservations").insert({
     item_id: input.itemId,

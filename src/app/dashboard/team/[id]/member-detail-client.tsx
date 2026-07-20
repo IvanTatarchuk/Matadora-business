@@ -20,15 +20,15 @@ export function TeamMemberClient({ member, org, myRole }: Props) {
   const canManage = myRole === "owner" || myRole === "admin";
 
   function handleRemove() {
-    if (!confirm("Ви впевнені, що хочете видалити цього члена команди?")) return;
+    if (!confirm("Czy na pewno chcesz usunąć tego członka zespołu?")) return;
     // Remove member logic would go here
   }
 
   const roleLabels: Record<OrgMemberRole, string> = {
-    owner: "Власник",
-    admin: "Адміністратор",
-    manager: "Менеджер",
-    member: "Член команди",
+    owner: "Właściciel",
+    admin: "Administrator",
+    manager: "Menedżer",
+    member: "Członek zespołu",
   };
 
   return (
@@ -50,21 +50,21 @@ export function TeamMemberClient({ member, org, myRole }: Props) {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <User className="h-5 w-5" />
-              Інформація про члена
+              Informacje o członku
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             <div className="flex items-center gap-3">
               <User className="h-4 w-4 text-muted-foreground" />
               <div>
-                <p className="text-sm text-muted-foreground">Ім'я</p>
+                <p className="text-sm text-muted-foreground">Imię i nazwisko</p>
                 <p className="font-medium">{member.name}</p>
               </div>
             </div>
             <div className="flex items-center gap-3">
               <Shield className="h-4 w-4 text-muted-foreground" />
               <div>
-                <p className="text-sm text-muted-foreground">Роль</p>
+                <p className="text-sm text-muted-foreground">Rola</p>
                 <p className="font-medium">{roleLabels[member.role]}</p>
               </div>
             </div>
@@ -75,12 +75,12 @@ export function TeamMemberClient({ member, org, myRole }: Props) {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Settings className="h-5 w-5" />
-              Налаштування
+              Ustawienia
             </CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-sm text-muted-foreground">
-              Налаштування члена команди скоро будуть доступні
+              Ustawienia członka zespołu będą wkrótce dostępne
             </p>
           </CardContent>
         </Card>
@@ -88,11 +88,11 @@ export function TeamMemberClient({ member, org, myRole }: Props) {
 
       <Card>
         <CardHeader>
-          <CardTitle>Активність</CardTitle>
+          <CardTitle>Aktywność</CardTitle>
         </CardHeader>
         <CardContent>
           <p className="text-sm text-muted-foreground">
-            Історія активності члена команди скоро буде доступна
+            Historia aktywności członka zespołu będzie wkrótce dostępna
           </p>
         </CardContent>
       </Card>

@@ -47,7 +47,7 @@ export async function createTask(input: {
   dueDate?: string | null;
 }): Promise<ActionResult> {
   const supabase = createClient();
-  if (!input.title.trim()) return { ok: false, error: "Title is required" };
+  if (!input.title.trim()) return { ok: false, error: "Tytuł jest wymagany" };
   const { data, error } = await supabase
     .from("project_tasks")
     .insert({
@@ -127,10 +127,10 @@ export async function addUpdate(input: {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) return { ok: false, error: "Not authenticated" };
+  if (!user) return { ok: false, error: "Nie zalogowano" };
 
   if (!input.note?.trim() && !input.photoUrl) {
-    return { ok: false, error: "Add a note or a photo" };
+    return { ok: false, error: "Dodaj notatkę lub zdjęcie" };
   }
 
   const { error } = await supabase.from("project_updates").insert({
@@ -186,17 +186,17 @@ export async function uploadProjectPhoto(
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) return { ok: false, error: "Not authenticated" };
+  if (!user) return { ok: false, error: "Nie zalogowano" };
 
   const file = formData.get("photo");
   if (!(file instanceof File) || file.size === 0) {
-    return { ok: false, error: "No file provided" };
+    return { ok: false, error: "Nie przesłano pliku" };
   }
   if (file.size > MAX_PHOTO_BYTES) {
-    return { ok: false, error: "Photo must be 8 MB or smaller" };
+    return { ok: false, error: "Zdjęcie musi mieć maksymalnie 8 MB" };
   }
   if (!ALLOWED_TYPES.includes(file.type)) {
-    return { ok: false, error: "Use PNG, JPG or WEBP" };
+    return { ok: false, error: "Użyj formatu PNG, JPG lub WEBP" };
   }
 
   const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";

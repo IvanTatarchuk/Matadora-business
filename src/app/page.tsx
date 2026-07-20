@@ -27,8 +27,8 @@ import { Badge } from "@/components/ui/badge";
 
 const STATS = [
   { value: "< 5 min", label: "Do pierwszego kosztorysu" },
-  { value: "99 zł", label: "Plan PRO miesięcznie" },
-  { value: "0 zł", label: "Plan START — na zawsze" },
+  { value: "0 zł", label: "Cała platforma, na zawsze" },
+  { value: "500 zł", label: "Analiza AI kosztorysu z PDF" },
   { value: "KSeF", label: "Zgodność z e-fakturą" },
 ];
 
@@ -122,12 +122,12 @@ const COMPARISON = [
   { feature: "Kosztorys online (przeglądarka)", us: true, norma: false, planradar: false },
   { feature: "Alerty przetargowe AI", us: true, norma: false, planradar: false },
   { feature: "Protokół odbioru cyfrowy", us: true, norma: false, planradar: true },
-  { feature: "Faktury KSeF automatyczne", us: true, norma: false, planradar: false },
+  { feature: "Automatyczne generowanie faktur KSeF", us: true, norma: false, planradar: false },
   { feature: "BHP dokumentacja", us: true, norma: false, planradar: false },
   { feature: "Portal inwestora real-time", us: true, norma: false, planradar: true },
   { feature: "Zarządzanie projektem", us: true, norma: false, planradar: true },
   { feature: "Mobile / offline", us: true, norma: false, planradar: true },
-  { feature: "Cena miesięczna", us: "99 zł", norma: "167 zł", planradar: "420 zł" },
+  { feature: "Cena miesięczna", us: "0 zł", norma: "167 zł", planradar: "420 zł" },
 ];
 
 export default function HomePage() {
@@ -136,12 +136,13 @@ export default function HomePage() {
       {/* HEADER */}
       <header className="sticky top-0 z-50 border-b bg-white/95 backdrop-blur">
         <div className="container flex h-16 items-center justify-between">
-          <div className="flex items-center gap-2 font-bold text-xl">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
+          <div className="flex items-center gap-2 whitespace-nowrap font-extrabold text-xl tracking-tight">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary">
               <HardHat className="h-5 w-5 text-white" />
             </div>
-            <span>matadora</span>
-            <span className="text-primary">.business</span>
+            <span>
+              MATADORA<span className="text-primary">.business</span>
+            </span>
           </div>
           <nav className="hidden items-center gap-6 text-sm font-medium md:flex">
             <Link href="/kosztorys" className="text-muted-foreground hover:text-foreground">Kosztorys</Link>
@@ -175,8 +176,8 @@ export default function HomePage() {
             </h1>
             <p className="mx-auto mt-6 max-w-2xl text-xl text-white/80">
               Kosztorys online, alerty przetargowe AI, cyfrowe protokoły odbioru,
-              BHP i zarządzanie projektami — wszystko w jednym miejscu za{" "}
-              <span className="font-bold text-white">99 zł miesięcznie</span>.
+              BHP i zarządzanie projektami — wszystko w jednym miejscu,{" "}
+              <span className="font-bold text-white">całkowicie bezpłatnie</span>.
             </p>
             <div className="mt-10 flex flex-wrap justify-center gap-4">
               <Button size="lg" className="bg-primary hover:bg-primary/90 text-white px-8 h-12 text-base" asChild>
@@ -192,7 +193,7 @@ export default function HomePage() {
               </Button>
             </div>
             <p className="mt-4 text-sm text-white/50">
-              30 dni PRO gratis · Bez zobowiązań · Anuluj w każdej chwili
+              Zawsze bezpłatnie · Bez karty kredytowej · Bez zobowiązań
             </p>
           </div>
         </section>
@@ -278,7 +279,7 @@ export default function HomePage() {
               Porównanie z konkurencją
             </h2>
             <p className="mt-3 text-muted-foreground">
-              Dlaczego tysiące firm przechodzi z Norma PRO i PlanRadar
+              Zobacz, dlaczego warto zamienić Norma PRO i PlanRadar na matadora.business
             </p>
           </div>
           <div className="mt-10 overflow-x-auto rounded-xl border">
@@ -349,11 +350,10 @@ export default function HomePage() {
               Pierwsi użytkownicy
             </h2>
             <p className="mt-4 text-lg text-muted-foreground leading-relaxed">
-              Matadora jest w fazie beta. Pierwsze{" "}
-              <strong className="text-foreground">50 firm</strong>, które
-              założą konto, otrzymują plan{" "}
-              <strong className="text-foreground">PRO bezpłatnie przez 3 miesiące</strong>{" "}
-              — bez karty kredytowej, bez zobowiązań.
+              Matadora jest w fazie beta. Załóż konto{" "}
+              <strong className="text-foreground">bezpłatnie</strong>, bez karty kredytowej i bez
+              zobowiązań — cała platforma jest darmowa, płacisz tylko za funkcje AI, jeśli z nich
+              skorzystasz.
             </p>
             <p className="mt-3 text-sm text-muted-foreground">
               W zamian prosimy o szczery feedback, który pomoże nam budować
@@ -375,7 +375,7 @@ export default function HomePage() {
           <div className="text-center mb-10">
             <h2 className="text-3xl font-bold sm:text-4xl">Cennik</h2>
             <p className="mt-3 text-muted-foreground">
-              Płacisz za kosztorys — nie za subskrypcję
+              Cała platforma bezpłatna — płacisz tylko za analizę AI
             </p>
           </div>
 
@@ -388,43 +388,40 @@ export default function HomePage() {
                 <p className="text-xs text-muted-foreground">3–10 dni</p>
               </div>
               <div className="flex flex-col items-center justify-center">
-                <p className="text-xs font-bold text-green-700">vs Matadora</p>
-                <p className="text-xl font-extrabold text-green-600">−751 zł</p>
+                <p className="text-xs font-bold text-green-700">vs Matadora AI</p>
+                <p className="text-xl font-extrabold text-green-600">−400 zł</p>
                 <p className="text-xs text-muted-foreground">oszczędność</p>
               </div>
               <div>
-                <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">Matadora Mały</p>
-                <p className="mt-1 text-2xl font-extrabold text-green-600">149 zł</p>
-                <p className="text-xs text-green-700 font-semibold">w 3 minuty</p>
+                <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">Matadora — analiza AI</p>
+                <p className="mt-1 text-2xl font-extrabold text-green-600">500 zł</p>
+                <p className="text-xs text-green-700 font-semibold">w kilkadziesiąt sekund</p>
               </div>
             </div>
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 max-w-5xl mx-auto">
-            {[
-              { tier: "1. kosztorys", price: "0 zł", desc: "Zawsze bezpłatny", note: "bez rejestracji", highlight: false },
-              { tier: "Mały", price: "149 zł", desc: "Mieszkania, remonty", note: "wysyłka + podpis", highlight: false },
-              { tier: "Standardowy", price: "299 zł", desc: "Większe budowy", note: "KSeF + projekt", highlight: true },
-              { tier: "Kompleksowy", price: "499 zł", desc: "Przetargi, deweloperzy", note: "pełny projekt", highlight: false },
-            ].map((p) => (
-              <Card key={p.tier} className={`text-center ${p.highlight ? "border-primary shadow-lg" : "border"}`}>
-                <CardContent className="p-5">
-                  {p.highlight && (
-                    <div className="text-[10px] font-bold uppercase tracking-widest text-primary mb-2">Najpopularniejszy</div>
-                  )}
-                  <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">{p.tier}</p>
-                  <p className="mt-2 text-3xl font-extrabold">{p.price}</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">za kosztorys</p>
-                  <p className="mt-2 text-sm font-medium">{p.desc}</p>
-                  <p className="text-xs text-muted-foreground">{p.note}</p>
-                </CardContent>
-              </Card>
-            ))}
+          <div className="grid gap-4 sm:grid-cols-2 max-w-2xl mx-auto">
+            <Card className="text-center border">
+              <CardContent className="p-5">
+                <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Platforma</p>
+                <p className="mt-2 text-3xl font-extrabold text-green-600">0 zł</p>
+                <p className="text-xs text-muted-foreground mt-0.5">zawsze</p>
+                <p className="mt-2 text-sm font-medium">Konto, projekty, finanse, kalkulator KNR</p>
+                <p className="text-xs text-muted-foreground">bez limitów, bez subskrypcji</p>
+              </CardContent>
+            </Card>
+            <Card className="text-center border-primary shadow-lg">
+              <CardContent className="p-5">
+                <div className="text-[10px] font-bold uppercase tracking-widest text-primary mb-2">Opcjonalnie</div>
+                <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Analiza AI z PDF</p>
+                <p className="mt-2 text-3xl font-extrabold">500 zł</p>
+                <p className="text-xs text-muted-foreground mt-0.5">za dokument</p>
+                <p className="mt-2 text-sm font-medium">Automatyczne pozycje z rzutu/przedmiaru</p>
+                <p className="text-xs text-muted-foreground">płatność jednorazowa, przy użyciu</p>
+              </CardContent>
+            </Card>
           </div>
           <div className="mt-8 text-center">
-            <p className="text-sm text-muted-foreground mb-3">
-              3+ kosztorysy miesięcznie? Subskrypcja PRO <strong>499 zł/mies.</strong> — nielimitowane kosztorysy.
-            </p>
             <Link href="/pricing" className="text-sm font-semibold text-primary underline underline-offset-2">
               Zobacz pełny cennik →
             </Link>
@@ -504,7 +501,7 @@ export default function HomePage() {
             <div className="mt-8 flex flex-wrap justify-center gap-4">
               <Button size="lg" className="bg-white text-primary hover:bg-white/90 h-12 px-8 text-base font-bold" asChild>
                 <Link href="/register">
-                  Zacznij za darmo — 30 dni PRO gratis
+                  Zacznij za darmo
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Link>
               </Button>

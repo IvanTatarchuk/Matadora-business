@@ -98,7 +98,7 @@ export default function NewProtokolPage() {
         </Button>
         <div>
           <h1 className="text-2xl font-bold">Nowy protokół odbioru</h1>
-          <p className="text-sm text-muted-foreground">Klient podpisze na telefonie — faktura KSeF automatycznie</p>
+          <p className="text-sm text-muted-foreground">Klient podpisze na telefonie — faktura KSeF generuje się automatycznie</p>
         </div>
       </div>
 

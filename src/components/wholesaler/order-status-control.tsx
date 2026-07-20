@@ -14,6 +14,14 @@ const STATUS_OPTIONS: OrderStatus[] = [
   "cancelled",
 ];
 
+const STATUS_LABEL: Record<OrderStatus, string> = {
+  pending: "Oczekujące",
+  confirmed: "Potwierdzone",
+  shipped: "Wysłane",
+  delivered: "Dostarczone",
+  cancelled: "Anulowane",
+};
+
 export function OrderStatusControl({
   orderId,
   status,
@@ -31,7 +39,7 @@ export function OrderStatusControl({
     startTransition(async () => {
       const res = await updateOrderStatus(orderId, next);
       if (!res.ok) {
-        setError(res.error ?? "Could not update");
+        setError(res.error ?? "Nie udało się zaktualizować");
         return;
       }
       router.refresh();
@@ -44,11 +52,11 @@ export function OrderStatusControl({
         value={status}
         disabled={pending}
         onChange={(e) => onChange(e.target.value as OrderStatus)}
-        className="h-9 rounded-md border border-input bg-background px-2 text-sm capitalize ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50"
+        className="h-9 rounded-md border border-input bg-background px-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50"
       >
         {STATUS_OPTIONS.map((s) => (
-          <option key={s} value={s} className="capitalize">
-            {s}
+          <option key={s} value={s}>
+            {STATUS_LABEL[s]}
           </option>
         ))}
       </select>

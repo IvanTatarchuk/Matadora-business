@@ -142,7 +142,7 @@ export function GeolocationClient({ initialLocations, initialGeofences, initialE
         <div className="relative flex-1 max-w-sm">
           <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Шукати геофенци..."
+            placeholder="Szukaj geofence..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-9"
@@ -153,9 +153,9 @@ export function GeolocationClient({ initialLocations, initialGeofences, initialE
           onChange={(e) => setFilterEventType(e.target.value as "all" | "entry" | "exit")}
           className="rounded-md border bg-background px-3 py-2 text-sm"
         >
-          <option value="all">Всі типи подій</option>
-          <option value="entry">Вхід</option>
-          <option value="exit">Вихід</option>
+          <option value="all">Wszystkie typy zdarzeń</option>
+          <option value="entry">Wejście</option>
+          <option value="exit">Wyjście</option>
         </select>
       </div>
 
@@ -287,7 +287,7 @@ export function GeolocationClient({ initialLocations, initialGeofences, initialE
       {/* Geofences */}
       <Card>
         <CardHeader>
-          <CardTitle>Pегofence</CardTitle>
+          <CardTitle>Geofence</CardTitle>
         </CardHeader>
         <CardContent>
           {filteredGeofences.length === 0 ? (

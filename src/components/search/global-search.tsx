@@ -159,7 +159,7 @@ export function GlobalSearch() {
 
             {!loading && query.length >= 2 && results.length === 0 && (
               <div className="text-center py-4 text-sm text-muted-foreground">
-                Brak wyników dla "{query}"
+                Brak wyników dla &quot;{query}&quot;
               </div>
             )}
           </div>

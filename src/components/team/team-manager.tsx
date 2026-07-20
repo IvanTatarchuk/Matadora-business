@@ -178,7 +178,7 @@ export function TeamManager({
           <div className="relative flex-1 max-w-sm">
             <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Шукати членів..."
+              placeholder="Szukaj członków..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-9"
@@ -189,7 +189,7 @@ export function TeamManager({
             onChange={(e) => setFilterRole(e.target.value as "all" | "owner" | "admin" | "manager" | "member")}
             className="rounded-md border bg-background px-3 py-2 text-sm"
           >
-            <option value="all">Всі ролі</option>
+            <option value="all">Wszystkie role</option>
             <option value="owner">Owner</option>
             <option value="admin">Admin</option>
             <option value="manager">Manager</option>

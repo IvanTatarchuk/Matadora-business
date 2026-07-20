@@ -61,7 +61,7 @@ export async function commitImport(
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) return { ok: false, error: "Not authenticated" };
+  if (!user) return { ok: false, error: "Nie zalogowano" };
 
   const items = (payload.items ?? [])
     .map((it) => ({
@@ -75,10 +75,10 @@ export async function commitImport(
     .filter((it) => it.product_name.length > 0);
 
   if (items.length === 0) {
-    return { ok: false, error: "No valid rows to import" };
+    return { ok: false, error: "Brak poprawnych wierszy do zaimportowania" };
   }
   if (items.length > MAX_ROWS) {
-    return { ok: false, error: `Too many rows (max ${MAX_ROWS})` };
+    return { ok: false, error: `Zbyt wiele wierszy (maks. ${MAX_ROWS})` };
   }
 
   // Resolve / create the supplier.

@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import {
   updateCrew, deleteCrew, setCrewMembers, assignCrewToProject, deleteCrewAssignment,
   createCrewSchedule, deleteCrewSchedule, type ShiftType,
+  createCrewProductivity, listCrewProductivity, getCrewProductivityStats,
   type CrewWithMembers,
 } from "@/lib/actions/workforce";
 import type { WorkerCertification } from "@/lib/actions/worker-certifications";
@@ -20,6 +21,7 @@ type Props = {
   crew: CrewWithMembers;
   initialAssignments: any[];
   initialSchedules: any[];
+  initialProductivityEntries: any[];
   initialProductivityStats: {
     totalHoursWorked: number;
     totalTasksCompleted: number;
@@ -30,7 +32,7 @@ type Props = {
   expiringCertifications: WorkerCertification[];
 };
 
-export function CrewDetailClient({ crew, initialAssignments, initialSchedules, initialProductivityStats, expiringCertifications }: Props) {
+export function CrewDetailClient({ crew, initialAssignments, initialSchedules, initialProductivityEntries, initialProductivityStats, expiringCertifications }: Props) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
@@ -40,9 +42,11 @@ export function CrewDetailClient({ crew, initialAssignments, initialSchedules, i
   const [selectedMembers, setSelectedMembers] = useState<string[]>(crew.memberIds);
   const [assignments, setAssignments] = useState(initialAssignments);
   const [schedules, setSchedules] = useState(initialSchedules);
+  const [productivityEntries, setProductivityEntries] = useState(initialProductivityEntries);
   const [productivityStats, setProductivityStats] = useState(initialProductivityStats);
   const [showAssignForm, setShowAssignForm] = useState(false);
   const [showScheduleForm, setShowScheduleForm] = useState(false);
+  const [showProductivityForm, setShowProductivityForm] = useState(false);
   const [assignForm, setAssignForm] = useState({
     projectId: "",
     startDate: "",
@@ -58,6 +62,16 @@ export function CrewDetailClient({ crew, initialAssignments, initialSchedules, i
     location: "",
     notes: "",
   });
+  const [productivityForm, setProductivityForm] = useState({
+    periodStart: "",
+    periodEnd: "",
+    totalHoursWorked: "",
+    tasksCompleted: "",
+    tasksTotal: "",
+    efficiencyScore: "",
+    qualityScore: "",
+    notes: "",
+  });
 
   function handleSave() {
     setError(null);
@@ -66,20 +80,20 @@ export function CrewDetailClient({ crew, initialAssignments, initialSchedules, i
         name: editName,
         foreman_worker_id: editForeman || null,
       });
-      if (!res.ok) { setError(res.error ?? "Помилка"); return; }
+      if (!res.ok) { setError(res.error ?? "Błąd"); return; }
       const membersRes = await setCrewMembers(crew.id, selectedMembers);
-      if (!membersRes.ok) { setError(membersRes.error ?? "Помилка"); return; }
+      if (!membersRes.ok) { setError(membersRes.error ?? "Błąd"); return; }
       setIsEditing(false);
       router.refresh();
     });
   }
 
   function handleDelete() {
-    if (!confirm("Ви впевнені, що хочете видалити цю бригаду?")) return;
+    if (!confirm("Czy na pewno chcesz usunąć tę brygadę?")) return;
     setError(null);
     startTransition(async () => {
       const res = await deleteCrew(crew.id);
-      if (!res.ok) { setError(res.error ?? "Помилка"); return; }
+      if (!res.ok) { setError(res.error ?? "Błąd"); return; }
       router.push("/dashboard/crews");
     });
   }
@@ -95,7 +109,7 @@ export function CrewDetailClient({ crew, initialAssignments, initialSchedules, i
   function handleAssign() {
     setError(null);
     if (!assignForm.projectId) {
-      setError("ID проекту є обов'язковим");
+      setError("ID projektu jest wymagane");
       return;
     }
     startTransition(async () => {
@@ -106,7 +120,7 @@ export function CrewDetailClient({ crew, initialAssignments, initialSchedules, i
         endDate: assignForm.endDate || null,
         note: assignForm.note || null,
       });
-      if (!res.ok) { setError(res.error ?? "Помилка"); return; }
+      if (!res.ok) { setError(res.error ?? "Błąd"); return; }
       setShowAssignForm(false);
       setAssignForm({ projectId: "", startDate: "", endDate: "", note: "" });
       // Reload assignments
@@ -119,7 +133,7 @@ export function CrewDetailClient({ crew, initialAssignments, initialSchedules, i
     setError(null);
     startTransition(async () => {
       const res = await deleteCrewAssignment(assignmentId);
-      if (!res.ok) { setError(res.error ?? "Помилка"); return; }
+      if (!res.ok) { setError(res.error ?? "Błąd"); return; }
       setAssignments(assignments.filter((a) => a.id !== assignmentId));
     });
   }
@@ -127,7 +141,7 @@ export function CrewDetailClient({ crew, initialAssignments, initialSchedules, i
   function handleCreateSchedule() {
     setError(null);
     if (!scheduleForm.shiftDate) {
-      setError("Дата зміни є обов'язковою");
+      setError("Data zmiany jest wymagana");
       return;
     }
     startTransition(async () => {
@@ -142,7 +156,7 @@ export function CrewDetailClient({ crew, initialAssignments, initialSchedules, i
         location: scheduleForm.location || undefined,
         notes: scheduleForm.notes || undefined,
       });
-      if (!res.ok) { setError(res.error ?? "Помилка"); return; }
+      if (!res.ok) { setError(res.error ?? "Błąd"); return; }
       setShowScheduleForm(false);
       setScheduleForm({
         shiftDate: "",
@@ -163,17 +177,57 @@ export function CrewDetailClient({ crew, initialAssignments, initialSchedules, i
     setError(null);
     startTransition(async () => {
       const res = await deleteCrewSchedule(scheduleId);
-      if (!res.ok) { setError(res.error ?? "Помилка"); return; }
+      if (!res.ok) { setError(res.error ?? "Błąd"); return; }
       setSchedules(schedules.filter((s) => s.id !== scheduleId));
     });
   }
 
+  function handleCreateProductivity() {
+    setError(null);
+    if (!productivityForm.periodStart || !productivityForm.periodEnd) {
+      setError("Okres (początek i koniec) jest wymagany");
+      return;
+    }
+    startTransition(async () => {
+      const res = await createCrewProductivity({
+        crewId: crew.id,
+        orgId: crew.org_id,
+        periodStart: productivityForm.periodStart,
+        periodEnd: productivityForm.periodEnd,
+        totalHoursWorked: productivityForm.totalHoursWorked ? parseFloat(productivityForm.totalHoursWorked) : undefined,
+        tasksCompleted: productivityForm.tasksCompleted ? parseInt(productivityForm.tasksCompleted) : undefined,
+        tasksTotal: productivityForm.tasksTotal ? parseInt(productivityForm.tasksTotal) : undefined,
+        efficiencyScore: productivityForm.efficiencyScore ? parseFloat(productivityForm.efficiencyScore) : undefined,
+        qualityScore: productivityForm.qualityScore ? parseFloat(productivityForm.qualityScore) : undefined,
+        notes: productivityForm.notes || undefined,
+      });
+      if (!res.ok) { setError(res.error ?? "Błąd"); return; }
+      setShowProductivityForm(false);
+      setProductivityForm({
+        periodStart: "",
+        periodEnd: "",
+        totalHoursWorked: "",
+        tasksCompleted: "",
+        tasksTotal: "",
+        efficiencyScore: "",
+        qualityScore: "",
+        notes: "",
+      });
+      const [newEntries, newStats] = await Promise.all([
+        listCrewProductivity(crew.id),
+        getCrewProductivityStats(crew.id),
+      ]);
+      setProductivityEntries(newEntries);
+      setProductivityStats(newStats);
+    });
+  }
+
   const shiftTypeLabels: Record<ShiftType, string> = {
-    morning: "Ранкова",
-    afternoon: "Денна",
-    evening: "Вечірня",
-    night: "Нічна",
-    full_day: "Повний день",
+    morning: "Poranna",
+    afternoon: "Popołudniowa",
+    evening: "Wieczorna",
+    night: "Nocna",
+    full_day: "Cały dzień",
   };
 
   return (
@@ -186,19 +240,19 @@ export function CrewDetailClient({ crew, initialAssignments, initialSchedules, i
           <div>
             <h1 className="text-2xl font-bold">{crew.name}</h1>
             <p className="text-sm text-muted-foreground">
-              {crew.memberIds.length} членів · {assignments.length} призначень · {schedules.length} змін
+              {crew.memberIds.length} członków · {assignments.length} przypisań · {schedules.length} zmian
             </p>
           </div>
         </div>
         <div className="flex gap-2">
           <Button variant="outline" onClick={() => setIsEditing(!isEditing)}>
             {isEditing ? <Save className="h-4 w-4 mr-2" /> : <Settings className="h-4 w-4 mr-2" />}
-            {isEditing ? "Зберегти" : "Редагувати"}
+            {isEditing ? "Zapisz" : "Edytuj"}
           </Button>
           {isEditing && (
             <Button variant="destructive" onClick={handleDelete} disabled={pending}>
               <Trash2 className="h-4 w-4 mr-2" />
-              Видалити
+              Usuń
             </Button>
           )}
         </div>
@@ -207,31 +261,31 @@ export function CrewDetailClient({ crew, initialAssignments, initialSchedules, i
       {isEditing && (
         <Card className="border-primary">
           <CardHeader>
-            <CardTitle>Редагування бригади</CardTitle>
+            <CardTitle>Edycja brygady</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <Label>Назва бригади</Label>
+              <Label>Nazwa brygady</Label>
               <Input value={editName} onChange={(e) => setEditName(e.target.value)} className="mt-1" />
             </div>
             <div>
-              <Label>Бригадир</Label>
+              <Label>Brygadzista</Label>
               <select
                 className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm mt-1"
                 value={editForeman}
                 onChange={(e) => setEditForeman(e.target.value)}
               >
-                <option value="">— немає —</option>
+                <option value="">— brak —</option>
               </select>
             </div>
             {error && <p className="text-sm text-destructive">{error}</p>}
             <div className="flex gap-2">
               <Button onClick={handleSave} disabled={pending}>
                 <Save className="h-4 w-4 mr-2" />
-                Зберегти зміни
+                Zapisz zmiany
               </Button>
               <Button variant="outline" onClick={() => setIsEditing(false)}>
-                Скасувати
+                Anuluj
               </Button>
             </div>
           </CardContent>
@@ -243,12 +297,12 @@ export function CrewDetailClient({ crew, initialAssignments, initialSchedules, i
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Users className="h-5 w-5" />
-              Члени бригади
+              Członkowie brygady
             </CardTitle>
           </CardHeader>
           <CardContent>
             {selectedMembers.length === 0 ? (
-              <p className="text-sm text-muted-foreground">Немає членів бригади</p>
+              <p className="text-sm text-muted-foreground">Brak członków brygady</p>
             ) : (
               <div className="space-y-2">
                 {selectedMembers.map((memberId) => (
@@ -270,7 +324,7 @@ export function CrewDetailClient({ crew, initialAssignments, initialSchedules, i
           <CardHeader className="flex flex-row items-center justify-between space-y-0">
             <CardTitle className="flex items-center gap-2">
               <FolderOpen className="h-5 w-5" />
-              Призначення до проектів
+              Przypisania do projektów
             </CardTitle>
             <Button variant="outline" size="sm" onClick={() => setShowAssignForm(!showAssignForm)}>
               <Plus className="h-4 w-4" />
@@ -281,7 +335,7 @@ export function CrewDetailClient({ crew, initialAssignments, initialSchedules, i
               <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800">
                 <p className="mb-1 flex items-center gap-1.5 font-semibold">
                   <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
-                  Перед призначенням перевірте кваліфікації
+                  Przed przypisaniem sprawdź kwalifikacje
                 </p>
                 <ul className="list-disc space-y-0.5 pl-4">
                   {expiringCertifications.map((cert) => {
@@ -289,8 +343,8 @@ export function CrewDetailClient({ crew, initialAssignments, initialSchedules, i
                     const label = cert.certification_type === "custom" ? cert.custom_name : CERT_LABELS[cert.certification_type];
                     return (
                       <li key={cert.id}>
-                        {cert.worker_name ?? "Робітник"} — {label}{" "}
-                        {days !== null && days < 0 ? "(термін дії закінчився)" : `(закінчується через ${days} дн.)`}
+                        {cert.worker_name ?? "Pracownik"} — {label}{" "}
+                        {days !== null && days < 0 ? "(termin ważności minął)" : `(wygasa za ${days} dni)`}
                       </li>
                     );
                   })}
@@ -308,7 +362,7 @@ export function CrewDetailClient({ crew, initialAssignments, initialSchedules, i
                   />
                 </div>
                 <div>
-                  <Label>Дата початку</Label>
+                  <Label>Data rozpoczęcia</Label>
                   <Input
                     type="date"
                     value={assignForm.startDate}
@@ -317,7 +371,7 @@ export function CrewDetailClient({ crew, initialAssignments, initialSchedules, i
                   />
                 </div>
                 <div>
-                  <Label>Дата завершення</Label>
+                  <Label>Data zakończenia</Label>
                   <Input
                     type="date"
                     value={assignForm.endDate}
@@ -326,7 +380,7 @@ export function CrewDetailClient({ crew, initialAssignments, initialSchedules, i
                   />
                 </div>
                 <div>
-                  <Label>Примітка</Label>
+                  <Label>Uwaga</Label>
                   <Input
                     value={assignForm.note}
                     onChange={(e) => setAssignForm({ ...assignForm, note: e.target.value })}
@@ -335,16 +389,16 @@ export function CrewDetailClient({ crew, initialAssignments, initialSchedules, i
                 </div>
                 <div className="flex gap-2">
                   <Button size="sm" onClick={handleAssign} disabled={pending}>
-                    Призначити
+                    Przypisz
                   </Button>
                   <Button variant="outline" size="sm" onClick={() => setShowAssignForm(false)}>
-                    Скасувати
+                    Anuluj
                   </Button>
                 </div>
               </div>
             )}
             {assignments.length === 0 ? (
-              <p className="text-sm text-muted-foreground">Немає призначень</p>
+              <p className="text-sm text-muted-foreground">Brak przypisań</p>
             ) : (
               <div className="space-y-2">
                 {assignments.map((assignment) => (
@@ -372,7 +426,7 @@ export function CrewDetailClient({ crew, initialAssignments, initialSchedules, i
         <CardHeader className="flex flex-row items-center justify-between space-y-0">
           <CardTitle className="flex items-center gap-2">
             <Clock className="h-5 w-5" />
-            Розклад роботи
+            Harmonogram pracy
           </CardTitle>
           <Button variant="outline" size="sm" onClick={() => setShowScheduleForm(!showScheduleForm)}>
             <Plus className="h-4 w-4" />
@@ -382,7 +436,7 @@ export function CrewDetailClient({ crew, initialAssignments, initialSchedules, i
           {showScheduleForm && (
             <div className="space-y-3 mb-4 p-3 bg-muted rounded">
               <div>
-                <Label>Дата зміни</Label>
+                <Label>Data zmiany</Label>
                 <Input
                   type="date"
                   value={scheduleForm.shiftDate}
@@ -391,22 +445,22 @@ export function CrewDetailClient({ crew, initialAssignments, initialSchedules, i
                 />
               </div>
               <div>
-                <Label>Тип зміни</Label>
+                <Label>Typ zmiany</Label>
                 <select
                   className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm mt-1"
                   value={scheduleForm.shiftType}
                   onChange={(e) => setScheduleForm({ ...scheduleForm, shiftType: e.target.value as ShiftType })}
                 >
-                  <option value="morning">Ранкова</option>
-                  <option value="afternoon">Денна</option>
-                  <option value="evening">Вечірня</option>
-                  <option value="night">Нічна</option>
-                  <option value="full_day">Повний день</option>
+                  <option value="morning">Poranna</option>
+                  <option value="afternoon">Popołudniowa</option>
+                  <option value="evening">Wieczorna</option>
+                  <option value="night">Nocna</option>
+                  <option value="full_day">Cały dzień</option>
                 </select>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <Label>Час початку</Label>
+                  <Label>Godzina rozpoczęcia</Label>
                   <Input
                     type="time"
                     value={scheduleForm.startTime}
@@ -415,7 +469,7 @@ export function CrewDetailClient({ crew, initialAssignments, initialSchedules, i
                   />
                 </div>
                 <div>
-                  <Label>Час завершення</Label>
+                  <Label>Godzina zakończenia</Label>
                   <Input
                     type="time"
                     value={scheduleForm.endTime}
@@ -425,7 +479,7 @@ export function CrewDetailClient({ crew, initialAssignments, initialSchedules, i
                 </div>
               </div>
               <div>
-                <Label>Перерва (хвилин)</Label>
+                <Label>Przerwa (minuty)</Label>
                 <Input
                   type="number"
                   value={scheduleForm.breakDuration}
@@ -434,7 +488,7 @@ export function CrewDetailClient({ crew, initialAssignments, initialSchedules, i
                 />
               </div>
               <div>
-                <Label>Локація</Label>
+                <Label>Lokalizacja</Label>
                 <Input
                   value={scheduleForm.location}
                   onChange={(e) => setScheduleForm({ ...scheduleForm, location: e.target.value })}
@@ -442,7 +496,7 @@ export function CrewDetailClient({ crew, initialAssignments, initialSchedules, i
                 />
               </div>
               <div>
-                <Label>Примітки</Label>
+                <Label>Uwagi</Label>
                 <Input
                   value={scheduleForm.notes}
                   onChange={(e) => setScheduleForm({ ...scheduleForm, notes: e.target.value })}
@@ -451,16 +505,16 @@ export function CrewDetailClient({ crew, initialAssignments, initialSchedules, i
               </div>
               <div className="flex gap-2">
                 <Button size="sm" onClick={handleCreateSchedule} disabled={pending}>
-                  Додати зміну
+                  Dodaj zmianę
                 </Button>
     <Button variant="outline" size="sm" onClick={() => setShowScheduleForm(false)}>
-                  Скасувати
+                  Anuluj
                 </Button>
               </div>
             </div>
           )}
           {schedules.length === 0 ? (
-            <p className="text-sm text-muted-foreground">Немає розкладу</p>
+            <p className="text-sm text-muted-foreground">Brak harmonogramu</p>
           ) : (
             <div className="space-y-2">
               {schedules.map((schedule) => (
@@ -474,7 +528,7 @@ export function CrewDetailClient({ crew, initialAssignments, initialSchedules, i
                     </div>
                     <p className="text-xs text-muted-foreground">
                       {schedule.start_time} - {schedule.end_time}
-                      {schedule.break_duration > 0 && ` · ${schedule.break_duration} хв перерва`}
+                      {schedule.break_duration > 0 && ` · ${schedule.break_duration} min przerwy`}
                     </p>
                     {schedule.location && (
                       <p className="text-xs text-muted-foreground">📍 {schedule.location}</p>
@@ -491,31 +545,135 @@ export function CrewDetailClient({ crew, initialAssignments, initialSchedules, i
       </Card>
 
       <Card>
-        <CardHeader>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0">
           <CardTitle className="flex items-center gap-2">
             <BarChart3 className="h-5 w-5" />
-            Статистика продуктивності
+            Statystyki wydajności
           </CardTitle>
+          <Button variant="outline" size="sm" onClick={() => setShowProductivityForm(!showProductivityForm)}>
+            <Plus className="h-4 w-4" />
+          </Button>
         </CardHeader>
         <CardContent>
+          {showProductivityForm && (
+            <div className="space-y-3 mb-4 p-3 bg-muted rounded">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label>Początek okresu</Label>
+                  <Input
+                    type="date"
+                    value={productivityForm.periodStart}
+                    onChange={(e) => setProductivityForm({ ...productivityForm, periodStart: e.target.value })}
+                    className="mt-1"
+                  />
+                </div>
+                <div>
+                  <Label>Koniec okresu</Label>
+                  <Input
+                    type="date"
+                    value={productivityForm.periodEnd}
+                    onChange={(e) => setProductivityForm({ ...productivityForm, periodEnd: e.target.value })}
+                    className="mt-1"
+                  />
+                </div>
+              </div>
+              <div>
+                <Label>Przepracowane godziny</Label>
+                <Input
+                  type="number"
+                  value={productivityForm.totalHoursWorked}
+                  onChange={(e) => setProductivityForm({ ...productivityForm, totalHoursWorked: e.target.value })}
+                  className="mt-1"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label>Zadania wykonane</Label>
+                  <Input
+                    type="number"
+                    value={productivityForm.tasksCompleted}
+                    onChange={(e) => setProductivityForm({ ...productivityForm, tasksCompleted: e.target.value })}
+                    className="mt-1"
+                  />
+                </div>
+                <div>
+                  <Label>Zadania łącznie</Label>
+                  <Input
+                    type="number"
+                    value={productivityForm.tasksTotal}
+                    onChange={(e) => setProductivityForm({ ...productivityForm, tasksTotal: e.target.value })}
+                    className="mt-1"
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label>Efektywność (%)</Label>
+                  <Input
+                    type="number"
+                    value={productivityForm.efficiencyScore}
+                    onChange={(e) => setProductivityForm({ ...productivityForm, efficiencyScore: e.target.value })}
+                    className="mt-1"
+                  />
+                </div>
+                <div>
+                  <Label>Jakość (%)</Label>
+                  <Input
+                    type="number"
+                    value={productivityForm.qualityScore}
+                    onChange={(e) => setProductivityForm({ ...productivityForm, qualityScore: e.target.value })}
+                    className="mt-1"
+                  />
+                </div>
+              </div>
+              <div>
+                <Label>Notatki</Label>
+                <Input
+                  value={productivityForm.notes}
+                  onChange={(e) => setProductivityForm({ ...productivityForm, notes: e.target.value })}
+                  className="mt-1"
+                />
+              </div>
+              <div className="flex gap-2">
+                <Button size="sm" onClick={handleCreateProductivity} disabled={pending}>
+                  Dodaj okres
+                </Button>
+                <Button variant="outline" size="sm" onClick={() => setShowProductivityForm(false)}>
+                  Anuluj
+                </Button>
+              </div>
+            </div>
+          )}
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="p-3 bg-muted rounded">
-              <p className="text-sm text-muted-foreground">Всього годин роботи</p>
+              <p className="text-sm text-muted-foreground">Łącznie godzin pracy</p>
               <p className="text-2xl font-bold">{productivityStats.totalHoursWorked.toFixed(1)}</p>
             </div>
             <div className="p-3 bg-muted rounded">
-              <p className="text-sm text-muted-foreground">Завдань виконано</p>
+              <p className="text-sm text-muted-foreground">Zadania wykonane</p>
               <p className="text-2xl font-bold">{productivityStats.totalTasksCompleted} / {productivityStats.totalTasksTotal}</p>
             </div>
             <div className="p-3 bg-muted rounded">
-              <p className="text-sm text-muted-foreground">Середня ефективність</p>
+              <p className="text-sm text-muted-foreground">Średnia wydajność</p>
               <p className="text-2xl font-bold">{productivityStats.averageEfficiency.toFixed(1)}%</p>
             </div>
             <div className="p-3 bg-muted rounded">
-              <p className="text-sm text-muted-foreground">Середня якість</p>
+              <p className="text-sm text-muted-foreground">Średnia jakość</p>
               <p className="text-2xl font-bold">{productivityStats.averageQuality.toFixed(1)}%</p>
             </div>
           </div>
+          {productivityEntries.length > 0 && (
+            <div className="mt-4 space-y-2">
+              {productivityEntries.map((entry) => (
+                <div key={entry.id} className="flex items-center justify-between p-2 rounded bg-muted text-sm">
+                  <span>{entry.period_start} — {entry.period_end}</span>
+                  <span className="text-muted-foreground">
+                    {entry.total_hours_worked} godz. · {entry.tasks_completed}/{entry.tasks_total} zadań
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>

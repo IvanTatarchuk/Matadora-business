@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -29,7 +29,11 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { formatPLN } from "@/lib/utils";
 import { validateEstimateForSubmission, findOutlierRates } from "@/lib/offer-calc";
+import { searchCostItems, type CostItem } from "@/lib/actions/cost-items";
 
+/** Small local fallback used only for the 3 default-seeded line items and the
+ * outlier-rate sanity bounds — the searchable catalog itself now lives in the
+ * `cost_items` table (100+ items) and is queried via `searchCostItems`. */
 const KNR_ITEMS = [
   { code: "KNR 4-01 0501-01", name: "Posadzki z płytek ceramicznych na kleju — 30×30 cm", unit: "m²", laborRate: 35, materialRate: 55 },
   { code: "KNR 4-01 0502-01", name: "Posadzki z płytek ceramicznych na kleju — 60×60 cm", unit: "m²", laborRate: 42, materialRate: 85 },
@@ -99,6 +103,24 @@ type AiSuggestedItem = {
 };
 
 const MAX_PDF_MB = 4;
+const AI_ANALYSIS_PRICE_PLN = 500;
+const PDF_STORAGE_KEY = "matadora_kosztorys_pdf_pending";
+
+function fileToBase64(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve((reader.result as string).split(",")[1] ?? "");
+    reader.onerror = () => reject(reader.error);
+    reader.readAsDataURL(file);
+  });
+}
+
+function base64ToFile(base64: string, name: string): File {
+  const binary = atob(base64);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+  return new File([bytes], name, { type: "application/pdf" });
+}
 
 const VAT_RATES = [
   { label: "8% (budownictwo mieszkaniowe)", value: 0.08 },
@@ -117,6 +139,8 @@ export default function KosztorysPage() {
   ]);
   const [search, setSearch] = useState("");
   const [showCatalog, setShowCatalog] = useState(false);
+  const [catalogResults, setCatalogResults] = useState<CostItem[]>([]);
+  const [catalogLoading, setCatalogLoading] = useState(false);
   const [showSaveModal, setShowSaveModal] = useState(false);
   const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set());
 
@@ -128,15 +152,62 @@ export default function KosztorysPage() {
   const [aiFileName, setAiFileName] = useState<string | null>(null);
   const [aiSummary, setAiSummary] = useState<string | null>(null);
   const [aiSuggestions, setAiSuggestions] = useState<AiSuggestedItem[]>([]);
+  const [aiAwaitingPayment, setAiAwaitingPayment] = useState(false);
+  const [aiPaying, setAiPaying] = useState(false);
 
-  const filtered = KNR_ITEMS.filter(
-    (k) =>
-      k.name.toLowerCase().includes(search.toLowerCase()) ||
-      k.code.toLowerCase().includes(search.toLowerCase())
-  );
+  // Resume after Stripe checkout redirect: pending PDF lives in localStorage
+  // (the browser navigates away to Stripe and back, so React state doesn't survive).
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const sessionId = params.get("paid_session_id");
+    const stored = localStorage.getItem(PDF_STORAGE_KEY);
 
-  function addItem(knr: typeof KNR_ITEMS[0]) {
-    setItems((prev) => [...prev, { id: newId(), ...knr, qty: 1 }]);
+    if (stored) {
+      try {
+        const { name, base64 } = JSON.parse(stored) as { name: string; base64: string };
+        setAiFileName(name);
+        setAiAwaitingPayment(true);
+        if (sessionId) {
+          void runAiAnalysis(base64ToFile(base64, name), sessionId);
+        }
+      } catch {
+        localStorage.removeItem(PDF_STORAGE_KEY);
+      }
+    } else if (sessionId) {
+      setAiError(
+        "Płatność została potwierdzona, ale nie znaleziono zapisanego pliku PDF w tej przeglądarce. Napisz do nas, przeanalizujemy dokument ręcznie: vanbud.felix@gmail.com"
+      );
+    }
+
+    if (sessionId) window.history.replaceState(null, "", "/kosztorys");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Debounced server-backed search against the cost_items catalog.
+  useEffect(() => {
+    if (!showCatalog) return;
+    setCatalogLoading(true);
+    const handle = setTimeout(() => {
+      searchCostItems(search)
+        .then(setCatalogResults)
+        .finally(() => setCatalogLoading(false));
+    }, 250);
+    return () => clearTimeout(handle);
+  }, [search, showCatalog]);
+
+  function addItem(item: CostItem) {
+    setItems((prev) => [
+      ...prev,
+      {
+        id: newId(),
+        code: item.code,
+        name: item.name,
+        unit: item.unit,
+        laborRate: item.labor_rate,
+        materialRate: item.material_rate,
+        qty: 1,
+      },
+    ]);
     setShowCatalog(false);
     setSearch("");
   }
@@ -192,17 +263,18 @@ export default function KosztorysPage() {
   function handlePdfSelected(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     e.target.value = ""; // allow re-selecting the same file later
-    if (file) void processPdfFile(file);
+    if (file) void stagePdfFile(file);
   }
 
   function handlePdfDrop(e: React.DragEvent<HTMLDivElement>) {
     e.preventDefault();
     setAiDragging(false);
     const file = e.dataTransfer.files?.[0];
-    if (file) void processPdfFile(file);
+    if (file) void stagePdfFile(file);
   }
 
-  async function processPdfFile(file: File) {
+  /** Stores the chosen PDF locally and waits for payment before analyzing it. */
+  async function stagePdfFile(file: File) {
     setAiError(null);
     setAiSummary(null);
     setAiSuggestions([]);
@@ -216,11 +288,51 @@ export default function KosztorysPage() {
       return;
     }
 
+    const base64 = await fileToBase64(file);
+    localStorage.setItem(PDF_STORAGE_KEY, JSON.stringify({ name: file.name, base64 }));
     setAiFileName(file.name);
+    setAiAwaitingPayment(true);
+  }
+
+  function cancelStagedPdf() {
+    localStorage.removeItem(PDF_STORAGE_KEY);
+    setAiAwaitingPayment(false);
+    setAiFileName(null);
+    setAiError(null);
+  }
+
+  /** Starts a Stripe Checkout session for the flat 500 zł AI analysis fee. */
+  async function payAndAnalyze() {
+    setAiError(null);
+    setAiPaying(true);
+    try {
+      const res = await fetch("/api/stripe/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: "{}",
+      });
+      const data = await res.json();
+      if (res.status === 503 || data.error === "payments_not_configured") {
+        setAiError("Płatności online są chwilowo niedostępne. Napisz do nas: vanbud.felix@gmail.com");
+        return;
+      }
+      if (!data.url) throw new Error(data.error ?? "Nie udało się rozpocząć płatności.");
+      window.location.href = data.url;
+    } catch (err) {
+      setAiError(err instanceof Error ? err.message : "Nie udało się rozpocząć płatności.");
+    } finally {
+      setAiPaying(false);
+    }
+  }
+
+  /** Runs the paid AI analysis once a Stripe session id is available (verified server-side). */
+  async function runAiAnalysis(file: File, sessionId: string) {
     setAiUploading(true);
+    setAiError(null);
     try {
       const formData = new FormData();
       formData.append("file", file);
+      formData.append("session_id", sessionId);
       const res = await fetch("/api/kosztorys/analyze-pdf", {
         method: "POST",
         body: formData,
@@ -255,6 +367,8 @@ export default function KosztorysPage() {
           })
         )
       );
+      localStorage.removeItem(PDF_STORAGE_KEY);
+      setAiAwaitingPayment(false);
     } catch (err) {
       setAiError(err instanceof Error ? err.message : "Analiza nie powiodła się.");
     } finally {
@@ -327,12 +441,13 @@ export default function KosztorysPage() {
       {/* HEADER */}
       <header className="sticky top-0 z-50 border-b bg-white/95 backdrop-blur">
         <div className="container flex h-16 items-center justify-between">
-          <Link href="/" className="flex items-center gap-2 font-bold text-xl">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
+          <Link href="/" className="flex items-center gap-2 whitespace-nowrap font-extrabold text-xl tracking-tight">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary">
               <HardHat className="h-5 w-5 text-white" />
             </div>
-            <span>matadora</span>
-            <span className="text-primary">.business</span>
+            <span>
+              MATADORA<span className="text-primary">.business</span>
+            </span>
           </Link>
           <div className="flex items-center gap-3">
             <Button variant="ghost" size="sm" asChild>
@@ -394,7 +509,9 @@ export default function KosztorysPage() {
                   </CardTitle>
                   <p className="text-xs text-muted-foreground">
                     Wgraj rzut architektoniczny, przedmiar robót lub istniejący kosztorys w PDF —
-                    Claude AI wyodrębni pozycje robót z ilościami i zaproponuje kody KNR.
+                    Claude AI wyodrębni pozycje robót z ilościami i zaproponuje kody KNR. Analiza AI
+                    kosztuje jednorazowo {AI_ANALYSIS_PRICE_PLN} zł — reszta kalkulatora jest
+                    bezpłatna.
                   </p>
                 </CardHeader>
                 <CardContent className="space-y-3">
@@ -406,7 +523,7 @@ export default function KosztorysPage() {
                     onChange={handlePdfSelected}
                   />
 
-                  {!aiUploading && aiSuggestions.length === 0 && (
+                  {!aiUploading && !aiAwaitingPayment && aiSuggestions.length === 0 && (
                     <div
                       onClick={() => fileInputRef.current?.click()}
                       onDragOver={(e) => {
@@ -428,6 +545,28 @@ export default function KosztorysPage() {
                         Wgraj projekt PDF — kliknij lub przeciągnij plik tutaj{" "}
                         <span className="text-muted-foreground">(max {MAX_PDF_MB} MB)</span>
                       </span>
+                    </div>
+                  )}
+
+                  {!aiUploading && aiAwaitingPayment && (
+                    <div className="flex flex-col items-center justify-center gap-3 rounded-lg border-2 border-dashed border-primary/30 bg-white/60 py-8 text-center">
+                      <FileText className="h-6 w-6 text-primary" />
+                      <span className="text-sm font-medium">{aiFileName}</span>
+                      <span className="text-xs text-muted-foreground">
+                        Plik gotowy do analizy — zapłać {AI_ANALYSIS_PRICE_PLN} zł, aby uruchomić AI
+                      </span>
+                      <div className="flex items-center gap-2">
+                        <Button size="sm" onClick={payAndAnalyze} disabled={aiPaying}>
+                          {aiPaying ? (
+                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                          ) : (
+                            `Zapłać ${AI_ANALYSIS_PRICE_PLN} zł i przeanalizuj`
+                          )}
+                        </Button>
+                        <Button size="sm" variant="outline" onClick={cancelStagedPdf} disabled={aiPaying}>
+                          Anuluj
+                        </Button>
+                      </div>
                     </div>
                   )}
 
@@ -744,19 +883,26 @@ export default function KosztorysPage() {
                     />
                   </CardHeader>
                   <CardContent className="max-h-72 overflow-y-auto space-y-1">
-                    {filtered.map((k) => (
+                    {catalogLoading && catalogResults.length === 0 && (
+                      <p className="py-4 text-center text-sm text-muted-foreground">Szukam...</p>
+                    )}
+                    {!catalogLoading && catalogResults.length === 0 && (
+                      <p className="py-4 text-center text-sm text-muted-foreground">Brak pozycji dla tego zapytania</p>
+                    )}
+                    {catalogResults.map((k) => (
                       <button
-                        key={k.code}
+                        key={k.id}
                         onClick={() => addItem(k)}
                         className="w-full rounded-lg border p-3 text-left hover:bg-primary/5 hover:border-primary transition-colors"
                       >
                         <div className="flex items-center justify-between">
                           <span className="text-xs font-mono text-muted-foreground">{k.code}</span>
                           <span className="text-xs text-muted-foreground">
-                            {formatPLN(k.laborRate + k.materialRate)}/{k.unit}
+                            {formatPLN(k.labor_rate + k.material_rate)}/{k.unit}
                           </span>
                         </div>
                         <p className="mt-0.5 text-sm font-medium">{k.name}</p>
+                        <p className="text-xs text-muted-foreground">{k.category}</p>
                       </button>
                     ))}
                   </CardContent>
@@ -864,13 +1010,12 @@ export default function KosztorysPage() {
                 </CardContent>
               </Card>
 
-              {/* UPSELL */}
+              {/* SEND TO CLIENT — free, part of the base platform */}
               <Card className="border-orange-200 bg-orange-50/60">
                 <CardContent className="p-4 space-y-3">
                   <p className="font-bold text-sm text-orange-900">Wyślij do klienta i zbierz podpis</p>
                   <p className="text-xs text-orange-700">
-                    Pierwszy kosztorys <strong>bezpłatny</strong>.
-                    Kolejne od <strong>149 zł / szt.</strong> — zamiast 900 zł u kosztorysanta.
+                    Bezpłatnie, bez limitu — założenie konta i cała platforma nic nie kosztują.
                   </p>
                   <ul className="space-y-1.5">
                     {[

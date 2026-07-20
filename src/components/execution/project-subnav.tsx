@@ -42,7 +42,7 @@ export function ProjectSubnav({
           { href: `/dashboard/contractor/projects/${projectId}/rfq`, label: "ZO/RFQ" },
           { href: `/dashboard/contractor/projects/${projectId}/kaucja`, label: "Kaucja" },
           { href: `/dashboard/contractor/projects/${projectId}/wypadki`, label: "Wypadki" },
-          { href: `/dashboard/contractor/projects/${projectId}/koszty`, label: "Job Costing" },
+          { href: `/dashboard/contractor/projects/${projectId}/koszty`, label: "Koszty zadań" },
           { href: `/dashboard/contractor/projects/${projectId}/kalendarz`, label: "Kalendarz" },
           { href: `/dashboard/contractor/projects/${projectId}/milestones`, label: "Kamienie milowe" },
           { href: `/dashboard/contractor/projects/${projectId}/portal-inwestora`, label: "Portal inwestora" },

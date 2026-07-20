@@ -25,7 +25,7 @@ const db = (s: any) => s as any;
 export async function sendEmail(config: EmailConfig): Promise<{ ok: boolean; error?: string }> {
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { ok: false, error: "Nie zalogowано" };
+  if (!user) return { ok: false, error: "Nie zalogowano" };
 
   // Store email in queue (would be processed by a worker in production)
   const { error } = await db(supabase).from("email_queue").insert({
@@ -54,7 +54,7 @@ export async function sendNotificationEmail(
     .eq("id", notificationId)
     .single();
 
-  if (!notification) return { ok: false, error: "Notification not found" };
+  if (!notification) return { ok: false, error: "Nie znaleziono powiadomienia" };
 
   // Get user email
   const { data: profile } = await db(supabase)
@@ -63,7 +63,7 @@ export async function sendNotificationEmail(
     .eq("id", userId)
     .single();
 
-  if (!profile?.email) return { ok: false, error: "User email not found" };
+  if (!profile?.email) return { ok: false, error: "Nie znaleziono adresu e-mail użytkownika" };
 
   const templateMap: Record<string, EmailTemplate> = {
     offer_sent: "offer_sent",
@@ -114,7 +114,7 @@ export async function sendDailyDigest(userId: string): Promise<{ ok: boolean; er
     .eq("id", userId)
     .single();
 
-  if (!profile?.email) return { ok: false, error: "User email not found" };
+  if (!profile?.email) return { ok: false, error: "Nie znaleziono adresu e-mail użytkownika" };
 
   return await sendEmail({
     to: profile.email,
@@ -201,7 +201,7 @@ export async function updateEmailPreferences(preferences: {
 }): Promise<{ ok: boolean; error?: string }> {
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { ok: false, error: "Nie zалогowано" };
+  if (!user) return { ok: false, error: "Nie zalogowano" };
 
   const { error } = await db(supabase)
     .from("email_preferences")

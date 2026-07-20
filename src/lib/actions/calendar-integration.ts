@@ -54,9 +54,9 @@ export async function createCalendarConnection(input: {
 }): Promise<{ ok: boolean; id?: string; error?: string }> {
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { ok: false, error: "Не залоговано" };
+  if (!user) return { ok: false, error: "Nie zalogowano" };
   const { data: member } = await supabase.from("organization_members").select("org_id").eq("user_id", user.id).single();
-  if (!member) return { ok: false, error: "Брак організації" };
+  if (!member) return { ok: false, error: "Brak organizacji" };
 
   const { data, error } = await db(supabase).from("calendar_connections").insert({
     org_id: member.org_id,
@@ -103,7 +103,7 @@ export async function toggleCalendarSync(connectionId: string): Promise<{ ok: bo
     .eq("id", connectionId)
     .single();
 
-  if (!connection) return { ok: false, error: "Connection not found" };
+  if (!connection) return { ok: false, error: "Nie znaleziono połączenia" };
 
   const { error } = await db(supabase)
     .from("calendar_connections")
@@ -158,7 +158,7 @@ export async function triggerSync(connectionId: string): Promise<{ ok: boolean; 
     .eq("id", connectionId)
     .single();
 
-  if (!connection) return { ok: false, error: "Connection not found" };
+  if (!connection) return { ok: false, error: "Nie znaleziono połączenia" };
 
   const { error } = await db(supabase).from("calendar_sync_logs").insert({
     connection_id: connectionId,

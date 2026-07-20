@@ -1,7 +1,7 @@
 {
-  "name": "BuildMate — ConTech Platform",
-  "short_name": "BuildMate",
-  "description": "Платформа для управління будівельними проєктами, підрядниками та фінансами",
+  "name": "Matadora — Platforma dla firm budowlanych",
+  "short_name": "Matadora",
+  "description": "Platforma do zarządzania projektami budowlanymi, podwykonawcami i finansami",
   "start_url": "https://matadora.business/dashboard",
   "display": "standalone",
   "background_color": "#0f172a",
@@ -23,17 +23,17 @@
   ],
   "shortcuts": [
     {
-      "name": "Мої проєкти",
+      "name": "Moje projekty",
       "url": "/dashboard/contractor/projects",
-      "description": "Відкрити список проєктів"
+      "description": "Otwórz listę projektów"
     },
     {
       "name": "Marketplace",
       "url": "/dashboard/marketplace",
-      "description": "Відкрити маркетплейс"
+      "description": "Otwórz rynek ofert"
     }
   ],
   "categories": ["business", "productivity"],
-  "lang": "uk",
+  "lang": "pl",
   "scope": "https://matadora.business/"
 }

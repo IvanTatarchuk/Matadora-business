@@ -14,6 +14,14 @@ const STATUS_VARIANT: Record<string, "default" | "secondary" | "success" | "warn
   cancelled: "secondary",
 };
 
+const STATUS_LABEL: Record<string, string> = {
+  pending: "Oczekujące",
+  confirmed: "Potwierdzone",
+  shipped: "Wysłane",
+  delivered: "Dostarczone",
+  cancelled: "Anulowane",
+};
+
 export default async function WholesalerDashboard() {
   const supabase = createClient();
   const {
@@ -37,23 +45,23 @@ export default async function WholesalerDashboard() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold">Wholesaler dashboard</h1>
+      <h1 className="text-2xl font-bold">Panel hurtowni</h1>
 
       <div className="grid gap-4 sm:grid-cols-3">
-        <StatCard label="Products" value={productCount ?? 0} icon={Package} />
-        <StatCard label="Orders" value={list.length} icon={ShoppingCart} />
-        <StatCard label="Pending orders" value={pending} icon={Boxes} />
+        <StatCard label="Produkty" value={productCount ?? 0} icon={Package} />
+        <StatCard label="Zamówienia" value={list.length} icon={ShoppingCart} />
+        <StatCard label="Oczekujące zamówienia" value={pending} icon={Boxes} />
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>Incoming orders</CardTitle>
+          <CardTitle>Przychodzące zamówienia</CardTitle>
         </CardHeader>
         <CardContent>
           {list.length === 0 ? (
             <p className="py-8 text-center text-sm text-muted-foreground">
-              No orders yet. Orders arrive automatically when an offer using
-              your materials is accepted.
+              Brak zamówień. Zamówienia pojawiają się automatycznie, gdy
+              zostanie zaakceptowana oferta zawierająca Twoje materiały.
             </p>
           ) : (
             <div className="divide-y">
@@ -63,7 +71,7 @@ export default async function WholesalerDashboard() {
                   className="flex items-center justify-between py-3"
                 >
                   <div>
-                    <p className="font-medium">Order #{o.id.slice(0, 8)}</p>
+                    <p className="font-medium">Zamówienie #{o.id.slice(0, 8)}</p>
                     <p className="text-xs text-muted-foreground">
                       {new Date(o.created_at).toLocaleDateString("pl-PL")}
                     </p>
@@ -73,7 +81,7 @@ export default async function WholesalerDashboard() {
                       {formatPLN(Number(o.total_amount))}
                     </span>
                     <Badge variant={STATUS_VARIANT[o.status] ?? "secondary"}>
-                      {o.status}
+                      {STATUS_LABEL[o.status] ?? o.status}
                     </Badge>
                   </div>
                 </div>

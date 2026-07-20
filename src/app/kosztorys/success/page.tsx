@@ -1,32 +1,35 @@
 import Link from "next/link";
-import { CheckCircle2, ArrowRight, HardHat } from "lucide-react";
+import { CheckCircle2, ArrowRight, HardHat, Receipt } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { PrintReceiptButton } from "./receipt-actions";
 
-const TIER_LABELS: Record<string, string> = {
-  maly: "Kosztorys Mały",
-  standardowy: "Kosztorys Standardowy",
-  kompleksowy: "Kosztorys Kompleksowy",
-};
-
-const TIER_PRICES_PLN: Record<string, number> = {
-  maly: 149,
-  standardowy: 299,
-  kompleksowy: 499,
-};
+const PRODUCT_LABEL = "Analiza AI kosztorysu";
+const PRODUCT_PRICE_PLN = 500;
 
 const SELLER_NIP = "955-235-98-44";
 const SELLER_NAME = "VANBUD Ivan Tatarchuk";
 const SELLER_ADDRESS = "ul. Mielecka 5, 70-740 Szczecin";
 
-export default function KosztorysSuccessPage({
+export default async function KosztorysSuccessPage({
   searchParams,
 }: {
-  searchParams: { tier?: string; session_id?: string };
+  searchParams: { session_id?: string };
 }) {
-  const tier = searchParams.tier ?? "standardowy";
-  const tierLabel = TIER_LABELS[tier] ?? "Kosztorys";
-  const price = TIER_PRICES_PLN[tier] ?? 299;
+  const tierLabel = PRODUCT_LABEL;
+  const price = PRODUCT_PRICE_PLN;
+
+  let invoicePaid = false;
+  if (searchParams.session_id) {
+    const supabase = createAdminClient();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data } = await (supabase as any)
+      .from("kosztorys_purchases")
+      .select("status")
+      .eq("stripe_session_id", searchParams.session_id)
+      .maybeSingle();
+    invoicePaid = data?.status === "paid";
+  }
   const purchaseDate = new Intl.DateTimeFormat("pl-PL", {
     day: "2-digit",
     month: "2-digit",
@@ -53,7 +56,8 @@ export default function KosztorysSuccessPage({
 
         <h1 className="text-2xl font-bold print:hidden">Płatność zakończona!</h1>
         <p className="mt-2 text-muted-foreground print:hidden">
-          Dziękujemy za zakup. <strong>{tierLabel}</strong> jest teraz aktywny.
+          Dziękujemy za zakup. <strong>{tierLabel}</strong> uruchomi się automatycznie po powrocie do
+          kalkulatora.
         </p>
 
         {/* RECEIPT / POTWIERDZENIE ZAKUPU */}
@@ -86,16 +90,31 @@ export default function KosztorysSuccessPage({
             <p>NIP: {SELLER_NIP}</p>
           </div>
           <p className="rounded-md bg-blue-50 p-2.5 text-xs text-blue-700">
-            To potwierdzenie nie jest fakturą VAT. Faktura VAT zostanie wysłana automatycznie na Twój
-            adres e-mail po zaksięgowaniu płatności.
+            To potwierdzenie nie jest fakturą VAT.{" "}
+            {invoicePaid
+              ? "Faktura VAT jest już gotowa do pobrania poniżej oraz została wysłana na Twój adres e-mail."
+              : "Faktura VAT zostanie wysłana automatycznie na Twój adres e-mail w ciągu kilku sekund, gdy tylko płatność zostanie zaksięgowana."}
           </p>
         </div>
 
         <div className="mt-6 space-y-3 print:hidden">
+          {searchParams.session_id && (
+            <Button variant="outline" className="w-full" asChild>
+              <Link href={`/faktura/${searchParams.session_id}`}>
+                <Receipt className="mr-2 h-4 w-4" /> Pobierz fakturę VAT
+              </Link>
+            </Button>
+          )}
           <PrintReceiptButton />
           <Button className="w-full" asChild>
-            <Link href="/kosztorys">
-              Wróć do kalkulatora <ArrowRight className="ml-2 h-4 w-4" />
+            <Link
+              href={
+                searchParams.session_id
+                  ? `/kosztorys?paid_session_id=${encodeURIComponent(searchParams.session_id)}`
+                  : "/kosztorys"
+              }
+            >
+              Wróć do kalkulatora i pobierz wynik <ArrowRight className="ml-2 h-4 w-4" />
             </Link>
           </Button>
           <Button variant="outline" className="w-full" asChild>

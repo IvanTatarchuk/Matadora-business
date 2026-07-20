@@ -111,7 +111,7 @@ export async function createSignatureRequest(input: {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { ok: false, error: "Nie zalogowano" };
   const { data: member } = await supabase.from("organization_members").select("org_id").eq("user_id", user.id).single();
-  if (!member) return { ok: false, error: "Brак організації" };
+  if (!member) return { ok: false, error: "Brak organizacji" };
 
   const { data, error } = await db(supabase).from("signature_requests").insert({
     document_id: input.documentId,

@@ -60,10 +60,10 @@ export function SecurityClient({ initialAuditLogs, initialSecurityEvents, initia
       <div>
         <h1 className="text-2xl font-bold flex items-center gap-2">
           <Shield className="h-6 w-6" />
-          Безпека та аудит
+          Bezpieczeństwo i audyt
         </h1>
         <p className="text-sm text-muted-foreground mt-1">
-          Логи аудиту, події безпеки та активні сесії
+          Dzienniki audytu, zdarzenia bezpieczeństwa i aktywne sesje
         </p>
       </div>
 
@@ -72,7 +72,7 @@ export function SecurityClient({ initialAuditLogs, initialSecurityEvents, initia
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center justify-between mb-2">
-              <p className="text-sm text-muted-foreground">Логи аудиту</p>
+              <p className="text-sm text-muted-foreground">Dzienniki audytu</p>
               <Activity className="h-4 w-4 text-blue-500" />
             </div>
             <p className="text-2xl font-bold">{stats.totalAuditLogs}</p>
@@ -81,7 +81,7 @@ export function SecurityClient({ initialAuditLogs, initialSecurityEvents, initia
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center justify-between mb-2">
-              <p className="text-sm text-muted-foreground">Невирішені події</p>
+              <p className="text-sm text-muted-foreground">Nierozwiązane zdarzenia</p>
               <AlertTriangle className="h-4 w-4 text-orange-500" />
             </div>
             <p className="text-2xl font-bold">{stats.unresolvedEvents}</p>
@@ -90,7 +90,7 @@ export function SecurityClient({ initialAuditLogs, initialSecurityEvents, initia
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center justify-between mb-2">
-              <p className="text-sm text-muted-foreground">Критичні події</p>
+              <p className="text-sm text-muted-foreground">Zdarzenia krytyczne</p>
               <AlertTriangle className="h-4 w-4 text-red-500" />
             </div>
             <p className="text-2xl font-bold">{stats.criticalEvents}</p>
@@ -99,7 +99,7 @@ export function SecurityClient({ initialAuditLogs, initialSecurityEvents, initia
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center justify-between mb-2">
-              <p className="text-sm text-muted-foreground">Активні сесії</p>
+              <p className="text-sm text-muted-foreground">Aktywne sesje</p>
               <Clock className="h-4 w-4 text-green-500" />
             </div>
             <p className="text-2xl font-bold">{stats.activeSessions}</p>
@@ -110,12 +110,12 @@ export function SecurityClient({ initialAuditLogs, initialSecurityEvents, initia
       {/* Security Events */}
       <Card>
         <CardHeader>
-          <CardTitle>Події безпеки</CardTitle>
+          <CardTitle>Zdarzenia bezpieczeństwa</CardTitle>
         </CardHeader>
         <CardContent>
           {unresolvedEvents.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
-              Немає невирішених подій
+              Brak nierozwiązanych zdarzeń
             </div>
           ) : (
             <div className="space-y-2">
@@ -133,12 +133,12 @@ export function SecurityClient({ initialAuditLogs, initialSecurityEvents, initia
                         {event.severity}
                       </span>
                     </div>
-                    <p className="text-sm text-muted-foreground">{event.description || "Без опису"}</p>
+                    <p className="text-sm text-muted-foreground">{event.description || "Brak opisu"}</p>
                     <p className="text-xs text-muted-foreground">{new Date(event.created_at).toLocaleString("pl-PL")}</p>
                   </div>
                   <Button variant="outline" size="sm" onClick={() => handleResolveEvent(event.id, "resolved")}>
                     <CheckCircle2 className="h-4 w-4 mr-2" />
-                    Вирішити
+                    Rozwiąż
                   </Button>
                 </div>
               ))}
@@ -150,12 +150,12 @@ export function SecurityClient({ initialAuditLogs, initialSecurityEvents, initia
       {/* User Sessions */}
       <Card>
         <CardHeader>
-          <CardTitle>Активні сесії</CardTitle>
+          <CardTitle>Aktywne sesje</CardTitle>
         </CardHeader>
         <CardContent>
           {activeSessions.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
-              Немає активних сесій
+              Brak aktywnych sesji
             </div>
           ) : (
             <div className="space-y-2">
@@ -168,12 +168,12 @@ export function SecurityClient({ initialAuditLogs, initialSecurityEvents, initia
                     </div>
                     <p className="text-sm text-muted-foreground">{session.ip_address || "Unknown IP"}</p>
                     <p className="text-xs text-muted-foreground">
-                      Остання активність: {new Date(session.last_activity).toLocaleString("pl-PL")}
+                      Ostatnia aktywność: {new Date(session.last_activity).toLocaleString("pl-PL")}
                     </p>
                   </div>
                   <Button variant="outline" size="sm" onClick={() => handleRevokeSession(session.id)}>
                     <LogOut className="h-4 w-4 mr-2" />
-                    Відключити
+                    Wyloguj
                   </Button>
                 </div>
               ))}
@@ -185,12 +185,12 @@ export function SecurityClient({ initialAuditLogs, initialSecurityEvents, initia
       {/* Audit Logs */}
       <Card>
         <CardHeader>
-          <CardTitle>Логи аудиту</CardTitle>
+          <CardTitle>Dzienniki audytu</CardTitle>
         </CardHeader>
         <CardContent>
           {auditLogs.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
-              Немає логів
+              Brak dzienników
             </div>
           ) : (
             <div className="space-y-2">
