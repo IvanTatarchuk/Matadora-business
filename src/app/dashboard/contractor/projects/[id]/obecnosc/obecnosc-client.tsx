@@ -1,16 +1,17 @@
 "use client";
 
-import { useState, useTransition, useCallback } from "react";
+import { useState, useTransition, useCallback, Fragment } from "react";
 import Link from "next/link";
 import {
   ArrowLeft, CheckCircle2, X, Clock, CalendarDays,
-  Users, Download, ChevronLeft, ChevronRight, AlertTriangle,
+  Users, Download, ChevronLeft, ChevronRight, ChevronDown, ChevronUp, AlertTriangle,
   UserCheck, MapPin,
 } from "lucide-react";
 import {
   upsertAttendanceRecord,
   approveAttendanceDay,
   exportAttendanceCSV,
+  listAttendanceByWorker,
   type AttendanceRecord,
   type AttendanceStatus,
 } from "@/lib/actions/attendance";
@@ -88,6 +89,21 @@ export function ObeznoscClient({
   const [saving, setSaving] = useState<string | null>(null);
   const [gpsCoords, setGpsCoords] = useState<{ lat: number; lon: number } | null>(null);
   const [gpsError, setGpsError] = useState<string | null>(null);
+  const [expandedWorker, setExpandedWorker] = useState<string | null>(null);
+  const [workerHistory, setWorkerHistory] = useState<AttendanceRecord[]>([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
+
+  async function toggleWorkerHistory(workerId: string) {
+    if (expandedWorker === workerId) {
+      setExpandedWorker(null);
+      return;
+    }
+    setExpandedWorker(workerId);
+    setHistoryLoading(true);
+    const history = await listAttendanceByWorker(projectId, workerId);
+    setWorkerHistory(history.slice(0, 10));
+    setHistoryLoading(false);
+  }
 
   const captureGps = useCallback((): Promise<{ lat: number; lon: number } | null> => {
     return new Promise((resolve) => {
@@ -460,6 +476,7 @@ export function ObeznoscClient({
                   <table className="w-full text-sm">
                     <thead className="bg-muted/50 border-b">
                       <tr>
+                        <th className="px-4 py-2 text-left font-medium"></th>
                         <th className="px-4 py-2 text-left font-medium">Pracownik</th>
                         <th className="px-4 py-2 text-left font-medium">Specjalizacja</th>
                         <th className="px-4 py-2 text-right font-medium">Dni</th>
@@ -470,30 +487,86 @@ export function ObeznoscClient({
                     </thead>
                     <tbody className="divide-y">
                       {summary.workers.map((w) => (
-                        <tr key={w.worker_id} className="hover:bg-muted/20">
-                          <td className="px-4 py-2 font-medium">{w.name}</td>
-                          <td className="px-4 py-2 text-muted-foreground">{w.specialty ?? "—"}</td>
-                          <td className="px-4 py-2 text-right">{w.days}</td>
-                          <td className="px-4 py-2 text-right">{w.hours.toFixed(1)} h</td>
-                          <td className="px-4 py-2 text-right font-semibold">{fmt(w.cost)}</td>
-                          <td className="px-4 py-2">
-                            <div className="flex flex-wrap gap-1">
-                              {Object.entries(w.statusCounts).map(([s, count]) => {
-                                const cfg = STATUS_CONFIG[s as AttendanceStatus];
-                                return cfg ? (
-                                  <span key={s} className={`rounded px-1.5 py-0.5 text-[10px] font-medium ${cfg.bg} ${cfg.color}`}>
-                                    {cfg.short}: {count}
-                                  </span>
-                                ) : null;
-                              })}
-                            </div>
-                          </td>
-                        </tr>
+                        <Fragment key={w.worker_id}>
+                          <tr
+                            className="hover:bg-muted/20 cursor-pointer"
+                            onClick={() => toggleWorkerHistory(w.worker_id)}
+                          >
+                            <td className="px-4 py-2 text-muted-foreground">
+                              {expandedWorker === w.worker_id ? (
+                                <ChevronUp className="h-4 w-4" />
+                              ) : (
+                                <ChevronDown className="h-4 w-4" />
+                              )}
+                            </td>
+                            <td className="px-4 py-2 font-medium">{w.name}</td>
+                            <td className="px-4 py-2 text-muted-foreground">{w.specialty ?? "—"}</td>
+                            <td className="px-4 py-2 text-right">{w.days}</td>
+                            <td className="px-4 py-2 text-right">{w.hours.toFixed(1)} h</td>
+                            <td className="px-4 py-2 text-right font-semibold">{fmt(w.cost)}</td>
+                            <td className="px-4 py-2">
+                              <div className="flex flex-wrap gap-1">
+                                {Object.entries(w.statusCounts).map(([s, count]) => {
+                                  const cfg = STATUS_CONFIG[s as AttendanceStatus];
+                                  return cfg ? (
+                                    <span key={s} className={`rounded px-1.5 py-0.5 text-[10px] font-medium ${cfg.bg} ${cfg.color}`}>
+                                      {cfg.short}: {count}
+                                    </span>
+                                  ) : null;
+                                })}
+                              </div>
+                            </td>
+                          </tr>
+                          {expandedWorker === w.worker_id && (
+                            <tr className="bg-muted/10">
+                              <td className="px-4 py-3" colSpan={7}>
+                                {historyLoading ? (
+                                  <p className="text-xs text-muted-foreground">Ładowanie historii…</p>
+                                ) : workerHistory.length === 0 ? (
+                                  <p className="text-xs text-muted-foreground">Brak historii obecności dla tego pracownika.</p>
+                                ) : (
+                                  <div className="overflow-auto">
+                                    <p className="text-xs font-medium text-muted-foreground mb-1">
+                                      Ostatnie zapisy obecności — {w.name}
+                                    </p>
+                                    <table className="w-full text-xs">
+                                      <thead>
+                                        <tr className="text-muted-foreground">
+                                          <th className="px-2 py-1 text-left font-medium">Data</th>
+                                          <th className="px-2 py-1 text-left font-medium">Status</th>
+                                          <th className="px-2 py-1 text-right font-medium">Godziny</th>
+                                          <th className="px-2 py-1 text-right font-medium">Koszt</th>
+                                        </tr>
+                                      </thead>
+                                      <tbody className="divide-y">
+                                        {workerHistory.map((h) => {
+                                          const cfg = STATUS_CONFIG[h.status];
+                                          return (
+                                            <tr key={h.id}>
+                                              <td className="px-2 py-1">{h.work_date}</td>
+                                              <td className="px-2 py-1">
+                                                <span className={`rounded px-1.5 py-0.5 text-[10px] font-medium ${cfg?.bg ?? "bg-muted"} ${cfg?.color ?? ""}`}>
+                                                  {cfg?.label ?? h.status}
+                                                </span>
+                                              </td>
+                                              <td className="px-2 py-1 text-right">{h.hours_worked.toFixed(1)} h</td>
+                                              <td className="px-2 py-1 text-right">{fmt(h.labor_cost + h.overtime_cost)}</td>
+                                            </tr>
+                                          );
+                                        })}
+                                      </tbody>
+                                    </table>
+                                  </div>
+                                )}
+                              </td>
+                            </tr>
+                          )}
+                        </Fragment>
                       ))}
                     </tbody>
                     <tfoot className="bg-muted/30 border-t font-semibold">
                       <tr>
-                        <td className="px-4 py-2" colSpan={2}>RAZEM</td>
+                        <td className="px-4 py-2" colSpan={3}>RAZEM</td>
                         <td className="px-4 py-2 text-right">{summary.daysWorked}</td>
                         <td className="px-4 py-2 text-right">{summary.totalHours.toFixed(1)} h</td>
                         <td className="px-4 py-2 text-right">{fmt(summary.totalCost)}</td>
