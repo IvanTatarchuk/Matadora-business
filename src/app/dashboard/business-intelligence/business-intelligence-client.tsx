@@ -1,10 +1,10 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { BarChart3, Plus, Database, FileText, Layers, X, RefreshCw, Search, Filter } from "lucide-react";
+import { BarChart3, Plus, Database, FileText, Layers, X, RefreshCw, Search, Filter, ChevronDown, ChevronUp } from "lucide-react";
 import {
-  createBIDashboard, createBIWidget, createBIReport, createBIDataSource,
-  type BIDashboard, type BIReport, type BIDataSource, type WidgetType, type ReportType, type SourceType,
+  createBIDashboard, createBIWidget, createBIReport, createBIDataSource, listBIWidgets,
+  type BIDashboard, type BIReport, type BIDataSource, type BIWidget, type WidgetType, type ReportType, type SourceType,
 } from "@/lib/actions/business-intelligence";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -35,6 +35,9 @@ export function BusinessIntelligenceClient({ initialDashboards, initialReports, 
   const [showDataSourceForm, setShowDataSourceForm] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [filterType, setFilterType] = useState<"all" | "public" | "private">("all");
+  const [expandedDashboardId, setExpandedDashboardId] = useState<string | null>(null);
+  const [widgetsByDashboard, setWidgetsByDashboard] = useState<Record<string, BIWidget[]>>({});
+  const [loadingWidgetsFor, setLoadingWidgetsFor] = useState<string | null>(null);
 
   const [dashboardForm, setDashboardForm] = useState({
     name: "",
@@ -99,6 +102,20 @@ export function BusinessIntelligenceClient({ initialDashboards, initialReports, 
       const newDataSources = await fetch("/api/bi/data-sources").then(r => r.json());
       setDataSources(newDataSources);
     });
+  }
+
+  function toggleDashboardWidgets(dashboardId: string) {
+    if (expandedDashboardId === dashboardId) {
+      setExpandedDashboardId(null);
+      return;
+    }
+    setExpandedDashboardId(dashboardId);
+    if (!widgetsByDashboard[dashboardId]) {
+      setLoadingWidgetsFor(dashboardId);
+      listBIWidgets(dashboardId)
+        .then((widgets) => setWidgetsByDashboard((prev) => ({ ...prev, [dashboardId]: widgets })))
+        .finally(() => setLoadingWidgetsFor((prev) => (prev === dashboardId ? null : prev)));
+    }
   }
 
   const filteredDashboards = dashboards.filter((d) => {
@@ -339,16 +356,50 @@ export function BusinessIntelligenceClient({ initialDashboards, initialReports, 
             </div>
           ) : (
             <div className="space-y-2">
-              {filteredDashboards.map((dashboard) => (
-                <div key={dashboard.id} className="flex items-center justify-between p-3 rounded-lg border">
-                  <div className="flex-1">
-                    <p className="font-medium">{dashboard.name}</p>
-                    <p className="text-sm text-muted-foreground">{dashboard.description || "Brak opisu"}</p>
-                    <p className="text-xs text-muted-foreground">{new Date(dashboard.created_at).toLocaleString("pl-PL")}</p>
+              {filteredDashboards.map((dashboard) => {
+                const isExpanded = expandedDashboardId === dashboard.id;
+                const widgets = widgetsByDashboard[dashboard.id];
+                return (
+                  <div key={dashboard.id} className="rounded-lg border">
+                    <button
+                      type="button"
+                      onClick={() => toggleDashboardWidgets(dashboard.id)}
+                      className="flex w-full items-center justify-between p-3 text-left hover:bg-muted/50"
+                    >
+                      <div className="flex-1">
+                        <p className="font-medium">{dashboard.name}</p>
+                        <p className="text-sm text-muted-foreground">{dashboard.description || "Brak opisu"}</p>
+                        <p className="text-xs text-muted-foreground">{new Date(dashboard.created_at).toLocaleString("pl-PL")}</p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {dashboard.is_public && <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded">Publiczny</span>}
+                        {isExpanded ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
+                      </div>
+                    </button>
+                    {isExpanded && (
+                      <div className="border-t p-3">
+                        {loadingWidgetsFor === dashboard.id && !widgets ? (
+                          <p className="text-sm text-muted-foreground">Ładowanie widżetów...</p>
+                        ) : !widgets || widgets.length === 0 ? (
+                          <p className="text-sm text-muted-foreground">Brak widżetów w tym dashboardzie</p>
+                        ) : (
+                          <div className="space-y-1.5">
+                            {widgets.map((widget) => (
+                              <div key={widget.id} className="flex items-center justify-between rounded border bg-muted/30 px-2.5 py-1.5 text-sm">
+                                <span className="font-medium">{widget.title}</span>
+                                <span className="flex items-center gap-2 text-xs text-muted-foreground">
+                                  <span className="rounded bg-purple-100 px-1.5 py-0.5 text-purple-700">{widget.widget_type}</span>
+                                  {widget.width}×{widget.height}
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
-                  {dashboard.is_public && <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded">Publiczny</span>}
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </CardContent>
