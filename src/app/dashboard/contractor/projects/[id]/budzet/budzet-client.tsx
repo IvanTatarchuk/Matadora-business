@@ -10,6 +10,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { CostTimelineChart } from "./cost-timeline-chart";
 
 const MONTHS_PL = ["Sty", "Lut", "Mar", "Kwi", "Maj", "Cze", "Lip", "Sie", "Wrz", "Paź", "Lis", "Gru"];
 const MONTHS_FULL = ["Styczeń", "Luty", "Marzec", "Kwiecień", "Maj", "Czerwiec",
@@ -31,11 +32,12 @@ function fmt(n: number | null) {
 }
 
 export function BudzetClient({
-  projectId, initialForecast, initialYear,
+  projectId, initialForecast, initialYear, costTimeline,
 }: {
   projectId: string;
   initialForecast: BudgetForecastEntry[];
   initialYear: number;
+  costTimeline: { month: string; actual: number }[];
 }) {
   const [forecast, setForecast] = useState<BudgetForecastEntry[]>(initialForecast);
   const [year, setYear] = useState(initialYear);
@@ -169,6 +171,8 @@ export function BudzetClient({
           </CardContent>
         </Card>
       </div>
+
+      <CostTimelineChart timeline={costTimeline} />
 
       {/* Forecast Table */}
       <Card>
