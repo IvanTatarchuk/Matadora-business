@@ -2,14 +2,14 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Users, Calendar, Settings, Trash2, Save, Plus, FolderOpen, Clock, BarChart3, AlertTriangle } from "lucide-react";
+import { ArrowLeft, Users, Calendar, Settings, Trash2, Save, Plus, FolderOpen, Clock, BarChart3, AlertTriangle, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
   updateCrew, deleteCrew, setCrewMembers, assignCrewToProject, deleteCrewAssignment,
-  createCrewSchedule, deleteCrewSchedule, type ShiftType,
+  createCrewSchedule, updateCrewSchedule, deleteCrewSchedule, type ShiftType,
   createCrewProductivity, listCrewProductivity, getCrewProductivityStats,
   type CrewWithMembers,
 } from "@/lib/actions/workforce";
@@ -46,6 +46,15 @@ export function CrewDetailClient({ crew, initialAssignments, initialSchedules, i
   const [productivityStats, setProductivityStats] = useState(initialProductivityStats);
   const [showAssignForm, setShowAssignForm] = useState(false);
   const [showScheduleForm, setShowScheduleForm] = useState(false);
+  const [editingScheduleId, setEditingScheduleId] = useState<string | null>(null);
+  const [editScheduleForm, setEditScheduleForm] = useState({
+    shiftType: "morning" as ShiftType,
+    startTime: "08:00",
+    endTime: "16:00",
+    breakDuration: 60,
+    location: "",
+    notes: "",
+  });
   const [showProductivityForm, setShowProductivityForm] = useState(false);
   const [assignForm, setAssignForm] = useState({
     projectId: "",
@@ -179,6 +188,48 @@ export function CrewDetailClient({ crew, initialAssignments, initialSchedules, i
       const res = await deleteCrewSchedule(scheduleId);
       if (!res.ok) { setError(res.error ?? "Błąd"); return; }
       setSchedules(schedules.filter((s) => s.id !== scheduleId));
+    });
+  }
+
+  function handleStartEditSchedule(schedule: any) {
+    setError(null);
+    setEditingScheduleId(schedule.id);
+    setEditScheduleForm({
+      shiftType: schedule.shift_type,
+      startTime: schedule.start_time,
+      endTime: schedule.end_time,
+      breakDuration: schedule.break_duration ?? 0,
+      location: schedule.location ?? "",
+      notes: schedule.notes ?? "",
+    });
+  }
+
+  function handleSaveScheduleEdit(scheduleId: string) {
+    setError(null);
+    startTransition(async () => {
+      const res = await updateCrewSchedule(scheduleId, {
+        shift_type: editScheduleForm.shiftType,
+        start_time: editScheduleForm.startTime,
+        end_time: editScheduleForm.endTime,
+        break_duration: editScheduleForm.breakDuration,
+        location: editScheduleForm.location || null,
+        notes: editScheduleForm.notes || null,
+      });
+      if (!res.ok) { setError(res.error ?? "Błąd"); return; }
+      setSchedules(schedules.map((s) =>
+        s.id === scheduleId
+          ? {
+              ...s,
+              shift_type: editScheduleForm.shiftType,
+              start_time: editScheduleForm.startTime,
+              end_time: editScheduleForm.endTime,
+              break_duration: editScheduleForm.breakDuration,
+              location: editScheduleForm.location || null,
+              notes: editScheduleForm.notes || null,
+            }
+          : s
+      ));
+      setEditingScheduleId(null);
     });
   }
 
@@ -518,26 +569,103 @@ export function CrewDetailClient({ crew, initialAssignments, initialSchedules, i
           ) : (
             <div className="space-y-2">
               {schedules.map((schedule) => (
-                <div key={schedule.id} className="flex items-center justify-between p-3 rounded bg-muted">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2">
-                      <p className="text-sm font-medium">{schedule.shift_date}</p>
-                      <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded">
-                        {shiftTypeLabels[schedule.shift_type as ShiftType]}
-                      </span>
+                editingScheduleId === schedule.id ? (
+                  <div key={schedule.id} className="space-y-3 p-3 bg-muted rounded">
+                    <div>
+                      <Label>Typ zmiany</Label>
+                      <select
+                        className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm mt-1"
+                        value={editScheduleForm.shiftType}
+                        onChange={(e) => setEditScheduleForm({ ...editScheduleForm, shiftType: e.target.value as ShiftType })}
+                      >
+                        <option value="morning">Poranna</option>
+                        <option value="afternoon">Popołudniowa</option>
+                        <option value="evening">Wieczorna</option>
+                        <option value="night">Nocna</option>
+                        <option value="full_day">Cały dzień</option>
+                      </select>
                     </div>
-                    <p className="text-xs text-muted-foreground">
-                      {schedule.start_time} - {schedule.end_time}
-                      {schedule.break_duration > 0 && ` · ${schedule.break_duration} min przerwy`}
-                    </p>
-                    {schedule.location && (
-                      <p className="text-xs text-muted-foreground">📍 {schedule.location}</p>
-                    )}
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <Label>Godzina rozpoczęcia</Label>
+                        <Input
+                          type="time"
+                          value={editScheduleForm.startTime}
+                          onChange={(e) => setEditScheduleForm({ ...editScheduleForm, startTime: e.target.value })}
+                          className="mt-1"
+                        />
+                      </div>
+                      <div>
+                        <Label>Godzina zakończenia</Label>
+                        <Input
+                          type="time"
+                          value={editScheduleForm.endTime}
+                          onChange={(e) => setEditScheduleForm({ ...editScheduleForm, endTime: e.target.value })}
+                          className="mt-1"
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <Label>Przerwa (minuty)</Label>
+                      <Input
+                        type="number"
+                        value={editScheduleForm.breakDuration}
+                        onChange={(e) => setEditScheduleForm({ ...editScheduleForm, breakDuration: parseInt(e.target.value) || 0 })}
+                        className="mt-1"
+                      />
+                    </div>
+                    <div>
+                      <Label>Lokalizacja</Label>
+                      <Input
+                        value={editScheduleForm.location}
+                        onChange={(e) => setEditScheduleForm({ ...editScheduleForm, location: e.target.value })}
+                        className="mt-1"
+                      />
+                    </div>
+                    <div>
+                      <Label>Uwagi</Label>
+                      <Input
+                        value={editScheduleForm.notes}
+                        onChange={(e) => setEditScheduleForm({ ...editScheduleForm, notes: e.target.value })}
+                        className="mt-1"
+                      />
+                    </div>
+                    <div className="flex gap-2">
+                      <Button size="sm" onClick={() => handleSaveScheduleEdit(schedule.id)} disabled={pending}>
+                        Zapisz
+                      </Button>
+                      <Button variant="outline" size="sm" onClick={() => setEditingScheduleId(null)}>
+                        Anuluj
+                      </Button>
+                    </div>
                   </div>
-                  <Button variant="ghost" size="sm" onClick={() => handleDeleteSchedule(schedule.id)}>
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
+                ) : (
+                  <div key={schedule.id} className="flex items-center justify-between p-3 rounded bg-muted">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        <p className="text-sm font-medium">{schedule.shift_date}</p>
+                        <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded">
+                          {shiftTypeLabels[schedule.shift_type as ShiftType]}
+                        </span>
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        {schedule.start_time} - {schedule.end_time}
+                        {schedule.break_duration > 0 && ` · ${schedule.break_duration} min przerwy`}
+                      </p>
+                      {schedule.location && (
+                        <p className="text-xs text-muted-foreground">📍 {schedule.location}</p>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <Button variant="ghost" size="sm" onClick={() => handleStartEditSchedule(schedule)}>
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                      <Button variant="ghost" size="sm" onClick={() => handleDeleteSchedule(schedule.id)}>
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                )
               ))}
             </div>
           )}
