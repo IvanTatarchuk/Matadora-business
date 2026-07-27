@@ -1,0 +1,77 @@
+name: Auto-merge agent PRs
+
+# Only PRs opened by the builder agent carry the 'agent-generated' label.
+# Human PRs are never touched by this workflow.
+on:
+  workflow_run:
+    workflows: ["CI"]
+    types: [completed]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  auto-merge:
+    if: github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            const run = context.payload.workflow_run;
+            const prs = run.pull_requests;
+            if (!prs || prs.length === 0) return;
+
+            for (const prRef of prs) {
+              const { data: pr } = await github.rest.pulls.get({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pull_number: prRef.number,
+              });
+
+              const isAgentPr = pr.labels.some((l) => l.name === "agent-generated");
+              if (!isAgentPr) continue;
+
+              const { data: files } = await github.rest.pulls.listFiles({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pull_number: pr.number,
+              });
+
+              // Second, independent check of protected paths (defense in depth —
+              // the builder route also refuses to touch these, this catches it
+              // if that check is ever bypassed or the route has a bug).
+              const protectedPatterns = [
+                /^supabase\/migrations\//,
+                /^src\/lib\/actions\/finance\.ts$/,
+                /^src\/lib\/actions\/offers\.ts$/,
+                /^src\/lib\/offer-calc\.ts$/,
+                /^src\/middleware\.ts$/,
+                /^src\/lib\/supabase\/admin\.ts$/,
+                /^src\/lib\/ksef\//,
+                /^\.github\/workflows\//,
+                /^vercel\.json$/,
+              ];
+
+              const touchesProtected = files.some((f) =>
+                protectedPatterns.some((p) => p.test(f.filename))
+              );
+
+              if (touchesProtected) {
+                await github.rest.issues.addLabels({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: pr.number,
+                  labels: ["needs-human-review"],
+                });
+                continue;
+              }
+
+              await github.rest.pulls.merge({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pull_number: pr.number,
+                merge_method: "squash",
+              });
+            }
