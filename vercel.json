@@ -2,5 +2,11 @@
   "buildCommand": "node -r ./scripts/patch-readlink.js node_modules/next/dist/bin/next build",
   "framework": "nextjs",
   "installCommand": "npm install",
-  "devCommand": "npm run dev"
+  "devCommand": "npm run dev",
+  "crons": [
+    {
+      "path": "/api/cron/agent-team-run",
+      "schedule": "0 2 * * *"
+    }
+  ]
 }
