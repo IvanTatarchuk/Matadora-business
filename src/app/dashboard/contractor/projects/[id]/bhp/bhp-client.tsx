@@ -119,7 +119,7 @@ export function BhpClient({
   function handleStatus(id: string, status: SafetyStatus) {
     startTransition(async () => {
       if (status === "resolved") {
-        await resolveSafetyObservation(id, projectId, currentUserId);
+        await resolveSafetyObservation(id, projectId);
         const today = new Date().toISOString().slice(0, 10);
         setObs((prev) => prev.map((o) => o.id === id
           ? { ...o, status, resolved_at: today, resolved_by: currentUserId }
