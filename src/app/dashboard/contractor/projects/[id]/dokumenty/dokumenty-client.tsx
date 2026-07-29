@@ -5,11 +5,12 @@ import Link from "next/link";
 import {
   ArrowLeft, File, FileText, ImageIcon, Trash2, Download,
   FolderOpen, Plus, Lock, AlertTriangle, Upload, CheckCircle2,
-  Clock, Shield, X,
+  Clock, Shield, X, Pencil,
 } from "lucide-react";
 import {
   createProjectDocument,
   deleteProjectDocument,
+  updateProjectDocument,
   uploadDocumentFile,
   type ProjectDocument,
   type DocCategory,
@@ -87,6 +88,15 @@ export function DokumentyClient({
   const [uploadedFile, setUploadedFile] = useState<{
     url: string; size: number; mimeType: string;
   } | null>(null);
+
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editForm, setEditForm] = useState<{
+    category: DocCategory;
+    notes: string;
+    expiryDate: string;
+    isConfidential: boolean;
+    visibleTo: "all" | "contractor_only" | "investor_only";
+  }>({ category: "inne", notes: "", expiryDate: "", isConfidential: false, visibleTo: "all" });
 
   const filtered = docs.filter((d) => {
     if (filter !== "all" && d.category !== filter) return false;
@@ -170,6 +180,39 @@ export function DokumentyClient({
     startTransition(async () => {
       const res = await deleteProjectDocument(docId, projectId);
       if (res.ok) setDocs((prev) => prev.filter((d) => d.id !== docId));
+    });
+  }
+
+  function startEdit(doc: ProjectDocument) {
+    setEditingId(doc.id);
+    setEditForm({
+      category: doc.category,
+      notes: doc.notes ?? "",
+      expiryDate: doc.expiry_date ?? "",
+      isConfidential: doc.is_confidential,
+      visibleTo: doc.visible_to,
+    });
+  }
+
+  function handleUpdate(docId: string) {
+    startTransition(async () => {
+      const res = await updateProjectDocument(docId, projectId, {
+        category: editForm.category,
+        notes: editForm.notes || undefined,
+        expiry_date: editForm.expiryDate || undefined,
+        is_confidential: editForm.isConfidential,
+        visible_to: editForm.visibleTo,
+      });
+      if (!res.ok) { setError(res.error ?? "Błąd zapisu"); return; }
+      setDocs((prev) => prev.map((d) => d.id === docId ? {
+        ...d,
+        category: editForm.category,
+        notes: editForm.notes || null,
+        expiry_date: editForm.expiryDate || null,
+        is_confidential: editForm.isConfidential,
+        visible_to: editForm.visibleTo,
+      } : d));
+      setEditingId(null);
     });
   }
 
@@ -443,6 +486,14 @@ export function DokumentyClient({
                       <Button
                         variant="ghost"
                         size="sm"
+                        onClick={() => editingId === doc.id ? setEditingId(null) : startEdit(doc)}
+                        disabled={pending}
+                      >
+                        <Pencil className="h-4 w-4 text-muted-foreground hover:text-primary" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
                         onClick={() => handleDelete(doc.id)}
                         disabled={pending}
                       >
@@ -450,6 +501,75 @@ export function DokumentyClient({
                       </Button>
                     </div>
                   </div>
+
+                  {editingId === doc.id && (
+                    <div className="mt-3 space-y-3 border-t pt-3">
+                      <div className="grid gap-3 sm:grid-cols-2">
+                        <div>
+                          <label className="text-xs font-medium">Kategoria</label>
+                          <select
+                            value={editForm.category}
+                            onChange={(e) => setEditForm({ ...editForm, category: e.target.value as DocCategory })}
+                            className="mt-1 w-full rounded-md border px-3 py-2 text-sm"
+                          >
+                            {Object.entries(CATEGORY_CONFIG).map(([k, v]) => (
+                              <option key={k} value={k}>{v.label}</option>
+                            ))}
+                          </select>
+                        </div>
+                        <div>
+                          <label className="text-xs font-medium">Data ważności</label>
+                          <Input
+                            type="date"
+                            value={editForm.expiryDate}
+                            onChange={(e) => setEditForm({ ...editForm, expiryDate: e.target.value })}
+                            className="mt-1"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-xs font-medium">Widoczność</label>
+                          <select
+                            value={editForm.visibleTo}
+                            onChange={(e) => setEditForm({ ...editForm, visibleTo: e.target.value as "all" | "contractor_only" | "investor_only" })}
+                            className="mt-1 w-full rounded-md border px-3 py-2 text-sm"
+                          >
+                            <option value="all">Wszyscy (wykonawca + inwestor)</option>
+                            <option value="contractor_only">Tylko wykonawca</option>
+                            <option value="investor_only">Tylko inwestor</option>
+                          </select>
+                        </div>
+                        <div>
+                          <label className="text-xs font-medium">Uwagi</label>
+                          <Input
+                            value={editForm.notes}
+                            onChange={(e) => setEditForm({ ...editForm, notes: e.target.value })}
+                            placeholder="Krótki opis dokumentu..."
+                            className="mt-1"
+                          />
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          id={`conf-${doc.id}`}
+                          checked={editForm.isConfidential}
+                          onChange={(e) => setEditForm({ ...editForm, isConfidential: e.target.checked })}
+                          className="h-4 w-4"
+                        />
+                        <label htmlFor={`conf-${doc.id}`} className="text-sm flex items-center gap-1">
+                          <Lock className="h-3 w-3" /> Poufny — widoczny tylko dla Ciebie
+                        </label>
+                      </div>
+                      <div className="flex gap-2">
+                        <Button size="sm" onClick={() => handleUpdate(doc.id)} disabled={pending}>
+                          {pending ? "Zapisywanie..." : "Zapisz zmiany"}
+                        </Button>
+                        <Button variant="outline" size="sm" onClick={() => setEditingId(null)}>
+                          Anuluj
+                        </Button>
+                      </div>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             );
