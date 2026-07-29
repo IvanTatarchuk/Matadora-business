@@ -85,12 +85,14 @@ export async function createSafetyObservation(input: {
 }
 
 export async function resolveSafetyObservation(
-  id: string, projectId: string, resolvedBy: string
+  id: string, projectId: string
 ): Promise<{ ok: boolean; error?: string }> {
   const supabase = createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { ok: false, error: "Nie zalogowano" };
   const { error } = await db(supabase).from("safety_observations").update({
     status: "resolved", resolved_at: new Date().toISOString().slice(0, 10),
-    resolved_by: resolvedBy, updated_at: new Date().toISOString(),
+    resolved_by: user.id, updated_at: new Date().toISOString(),
   }).eq("id", id);
   if (error) return { ok: false, error: error.message };
   revalidatePath(`/dashboard/contractor/projects/${projectId}/bhp`);
