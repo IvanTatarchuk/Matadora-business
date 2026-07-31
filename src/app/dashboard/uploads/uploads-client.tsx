@@ -1,13 +1,14 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { Upload, File, Trash2, Download, Search, Filter, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
-  createFileUpload, deleteFileUpload, type FileCategory,
+  uploadOrgFile, deleteFileUpload, incrementDownloadCount, type FileCategory,
 } from "@/lib/actions/file-uploads";
 
 type Props = {
@@ -21,10 +22,13 @@ type Props = {
 };
 
 export function UploadsClient({ orgId, initialUploads, initialStats }: Props) {
+  const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [uploads, setUploads] = useState(initialUploads);
   const [stats, setStats] = useState(initialStats);
+  useEffect(() => setUploads(initialUploads), [initialUploads]);
+  useEffect(() => setStats(initialStats), [initialStats]);
   const [showUploadForm, setShowUploadForm] = useState(false);
   const [uploadForm, setUploadForm] = useState({
     description: "",
@@ -48,30 +52,21 @@ export function UploadsClient({ orgId, initialUploads, initialStats }: Props) {
       return;
     }
     startTransition(async () => {
-      // Simulate file upload - in production, this would upload to storage
-      const storagePath = `uploads/${Date.now()}_${selectedFile.name}`;
-      const storageUrl = `https://storage.example.com/${storagePath}`;
-      
-      const res = await createFileUpload({
-        orgId,
-        fileName: selectedFile.name,
-        fileType: selectedFile.type,
-        fileSize: selectedFile.size,
-        storagePath,
-        storageUrl,
-        category: uploadForm.category,
-        description: uploadForm.description || undefined,
-        tags: uploadForm.tags ? uploadForm.tags.split(",").map(t => t.trim()) : [],
-        isPublic: uploadForm.isPublic,
-      });
-      
+      const fd = new FormData();
+      fd.set("file", selectedFile);
+      fd.set("orgId", orgId);
+      fd.set("category", uploadForm.category);
+      if (uploadForm.description) fd.set("description", uploadForm.description);
+      if (uploadForm.tags) fd.set("tags", uploadForm.tags);
+      fd.set("isPublic", String(uploadForm.isPublic));
+
+      const res = await uploadOrgFile(fd);
+
       if (!res.ok) { setError(res.error ?? "Błąd"); return; }
       setShowUploadForm(false);
       setSelectedFile(null);
       setUploadForm({ description: "", category: "other", tags: "", isPublic: false });
-      // Reload uploads
-      const newUploads = await fetch(`/api/uploads`).then(r => r.json());
-      setUploads(newUploads);
+      router.refresh();
     });
   }
 
@@ -81,14 +76,19 @@ export function UploadsClient({ orgId, initialUploads, initialStats }: Props) {
       const res = await deleteFileUpload(id);
       if (!res.ok) { setError(res.error ?? "Błąd"); return; }
       setUploads(uploads.filter((u) => u.id !== id));
+      router.refresh();
     });
   }
 
-  function handleDownload(id: string) {
+  function handleDownload(id: string, storageUrl: string | null) {
     setError(null);
+    if (!storageUrl) {
+      setError("Ten plik nie ma dostępnego adresu do pobrania.");
+      return;
+    }
+    window.open(storageUrl, "_blank", "noopener,noreferrer");
     startTransition(async () => {
-      // In production, this would trigger actual download
-      console.log("Downloading file:", id);
+      await incrementDownloadCount(id);
     });
   }
 
@@ -308,7 +308,7 @@ export function UploadsClient({ orgId, initialUploads, initialStats }: Props) {
                     )}
                   </div>
                   <div className="flex gap-1">
-                    <Button variant="ghost" size="sm" onClick={() => handleDownload(upload.id)}>
+                    <Button variant="ghost" size="sm" onClick={() => handleDownload(upload.id, upload.storage_url)}>
                       <Download className="h-4 w-4" />
                     </Button>
                     <Button variant="ghost" size="sm" onClick={() => handleDelete(upload.id)}>

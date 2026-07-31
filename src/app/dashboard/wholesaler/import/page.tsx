@@ -7,12 +7,12 @@ export default async function ImportPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">Import materials</h1>
+        <h1 className="text-2xl font-bold">Import materiałów</h1>
         <p className="text-sm text-muted-foreground">
-          Upload a price list (CSV) you received from a supplier. Map the
-          columns, preview, and import — existing products are matched by SKU
-          and their prices updated. Only data you upload is used; nothing is
-          scraped.
+          Wgraj cennik (CSV) otrzymany od dostawcy. Zmapuj kolumny, sprawdź
+          podgląd i zaimportuj — istniejące produkty są dopasowywane po SKU,
+          a ich ceny aktualizowane. Wykorzystywane są wyłącznie wgrane przez
+          Ciebie dane; nic nie jest pobierane automatycznie.
         </p>
       </div>
 

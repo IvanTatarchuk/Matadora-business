@@ -12,7 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatPLN } from "@/lib/utils";
-import { PROJECT_CATEGORIES } from "@/lib/project-meta";
+import { PROJECT_CATEGORIES, PROJECT_CATEGORY_LABELS } from "@/lib/project-meta";
 import {
   createProject,
   publishProject,
@@ -28,6 +28,14 @@ const STATUS_VARIANT: Record<string, "default" | "secondary" | "success" | "warn
   in_progress: "default",
   completed: "success",
   cancelled: "secondary",
+};
+
+const STATUS_LABEL: Record<string, string> = {
+  draft: "Szkic",
+  open: "Otwarty",
+  in_progress: "W trakcie",
+  completed: "Zakończony",
+  cancelled: "Anulowany",
 };
 
 export type ProjectWithBids = Project & { bidCount: number };
@@ -56,13 +64,13 @@ export function ProjectsManager({ projects }: { projects: ProjectWithBids[] }) {
   function submit(publish: boolean) {
     setError(null);
     if (!form.title.trim()) {
-      setError("Project title is required.");
+      setError("Tytuł projektu jest wymagany.");
       return;
     }
     startTransition(async () => {
       const res = await createProject({ ...form, publish });
       if (!res.ok) {
-        setError(res.error ?? "Something went wrong");
+        setError(res.error ?? "Coś poszło nie tak");
         return;
       }
       setForm(EMPTY);
@@ -75,7 +83,7 @@ export function ProjectsManager({ projects }: { projects: ProjectWithBids[] }) {
     startTransition(async () => {
       const res = await fn();
       if (!res.ok) {
-        setError(res.error ?? "Action failed");
+        setError(res.error ?? "Akcja nie powiodła się");
         return;
       }
       router.refresh();
@@ -86,31 +94,31 @@ export function ProjectsManager({ projects }: { projects: ProjectWithBids[] }) {
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle>New project</CardTitle>
+          <CardTitle>Nowy projekt</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2 sm:col-span-2">
-              <Label htmlFor="title">Title</Label>
+              <Label htmlFor="title">Tytuł</Label>
               <Input
                 id="title"
                 value={form.title}
                 onChange={(e) => patch({ title: e.target.value })}
-                placeholder="Apartment renovation — Mokotów"
+                placeholder="Remont mieszkania — Mokotów"
               />
             </div>
             <div className="space-y-2 sm:col-span-2">
-              <Label htmlFor="description">Description</Label>
+              <Label htmlFor="description">Opis</Label>
               <Textarea
                 id="description"
                 value={form.description ?? ""}
                 onChange={(e) => patch({ description: e.target.value })}
-                placeholder="Scope of work, expectations, constraints…"
+                placeholder="Zakres prac, oczekiwania, ograniczenia…"
                 className="min-h-[80px]"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="address">Address</Label>
+              <Label htmlFor="address">Adres</Label>
               <Input
                 id="address"
                 value={form.address ?? ""}
@@ -119,7 +127,7 @@ export function ProjectsManager({ projects }: { projects: ProjectWithBids[] }) {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="category">Category</Label>
+              <Label htmlFor="category">Kategoria</Label>
               <select
                 id="category"
                 value={form.category}
@@ -128,13 +136,13 @@ export function ProjectsManager({ projects }: { projects: ProjectWithBids[] }) {
               >
                 {PROJECT_CATEGORIES.map((c) => (
                   <option key={c} value={c}>
-                    {c}
+                    {PROJECT_CATEGORY_LABELS[c]}
                   </option>
                 ))}
               </select>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="surface">Surface area (m²)</Label>
+              <Label htmlFor="surface">Powierzchnia (m²)</Label>
               <Input
                 id="surface"
                 type="number"
@@ -147,7 +155,7 @@ export function ProjectsManager({ projects }: { projects: ProjectWithBids[] }) {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="deadline">Deadline</Label>
+              <Label htmlFor="deadline">Termin</Label>
               <Input
                 id="deadline"
                 type="date"
@@ -156,7 +164,7 @@ export function ProjectsManager({ projects }: { projects: ProjectWithBids[] }) {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="budgetMin">Budget min (PLN)</Label>
+              <Label htmlFor="budgetMin">Budżet min (PLN)</Label>
               <Input
                 id="budgetMin"
                 type="number"
@@ -168,7 +176,7 @@ export function ProjectsManager({ projects }: { projects: ProjectWithBids[] }) {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="budgetMax">Budget max (PLN)</Label>
+              <Label htmlFor="budgetMax">Budżet max (PLN)</Label>
               <Input
                 id="budgetMax"
                 type="number"
@@ -185,14 +193,14 @@ export function ProjectsManager({ projects }: { projects: ProjectWithBids[] }) {
 
           <div className="flex gap-2">
             <Button onClick={() => submit(true)} disabled={pending}>
-              <Upload className="h-4 w-4" /> Publish to marketplace
+              <Upload className="h-4 w-4" /> Opublikuj na rynku ofert
             </Button>
             <Button
               variant="outline"
               onClick={() => submit(false)}
               disabled={pending}
             >
-              <Plus className="h-4 w-4" /> Save as draft
+              <Plus className="h-4 w-4" /> Zapisz jako szkic
             </Button>
           </div>
         </CardContent>
@@ -200,12 +208,12 @@ export function ProjectsManager({ projects }: { projects: ProjectWithBids[] }) {
 
       <Card>
         <CardHeader>
-          <CardTitle>My projects ({projects.length})</CardTitle>
+          <CardTitle>Moje projekty ({projects.length})</CardTitle>
         </CardHeader>
         <CardContent>
           {projects.length === 0 ? (
             <p className="py-8 text-center text-sm text-muted-foreground">
-              No projects yet. Create one above and publish it so contractors can bid.
+              Brak projektów. Utwórz projekt powyżej i opublikuj go, aby wykonawcy mogli składać oferty.
             </p>
           ) : (
             <div className="divide-y">
@@ -218,11 +226,13 @@ export function ProjectsManager({ projects }: { projects: ProjectWithBids[] }) {
                     <div className="flex items-center gap-2">
                       <p className="truncate font-medium">{p.title}</p>
                       <Badge variant={STATUS_VARIANT[p.status] ?? "secondary"}>
-                        {p.status.replace("_", " ")}
+                        {STATUS_LABEL[p.status] ?? p.status}
                       </Badge>
                     </div>
                     <p className="text-xs text-muted-foreground">
-                      {p.category ?? "—"}
+                      {p.category
+                        ? PROJECT_CATEGORY_LABELS[p.category as keyof typeof PROJECT_CATEGORY_LABELS] ?? p.category
+                        : "—"}
                       {p.budget_min || p.budget_max
                         ? ` · ${formatPLN(Number(p.budget_min ?? 0))}–${formatPLN(Number(p.budget_max ?? 0))}`
                         : ""}
@@ -235,15 +245,15 @@ export function ProjectsManager({ projects }: { projects: ProjectWithBids[] }) {
                         href={`/dashboard/investor/projects/${p.id}`}
                         className="inline-flex items-center gap-1 rounded-md border px-3 py-1.5 text-sm hover:bg-accent"
                       >
-                        <Activity className="h-4 w-4" /> Progress
+                        <Activity className="h-4 w-4" /> Postęp
                       </Link>
                     )}
                     <Link
                       href={`/dashboard/marketplace/${p.id}`}
                       className="inline-flex items-center gap-1 rounded-md border px-3 py-1.5 text-sm hover:bg-accent"
                     >
-                      <Users className="h-4 w-4" /> {p.bidCount} bid
-                      {p.bidCount === 1 ? "" : "s"}
+                      <Users className="h-4 w-4" /> {p.bidCount}{" "}
+                      {p.bidCount === 1 ? "oferta" : "ofert"}
                     </Link>
 
                     {p.status === "draft" ? (
@@ -253,7 +263,7 @@ export function ProjectsManager({ projects }: { projects: ProjectWithBids[] }) {
                         onClick={() => runAction(() => publishProject(p.id))}
                         disabled={pending}
                       >
-                        <Upload className="h-4 w-4" /> Publish
+                        <Upload className="h-4 w-4" /> Opublikuj
                       </Button>
                     ) : p.status === "open" ? (
                       <Button
@@ -262,7 +272,7 @@ export function ProjectsManager({ projects }: { projects: ProjectWithBids[] }) {
                         onClick={() => runAction(() => unpublishProject(p.id))}
                         disabled={pending}
                       >
-                        <EyeOff className="h-4 w-4" /> Unpublish
+                        <EyeOff className="h-4 w-4" /> Wycofaj
                       </Button>
                     ) : null}
 
@@ -271,7 +281,7 @@ export function ProjectsManager({ projects }: { projects: ProjectWithBids[] }) {
                       variant="ghost"
                       onClick={() => runAction(() => deleteProject(p.id))}
                       disabled={pending}
-                      aria-label="Delete project"
+                      aria-label="Usuń projekt"
                     >
                       <Trash2 className="h-4 w-4 text-destructive" />
                     </Button>

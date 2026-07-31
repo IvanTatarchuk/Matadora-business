@@ -203,19 +203,32 @@ function buildRecommendations(data: EngineInput): Recommendation[] {
 
 // ─── Page ────────────────────────────────────────────────────────────────────
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const db = (s: any) => s as any;
+
 export default async function InsightsPage() {
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
   // Fetch real data
-  const [offersRes, projectsRes, profileRes] = await Promise.all([
+  const [offersRes, projectsRes, profileRes, protokolyRes, overdueRes] = await Promise.all([
     supabase.from("offers").select("id, status, total_gross, created_at").eq("contractor_id", user!.id),
     supabase.from("projects").select("id, status").eq("contractor_id", user!.id),
     supabase.from("profiles").select("nip, company_name").eq("id", user!.id).single(),
+    db(supabase).from("protokoly_odbioru").select("project_id").eq("contractor_id", user!.id),
+    db(supabase)
+      .from("milestone_payments")
+      .select("id, amount, project_id, projects!inner(contractor_id)")
+      .eq("projects.contractor_id", user!.id)
+      .eq("status", "overdue"),
   ]);
 
   const offers = offersRes.data ?? [];
   const projects = projectsRes.data ?? [];
+  const projectIdsWithProtokol = new Set(
+    (protokolyRes.data ?? []).map((p: { project_id: string }) => p.project_id)
+  );
+  const overduePayments = overdueRes.data ?? [];
 
   const sevenDaysAgo = new Date(Date.now() - 7 * 86400000).toISOString();
   const sentNotFollowedUp = offers.filter(
@@ -225,7 +238,11 @@ export default async function InsightsPage() {
   const accepted = offers.filter((o) => o.status === "accepted");
   const totalUnpaid = accepted.reduce((sum, o) => sum + Number(o.total_gross ?? 0), 0);
 
-  const activeProjects = projects.filter((p) => p.status === "in_progress" || p.status === "open").length;
+  const activeProjects = projects.filter(
+    (p) =>
+      (p.status === "in_progress" || p.status === "open") &&
+      !projectIdsWithProtokol.has(p.id)
+  ).length;
 
   // KSeF deadline: 1 April 2026
   const ksefDeadline = new Date("2026-04-01");
@@ -240,7 +257,7 @@ export default async function InsightsPage() {
     activeProjectsWithoutProtokol: activeProjects,
     offersNotFollowedUp: sentNotFollowedUp,
     totalUnpaidGross: totalUnpaid,
-    overdueCount: 0, // Would need payment tracking table
+    overdueCount: overduePayments.length,
     daysToKsefDeadline: daysToKsef,
   };
 

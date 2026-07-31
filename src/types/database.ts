@@ -845,6 +845,29 @@ export interface Database {
         >;
         Relationships: [];
       };
+      cost_items: {
+        Row: {
+          id: string;
+          code: string;
+          name: string;
+          category: string;
+          unit: string;
+          labor_rate: number;
+          material_rate: number;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          code: string;
+          name: string;
+          category: string;
+          unit: string;
+          labor_rate?: number;
+          material_rate?: number;
+        };
+        Update: Partial<Database["public"]["Tables"]["cost_items"]["Insert"]>;
+        Relationships: [];
+      };
     };
     Views: Record<string, never>;
     Functions: {
@@ -855,6 +878,10 @@ export interface Database {
       increment_views_count: {
         Args: { ad_id: string };
         Returns: void;
+      };
+      search_cost_items: {
+        Args: { q: string; result_limit?: number };
+        Returns: Database["public"]["Tables"]["cost_items"]["Row"][];
       };
     };
     Enums: {

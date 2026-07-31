@@ -21,6 +21,12 @@ const STATUS_VARIANT: Record<string, "default" | "secondary" | "success"> = {
   accepted: "success",
 };
 
+const STATUS_LABEL: Record<string, string> = {
+  draft: "Szkic",
+  sent: "Wysłany",
+  accepted: "Zaakceptowany",
+};
+
 export default async function OfferDetailPage({
   params,
 }: {
@@ -77,7 +83,7 @@ export default async function OfferDetailPage({
         href="/dashboard/contractor/offers"
         className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
       >
-        <ArrowLeft className="h-4 w-4" /> Back to offers
+        <ArrowLeft className="h-4 w-4" /> Wróć do kosztorysów
       </Link>
 
       <div className="flex items-start justify-between">
@@ -88,14 +94,14 @@ export default async function OfferDetailPage({
         <div className="flex items-center gap-3">
           <PrintButton />
           <Badge variant={STATUS_VARIANT[offer.status] ?? "secondary"}>
-            {offer.status}
+            {STATUS_LABEL[offer.status] ?? offer.status}
           </Badge>
         </div>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>Estimate</CardTitle>
+          <CardTitle>Kosztorys</CardTitle>
         </CardHeader>
         <CardContent>
           <OfferSummary
@@ -110,7 +116,7 @@ export default async function OfferDetailPage({
 
       <Card className="print:hidden">
         <CardHeader>
-          <CardTitle>Share with investor</CardTitle>
+          <CardTitle>Udostępnij inwestorowi</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex items-center gap-2 rounded-md border bg-muted/40 p-3 text-sm">
@@ -125,13 +131,13 @@ export default async function OfferDetailPage({
               }}
             >
               <Button type="submit">
-                <Send className="h-4 w-4" /> Send offer to investor
+                <Send className="h-4 w-4" /> Wyślij kosztorys do inwestora
               </Button>
             </form>
           ) : (
             <Button variant="outline" asChild>
               <a href={shareUrl} target="_blank" rel="noreferrer">
-                Open investor view
+                Otwórz widok inwestora
               </a>
             </Button>
           )}

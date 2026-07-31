@@ -7,7 +7,7 @@ import {
   CheckCircle2, Clock, XCircle, HardHat,
 } from "lucide-react";
 import {
-  createSafetyObservation, updateSafetyStatus,
+  createSafetyObservation, updateSafetyStatus, resolveSafetyObservation,
   type SafetyObservation, type SafetyObservationType,
   type SafetySeverity, type SafetyStatus,
 } from "@/lib/actions/safety";
@@ -40,7 +40,14 @@ const STATUS_CONFIG: Record<SafetyStatus, { label: string; color: string; icon: 
   closed:      { label: "Zamknięte",     color: "bg-slate-100 text-slate-500", icon: XCircle },
 };
 
-export function BhpClient({ projectId, initialObservations }: { projectId: string; initialObservations: SafetyObservation[] }) {
+export function BhpClient({
+  projectId, initialObservations, currentUserId, resolverNames,
+}: {
+  projectId: string;
+  initialObservations: SafetyObservation[];
+  currentUserId: string;
+  resolverNames: Record<string, string>;
+}) {
   const [obs, setObs] = useState<SafetyObservation[]>(initialObservations);
   const [showForm, setShowForm] = useState(false);
   const [filterStatus, setFilterStatus] = useState<SafetyStatus | "all">("all");
@@ -111,6 +118,14 @@ export function BhpClient({ projectId, initialObservations }: { projectId: strin
 
   function handleStatus(id: string, status: SafetyStatus) {
     startTransition(async () => {
+      if (status === "resolved") {
+        await resolveSafetyObservation(id, projectId);
+        const today = new Date().toISOString().slice(0, 10);
+        setObs((prev) => prev.map((o) => o.id === id
+          ? { ...o, status, resolved_at: today, resolved_by: currentUserId }
+          : o));
+        return;
+      }
       await updateSafetyStatus(id, projectId, status);
       setObs((prev) => prev.map((o) => o.id === id ? { ...o, status } : o));
     });
@@ -247,6 +262,9 @@ export function BhpClient({ projectId, initialObservations }: { projectId: strin
                         {o.location_note && <span>📍 {o.location_note}</span>}
                         {o.reported_by_name && <span>Zgłoszone przez: {o.reported_by_name}</span>}
                         {o.due_date && o.status !== "closed" && <span>Termin: {new Date(o.due_date).toLocaleDateString("pl-PL")}</span>}
+                        {o.resolved_by && (o.status === "resolved" || o.status === "closed") && (
+                          <span>Rozwiązane przez: {o.resolved_by === currentUserId ? "Ty" : (resolverNames[o.resolved_by] || "—")}</span>
+                        )}
                       </div>
                       {o.description && <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{o.description}</p>}
                       {o.immediate_action && <p className="text-xs text-muted-foreground mt-1"><span className="font-medium">Natychm.:</span> {o.immediate_action}</p>}

@@ -1,6 +1,7 @@
 import Link from "next/link";
-import { CheckCircle2, ArrowRight, HardHat } from "lucide-react";
+import { CheckCircle2, ArrowRight, HardHat, Receipt } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { PrintReceiptButton } from "./receipt-actions";
 
 const PRODUCT_LABEL = "Analiza AI kosztorysu";
@@ -10,13 +11,25 @@ const SELLER_NIP = "955-235-98-44";
 const SELLER_NAME = "VANBUD Ivan Tatarchuk";
 const SELLER_ADDRESS = "ul. Mielecka 5, 70-740 Szczecin";
 
-export default function KosztorysSuccessPage({
+export default async function KosztorysSuccessPage({
   searchParams,
 }: {
   searchParams: { session_id?: string };
 }) {
   const tierLabel = PRODUCT_LABEL;
   const price = PRODUCT_PRICE_PLN;
+
+  let invoicePaid = false;
+  if (searchParams.session_id) {
+    const supabase = createAdminClient();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data } = await (supabase as any)
+      .from("kosztorys_purchases")
+      .select("status")
+      .eq("stripe_session_id", searchParams.session_id)
+      .maybeSingle();
+    invoicePaid = data?.status === "paid";
+  }
   const purchaseDate = new Intl.DateTimeFormat("pl-PL", {
     day: "2-digit",
     month: "2-digit",
@@ -77,12 +90,21 @@ export default function KosztorysSuccessPage({
             <p>NIP: {SELLER_NIP}</p>
           </div>
           <p className="rounded-md bg-blue-50 p-2.5 text-xs text-blue-700">
-            To potwierdzenie nie jest fakturą VAT. Faktura VAT zostanie wysłana automatycznie na Twój
-            adres e-mail po zaksięgowaniu płatności.
+            To potwierdzenie nie jest fakturą VAT.{" "}
+            {invoicePaid
+              ? "Faktura VAT jest już gotowa do pobrania poniżej oraz została wysłana na Twój adres e-mail."
+              : "Faktura VAT zostanie wysłana automatycznie na Twój adres e-mail w ciągu kilku sekund, gdy tylko płatność zostanie zaksięgowana."}
           </p>
         </div>
 
         <div className="mt-6 space-y-3 print:hidden">
+          {searchParams.session_id && (
+            <Button variant="outline" className="w-full" asChild>
+              <Link href={`/faktura/${searchParams.session_id}`}>
+                <Receipt className="mr-2 h-4 w-4" /> Pobierz fakturę VAT
+              </Link>
+            </Button>
+          )}
           <PrintReceiptButton />
           <Button className="w-full" asChild>
             <Link

@@ -15,6 +15,21 @@ const OFFER_VARIANT: Record<string, "default" | "secondary" | "success"> = {
   rejected: "secondary",
 };
 
+const OFFER_LABEL: Record<string, string> = {
+  draft: "Szkic",
+  sent: "Wysłana",
+  accepted: "Zaakceptowana",
+  rejected: "Odrzucona",
+};
+
+const PROJECT_STATUS_LABEL: Record<string, string> = {
+  draft: "Szkic",
+  open: "Otwarty",
+  in_progress: "W trakcie",
+  completed: "Zakończony",
+  cancelled: "Anulowany",
+};
+
 export default async function MarketplaceProjectPage({
   params,
 }: {
@@ -59,14 +74,14 @@ export default async function MarketplaceProjectPage({
         href="/dashboard/marketplace"
         className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
       >
-        <ArrowLeft className="h-4 w-4" /> Back to marketplace
+        <ArrowLeft className="h-4 w-4" /> Wróć do rynku ofert
       </Link>
 
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <div className="flex items-center gap-2">
             <h1 className="text-2xl font-bold">{project.title}</h1>
-            <Badge variant="secondary">{project.status.replace("_", " ")}</Badge>
+            <Badge variant="secondary">{PROJECT_STATUS_LABEL[project.status] ?? project.status}</Badge>
           </div>
           {project.category && (
             <p className="text-sm text-muted-foreground">{project.category}</p>
@@ -76,13 +91,13 @@ export default async function MarketplaceProjectPage({
         {canBid && (
           <Button asChild>
             <Link href={`/dashboard/marketplace/${project.id}/bid`}>
-              Submit a bid
+              Złóż ofertę
             </Link>
           </Button>
         )}
         {myOffer && (
           <Badge variant={OFFER_VARIANT[myOffer.status] ?? "secondary"}>
-            Your bid: {myOffer.status}
+            Twoja oferta: {OFFER_LABEL[myOffer.status] ?? myOffer.status}
           </Badge>
         )}
       </div>
@@ -111,7 +126,7 @@ export default async function MarketplaceProjectPage({
             )}
             {(project.budget_min || project.budget_max) && (
               <p className="font-semibold text-foreground">
-                Budget: {formatPLN(Number(project.budget_min ?? 0))} –{" "}
+                Budżet: {formatPLN(Number(project.budget_min ?? 0))} –{" "}
                 {formatPLN(Number(project.budget_max ?? 0))}
               </p>
             )}
@@ -122,12 +137,12 @@ export default async function MarketplaceProjectPage({
       {isOwner && (
         <Card>
           <CardHeader>
-            <CardTitle>Received bids ({offerList.length})</CardTitle>
+            <CardTitle>Otrzymane oferty ({offerList.length})</CardTitle>
           </CardHeader>
           <CardContent>
             {offerList.length === 0 ? (
               <p className="py-6 text-center text-sm text-muted-foreground">
-                No bids yet.
+                Brak ofert.
               </p>
             ) : (
               <div className="divide-y">
@@ -143,7 +158,7 @@ export default async function MarketplaceProjectPage({
                         {formatPLN(Number(o.total_gross))}
                       </span>
                       <Badge variant={OFFER_VARIANT[o.status] ?? "secondary"}>
-                        {o.status}
+                        {OFFER_LABEL[o.status] ?? o.status}
                       </Badge>
                     </div>
                   </Link>

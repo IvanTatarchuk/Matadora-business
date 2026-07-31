@@ -2,9 +2,9 @@
 
 import { useState, useTransition } from "react";
 import Link from "next/link";
-import { ArrowLeft, Plus, X, CheckCircle2, Circle, Clock, AlertTriangle, Trash2 } from "lucide-react";
+import { ArrowLeft, Plus, X, CheckCircle2, Circle, Clock, AlertTriangle, Trash2, Pencil } from "lucide-react";
 import {
-  createTaskCard, moveTaskCard, deleteTaskCard,
+  createTaskCard, moveTaskCard, deleteTaskCard, updateTaskCard,
   type TaskCard, type TaskStatus, type TaskPriority, type TaskCategory,
 } from "@/lib/actions/task-board";
 import {
@@ -57,12 +57,17 @@ export function ZadaniaClient({
   const [projectTasks, setProjectTasks] = useState<ProjectTask[]>(initialProjectTasks);
   const [updates, setUpdates] = useState<ProjectUpdate[]>(initialUpdates);
   const [showForm, setShowForm] = useState<TaskStatus | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
 
   const [form, setForm] = useState({
     title: "", description: "", priority: "medium" as TaskPriority,
     category: "general" as TaskCategory, dueDate: "", estimatedHours: "",
+  });
+  const [editForm, setEditForm] = useState({
+    title: "", description: "", priority: "medium" as TaskPriority,
+    dueDate: "", estimatedHours: "",
   });
 
   const tasksByStatus = (status: TaskStatus) => tasks.filter((t) => t.status === status);
@@ -114,6 +119,35 @@ export function ZadaniaClient({
     startTransition(async () => {
       await deleteTaskCard(id, projectId);
       setTasks((prev) => prev.filter((t) => t.id !== id));
+    });
+  }
+
+  function startEdit(task: TaskCard) {
+    setEditingId(task.id);
+    setEditForm({
+      title: task.title,
+      description: task.description ?? "",
+      priority: task.priority,
+      dueDate: task.due_date ?? "",
+      estimatedHours: task.estimated_hours ? String(task.estimated_hours) : "",
+    });
+  }
+
+  function handleEditSave(id: string) {
+    if (!editForm.title.trim()) { setError("Tytuł jest wymagany"); return; }
+    setError(null);
+    const updates = {
+      title: editForm.title,
+      description: editForm.description || null,
+      priority: editForm.priority,
+      due_date: editForm.dueDate || null,
+      estimated_hours: editForm.estimatedHours ? Number(editForm.estimatedHours) : null,
+    };
+    startTransition(async () => {
+      const res = await updateTaskCard(id, projectId, updates);
+      if (!res.ok) { setError(res.error ?? "Błąd"); return; }
+      setTasks((prev) => prev.map((t) => (t.id === id ? { ...t, ...updates } : t)));
+      setEditingId(null);
     });
   }
 
@@ -180,8 +214,36 @@ export function ZadaniaClient({
                   const pCfg = PRIORITY_CONFIG[task.priority];
                   const PIcon = pCfg.icon;
                   const isOverdue = task.due_date && task.status !== "done" && new Date(task.due_date) < new Date();
+                  if (editingId === task.id) {
+                    return (
+                      <Card key={task.id} className="shadow-sm">
+                        <CardContent className="p-3 space-y-2">
+                          <Input value={editForm.title} onChange={(e) => setEditForm({ ...editForm, title: e.target.value })}
+                            placeholder="Tytuł zadania..." className="h-7 text-xs" autoFocus />
+                          <Input value={editForm.description} onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
+                            placeholder="Opis (opcjonalnie)..." className="h-7 text-xs" />
+                          <div className="grid grid-cols-2 gap-1.5">
+                            <select value={editForm.priority} onChange={(e) => setEditForm({ ...editForm, priority: e.target.value as TaskPriority })}
+                              className="rounded border bg-background px-1.5 py-1 text-xs">
+                              {Object.entries(PRIORITY_CONFIG).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
+                            </select>
+                            <Input type="date" value={editForm.dueDate} onChange={(e) => setEditForm({ ...editForm, dueDate: e.target.value })}
+                              className="h-7 text-xs" />
+                          </div>
+                          <Input type="number" min={0} value={editForm.estimatedHours}
+                            onChange={(e) => setEditForm({ ...editForm, estimatedHours: e.target.value })}
+                            placeholder="Szac. godziny" className="h-7 text-xs" />
+                          {error && <p className="text-xs text-destructive">{error}</p>}
+                          <div className="flex gap-1.5">
+                            <Button size="sm" className="h-6 text-xs flex-1" onClick={() => handleEditSave(task.id)} disabled={pending}>Zapisz</Button>
+                            <Button size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={() => { setEditingId(null); setError(null); }}><X className="h-3 w-3" /></Button>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    );
+                  }
                   return (
-                    <Card key={task.id} className={`shadow-sm hover:shadow-md transition-shadow cursor-default ${isOverdue ? "border-red-200" : ""}`}>
+                    <Card key={task.id} className={`group shadow-sm hover:shadow-md transition-shadow cursor-default ${isOverdue ? "border-red-200" : ""}`}>
                       <CardContent className="p-3">
                         <div className="flex items-start justify-between gap-1.5 mb-2">
                           <div className="flex items-center gap-1.5 flex-1 min-w-0">
@@ -190,11 +252,20 @@ export function ZadaniaClient({
                               : <PIcon className={`h-3.5 w-3.5 shrink-0 ${pCfg.color}`} />}
                             <p className={`text-xs font-medium leading-tight ${task.status === "done" ? "line-through text-muted-foreground" : ""}`}>{task.title}</p>
                           </div>
-                          <Button variant="ghost" size="sm" className="h-5 w-5 p-0 shrink-0 opacity-0 group-hover:opacity-100"
-                            onClick={() => handleDelete(task.id)} disabled={pending}>
-                            <Trash2 className="h-3 w-3 text-muted-foreground" />
-                          </Button>
+                          <div className="flex items-center gap-0.5 shrink-0 opacity-0 group-hover:opacity-100">
+                            <Button variant="ghost" size="sm" className="h-5 w-5 p-0"
+                              onClick={() => startEdit(task)} disabled={pending}>
+                              <Pencil className="h-3 w-3 text-muted-foreground" />
+                            </Button>
+                            <Button variant="ghost" size="sm" className="h-5 w-5 p-0"
+                              onClick={() => handleDelete(task.id)} disabled={pending}>
+                              <Trash2 className="h-3 w-3 text-muted-foreground" />
+                            </Button>
+                          </div>
                         </div>
+                        {task.description && (
+                          <p className="text-[10px] text-muted-foreground mb-2 line-clamp-2">{task.description}</p>
+                        )}
                         <div className="flex gap-1 flex-wrap mb-2">
                           <span className="text-[10px] bg-muted rounded px-1 py-0.5">{CATEGORY_LABELS[task.category]}</span>
                           {task.due_date && (

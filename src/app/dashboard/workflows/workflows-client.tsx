@@ -1,10 +1,12 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Workflow, Plus, Play, Pause, Clock, CheckCircle2, AlertCircle, X, Search, Filter } from "lucide-react";
+import { Workflow, Plus, Play, Pause, Clock, CheckCircle2, AlertCircle, X, Search, Filter, ChevronDown, ChevronUp, ListChecks } from "lucide-react";
 import {
   createWorkflowDefinition, toggleWorkflow, triggerWorkflow,
+  listWorkflowSteps, createWorkflowStep,
   type WorkflowDefinition, type WorkflowExecution, type WorkflowTrigger,
+  type WorkflowStep, type WorkflowStepType,
 } from "@/lib/actions/workflows";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -23,6 +25,15 @@ type Props = {
   };
 };
 
+const STEP_TYPE_LABELS: Record<WorkflowStepType, string> = {
+  action: "Akcja",
+  condition: "Warunek",
+  notification: "Powiadomienie",
+  approval: "Zatwierdzenie",
+  delay: "Opóźnienie",
+  integration: "Integracja",
+};
+
 export function WorkflowsClient({ initialWorkflows, initialExecutions, initialStats }: Props) {
   const [workflows, setWorkflows] = useState<WorkflowDefinition[]>(initialWorkflows);
   const [executions, setExecutions] = useState<WorkflowExecution[]>(initialExecutions);
@@ -39,6 +50,12 @@ export function WorkflowsClient({ initialWorkflows, initialExecutions, initialSt
   });
   const [searchQuery, setSearchQuery] = useState("");
   const [filterStatus, setFilterStatus] = useState<"all" | "active" | "inactive">("all");
+
+  const [expandedWorkflows, setExpandedWorkflows] = useState<Set<string>>(new Set());
+  const [workflowSteps, setWorkflowSteps] = useState<Record<string, WorkflowStep[]>>({});
+  const [stepsLoading, setStepsLoading] = useState<Set<string>>(new Set());
+  const [addStepFor, setAddStepFor] = useState<string | null>(null);
+  const [stepForm, setStepForm] = useState({ name: "", description: "", stepType: "action" as WorkflowStepType });
 
   function handleCreateWorkflow() {
     if (!workflowForm.name) { setError("Nazwa jest wymagana"); return; }
@@ -73,6 +90,50 @@ export function WorkflowsClient({ initialWorkflows, initialExecutions, initialSt
       // Reload executions
       const newExecutions = await fetch("/api/workflows/executions").then(r => r.json());
       setExecutions(newExecutions);
+    });
+  }
+
+  function toggleExpanded(workflowId: string) {
+    setExpandedWorkflows((prev) => {
+      const next = new Set(prev);
+      if (next.has(workflowId)) {
+        next.delete(workflowId);
+      } else {
+        next.add(workflowId);
+        if (!workflowSteps[workflowId]) {
+          setStepsLoading((p) => new Set(p).add(workflowId));
+          listWorkflowSteps(workflowId).then((steps) => {
+            setWorkflowSteps((p) => ({ ...p, [workflowId]: steps }));
+            setStepsLoading((p) => {
+              const n = new Set(p);
+              n.delete(workflowId);
+              return n;
+            });
+          });
+        }
+      }
+      return next;
+    });
+  }
+
+  function handleAddStep(workflowId: string) {
+    if (!stepForm.name) { setError("Nazwa kroku jest wymagana"); return; }
+    setError(null);
+    startTransition(async () => {
+      const existing = workflowSteps[workflowId] ?? [];
+      const res = await createWorkflowStep({
+        workflowId,
+        stepOrder: existing.length,
+        name: stepForm.name,
+        description: stepForm.description || undefined,
+        stepType: stepForm.stepType,
+        stepConfig: {},
+      });
+      if (!res.ok) { setError(res.error ?? "Błąd"); return; }
+      setStepForm({ name: "", description: "", stepType: "action" });
+      setAddStepFor(null);
+      const steps = await listWorkflowSteps(workflowId);
+      setWorkflowSteps((p) => ({ ...p, [workflowId]: steps }));
     });
   }
 
@@ -221,28 +282,112 @@ export function WorkflowsClient({ initialWorkflows, initialExecutions, initialSt
             </div>
           ) : (
             <div className="space-y-2">
-              {filteredWorkflows.map((workflow) => (
-                <div key={workflow.id} className="flex items-center justify-between p-3 rounded-lg border">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2">
-                      <p className="font-medium">{workflow.name}</p>
-                      {workflow.is_active ? <CheckCircle2 className="h-4 w-4 text-green-500" /> : <Pause className="h-4 w-4 text-gray-400" />}
+              {filteredWorkflows.map((workflow) => {
+                const isExpanded = expandedWorkflows.has(workflow.id);
+                const steps = workflowSteps[workflow.id] ?? [];
+                const isLoadingSteps = stepsLoading.has(workflow.id);
+                return (
+                  <div key={workflow.id} className="rounded-lg border">
+                    <div className="flex items-center justify-between p-3">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2">
+                          <p className="font-medium">{workflow.name}</p>
+                          {workflow.is_active ? <CheckCircle2 className="h-4 w-4 text-green-500" /> : <Pause className="h-4 w-4 text-gray-400" />}
+                        </div>
+                        <p className="text-sm text-muted-foreground">{workflow.trigger_type}</p>
+                        <p className="text-xs text-muted-foreground">{new Date(workflow.created_at).toLocaleString("pl-PL")}</p>
+                      </div>
+                      <div className="flex gap-1">
+                        <Button variant="outline" size="sm" onClick={() => toggleExpanded(workflow.id)}>
+                          <ListChecks className="h-4 w-4 mr-1" />
+                          Kroki
+                          {isExpanded ? <ChevronUp className="h-4 w-4 ml-1" /> : <ChevronDown className="h-4 w-4 ml-1" />}
+                        </Button>
+                        {workflow.is_active && (
+                          <Button variant="outline" size="sm" onClick={() => handleTriggerWorkflow(workflow.id)}>
+                            <Play className="h-4 w-4" />
+                          </Button>
+                        )}
+                        <Button variant="outline" size="sm" onClick={() => handleToggleWorkflow(workflow.id)}>
+                          {workflow.is_active ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+                        </Button>
+                      </div>
                     </div>
-                    <p className="text-sm text-muted-foreground">{workflow.trigger_type}</p>
-                    <p className="text-xs text-muted-foreground">{new Date(workflow.created_at).toLocaleString("pl-PL")}</p>
-                  </div>
-                  <div className="flex gap-1">
-                    {workflow.is_active && (
-                      <Button variant="outline" size="sm" onClick={() => handleTriggerWorkflow(workflow.id)}>
-                        <Play className="h-4 w-4" />
-                      </Button>
+
+                    {isExpanded && (
+                      <div className="border-t bg-muted/30 p-3 space-y-2">
+                        {isLoadingSteps ? (
+                          <p className="text-sm text-muted-foreground">Wczytywanie kroków...</p>
+                        ) : steps.length === 0 ? (
+                          <p className="text-sm text-muted-foreground">Brak zdefiniowanych kroków.</p>
+                        ) : (
+                          <ol className="space-y-1.5">
+                            {steps.map((step, idx) => (
+                              <li key={step.id} className="flex items-start gap-2 rounded-md bg-background p-2 text-sm">
+                                <span className="mt-0.5 shrink-0 rounded-full bg-primary/10 px-1.5 py-0.5 text-xs font-medium text-primary">
+                                  {idx + 1}
+                                </span>
+                                <div className="min-w-0 flex-1">
+                                  <div className="flex items-center gap-2 flex-wrap">
+                                    <p className="font-medium">{step.name}</p>
+                                    <span className="text-xs text-muted-foreground">{STEP_TYPE_LABELS[step.step_type]}</span>
+                                  </div>
+                                  {step.description && (
+                                    <p className="text-xs text-muted-foreground">{step.description}</p>
+                                  )}
+                                </div>
+                              </li>
+                            ))}
+                          </ol>
+                        )}
+
+                        {addStepFor === workflow.id ? (
+                          <div className="space-y-2 rounded-md border bg-background p-2.5">
+                            <Input
+                              placeholder="Nazwa kroku"
+                              value={stepForm.name}
+                              onChange={(e) => setStepForm({ ...stepForm, name: e.target.value })}
+                              className="h-8 text-sm"
+                            />
+                            <Input
+                              placeholder="Opis (opcjonalnie)"
+                              value={stepForm.description}
+                              onChange={(e) => setStepForm({ ...stepForm, description: e.target.value })}
+                              className="h-8 text-sm"
+                            />
+                            <select
+                              value={stepForm.stepType}
+                              onChange={(e) => setStepForm({ ...stepForm, stepType: e.target.value as WorkflowStepType })}
+                              className="h-8 w-full rounded-md border bg-background px-2 text-sm"
+                            >
+                              {(Object.keys(STEP_TYPE_LABELS) as WorkflowStepType[]).map((type) => (
+                                <option key={type} value={type}>{STEP_TYPE_LABELS[type]}</option>
+                              ))}
+                            </select>
+                            <div className="flex gap-2">
+                              <Button size="sm" disabled={pending} onClick={() => handleAddStep(workflow.id)}>
+                                {pending ? "Dodawanie..." : "Dodaj krok"}
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => { setAddStepFor(null); setStepForm({ name: "", description: "", stepType: "action" }); setError(null); }}
+                              >
+                                Anuluj
+                              </Button>
+                            </div>
+                          </div>
+                        ) : (
+                          <Button size="sm" variant="outline" onClick={() => setAddStepFor(workflow.id)}>
+                            <Plus className="h-3.5 w-3.5 mr-1" />
+                            Dodaj krok
+                          </Button>
+                        )}
+                      </div>
                     )}
-                    <Button variant="outline" size="sm" onClick={() => handleToggleWorkflow(workflow.id)}>
-                      {workflow.is_active ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
-                    </Button>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </CardContent>
