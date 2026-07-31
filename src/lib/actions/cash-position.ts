@@ -104,8 +104,10 @@ export async function getCashPositionForecast(): Promise<CashPositionForecast | 
     const remaining = round2((ret.retention_amount ?? 0) - (ret.released_amount ?? 0));
     if (remaining <= 0) continue;
     const week = weeks[bucketIndex(ret.release_date, thisWeekStart)]!;
-    if (ret.direction === "held") week.expectedInflow += remaining;
-    else week.expectedOutflow += remaining;
+    // "held" = retention we're withholding from a subcontractor (liability, we pay it out later);
+    // "paid_out" = retention we already paid out to the investor as a deposit (asset, they release it back to us).
+    if (ret.direction === "held") week.expectedOutflow += remaining;
+    else week.expectedInflow += remaining;
   }
 
   let cumulative = cashNow;
