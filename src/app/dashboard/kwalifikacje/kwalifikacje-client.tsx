@@ -50,14 +50,14 @@ export function KwalifikacjeClient({
 
   const [form, setForm] = useState({
     workerId: workers[0]?.id ?? "",
-    certificationType: "bhp_general" as CertificationType,
-    customName: "", issuingAuthority: "", certificateNumber: "",
+    certType: "bhp_general" as CertificationType,
+    certName: "", issuingBody: "", certNumber: "",
     issuedDate: "", expiryDate: "", isPermanent: false, notes: "",
   });
 
   const filtered = certs.filter((c) => {
     const matchWorker = filterWorker === "all" || c.worker_id === filterWorker;
-    const matchType = filterType === "all" || c.certification_type === filterType;
+    const matchType = filterType === "all" || c.cert_type === filterType;
     const status = expiryStatus(c);
     const matchExpiry = filterExpiry === "all" || filterExpiry === status;
     return matchWorker && matchType && matchExpiry;
@@ -73,13 +73,14 @@ export function KwalifikacjeClient({
 
   function handleCreate() {
     if (!form.workerId) { setError("Wybierz pracownika"); return; }
-    if (form.certificationType === "custom" && !form.customName.trim()) { setError("Podaj nazwę certyfikatu"); return; }
+    if (form.certType === "other" && !form.certName.trim()) { setError("Podaj nazwę certyfikatu"); return; }
     setError(null);
     startTransition(async () => {
+      const certName = form.certType === "other" ? form.certName.trim() : CERT_LABELS[form.certType];
       const res = await createCertification({
-        workerId: form.workerId, certificationType: form.certificationType,
-        customName: form.customName || undefined, issuingAuthority: form.issuingAuthority || undefined,
-        certificateNumber: form.certificateNumber || undefined,
+        workerId: form.workerId, certType: form.certType, certName,
+        issuingBody: form.issuingBody || undefined,
+        certNumber: form.certNumber || undefined,
         issuedDate: form.issuedDate || undefined,
         expiryDate: form.isPermanent ? undefined : (form.expiryDate || undefined),
         isPermanent: form.isPermanent, notes: form.notes || undefined,
@@ -88,18 +89,18 @@ export function KwalifikacjeClient({
       const worker = workers.find((w) => w.id === form.workerId);
       const newCert: WorkerCertification = {
         id: res.id!, worker_id: form.workerId, org_id: "",
-        certification_type: form.certificationType,
-        custom_name: form.customName || null, issuing_authority: form.issuingAuthority || null,
-        certificate_number: form.certificateNumber || null,
+        cert_type: form.certType, cert_name: certName,
+        issuing_body: form.issuingBody || null,
+        cert_number: form.certNumber || null,
         issued_date: form.issuedDate || null,
         expiry_date: form.isPermanent ? null : (form.expiryDate || null),
-        is_permanent: form.isPermanent, notes: form.notes || null,
-        created_at: new Date().toISOString(), updated_at: new Date().toISOString(),
+        is_permanent: form.isPermanent, file_url: null, notes: form.notes || null,
+        created_at: new Date().toISOString(),
         worker_name: worker?.full_name ?? null, worker_specialty: worker?.specialty ?? null,
       };
       setCerts((prev) => [newCert, ...prev]);
       setShowForm(false);
-      setForm({ workerId: workers[0]?.id ?? "", certificationType: "bhp_general", customName: "", issuingAuthority: "", certificateNumber: "", issuedDate: "", expiryDate: "", isPermanent: false, notes: "" });
+      setForm({ workerId: workers[0]?.id ?? "", certType: "bhp_general", certName: "", issuingBody: "", certNumber: "", issuedDate: "", expiryDate: "", isPermanent: false, notes: "" });
     });
   }
 
@@ -145,7 +146,7 @@ export function KwalifikacjeClient({
                       {c.worker_name}
                     </span>
                     <span className="text-muted-foreground">—</span>
-                    <span>{c.certification_type === "custom" ? c.custom_name : CERT_LABELS[c.certification_type]}</span>
+                    <span>{c.cert_type === "other" ? c.cert_name : CERT_LABELS[c.cert_type]}</span>
                     <span className={`ml-auto text-xs font-semibold ${days !== null && days < 0 ? "text-red-600" : "text-orange-600"}`}>
                       {days !== null && days < 0 ? `WYGASŁE ${Math.abs(days)} dni temu` : `za ${days} dni`}
                     </span>
@@ -189,24 +190,24 @@ export function KwalifikacjeClient({
               </div>
               <div>
                 <label className="text-sm font-medium">Rodzaj kwalifikacji *</label>
-                <select value={form.certificationType} onChange={(e) => setForm({ ...form, certificationType: e.target.value as CertificationType })}
+                <select value={form.certType} onChange={(e) => setForm({ ...form, certType: e.target.value as CertificationType })}
                   className="mt-1 w-full rounded-md border bg-background px-3 py-2 text-sm">
                   {Object.entries(CERT_LABELS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
                 </select>
               </div>
-              {form.certificationType === "custom" && (
+              {form.certType === "other" && (
                 <div className="sm:col-span-2">
                   <label className="text-sm font-medium">Nazwa własna *</label>
-                  <Input value={form.customName} onChange={(e) => setForm({ ...form, customName: e.target.value })} className="mt-1" />
+                  <Input value={form.certName} onChange={(e) => setForm({ ...form, certName: e.target.value })} className="mt-1" />
                 </div>
               )}
               <div>
                 <label className="text-sm font-medium">Organ wydający</label>
-                <Input value={form.issuingAuthority} onChange={(e) => setForm({ ...form, issuingAuthority: e.target.value })} placeholder="np. UDT, SEP, Inspekcja Pracy" className="mt-1" />
+                <Input value={form.issuingBody} onChange={(e) => setForm({ ...form, issuingBody: e.target.value })} placeholder="np. UDT, SEP, Inspekcja Pracy" className="mt-1" />
               </div>
               <div>
                 <label className="text-sm font-medium">Nr certyfikatu / zaświadczenia</label>
-                <Input value={form.certificateNumber} onChange={(e) => setForm({ ...form, certificateNumber: e.target.value })} className="mt-1" />
+                <Input value={form.certNumber} onChange={(e) => setForm({ ...form, certNumber: e.target.value })} className="mt-1" />
               </div>
               <div>
                 <label className="text-sm font-medium">Data wydania</label>
@@ -287,11 +288,11 @@ export function KwalifikacjeClient({
                           <ExpIcon className="h-3 w-3" />{expCfg.label}
                         </span>
                       </div>
-                      <p className="font-semibold text-sm">{cert.certification_type === "custom" ? cert.custom_name : CERT_LABELS[cert.certification_type]}</p>
+                      <p className="font-semibold text-sm">{cert.cert_type === "other" ? cert.cert_name : CERT_LABELS[cert.cert_type]}</p>
                       <p className="text-xs text-muted-foreground mt-0.5">{cert.worker_name}{cert.worker_specialty ? ` · ${cert.worker_specialty}` : ""}</p>
                       <div className="mt-1.5 text-xs text-muted-foreground space-y-0.5">
-                        {cert.issuing_authority && <p>Wydane przez: {cert.issuing_authority}</p>}
-                        {cert.certificate_number && <p>Nr: {cert.certificate_number}</p>}
+                        {cert.issuing_body && <p>Wydane przez: {cert.issuing_body}</p>}
+                        {cert.cert_number && <p>Nr: {cert.cert_number}</p>}
                         {cert.issued_date && <p>Wydane: {new Date(cert.issued_date).toLocaleDateString("pl-PL")}</p>}
                         {cert.is_permanent ? (
                           <p className="text-blue-600 font-medium">Bezterminowe</p>
