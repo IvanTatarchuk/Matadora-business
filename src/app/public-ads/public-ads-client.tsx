@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Plus, Search, MapPin, Home, Phone, Mail, Image as ImageIcon, Filter, X, Calendar, DollarSign, Upload, Trash2 } from "lucide-react";
+import { Plus, Search, MapPin, Home, Phone, Mail, Image as ImageIcon, Filter, X, Calendar, DollarSign, Upload, Trash2, ChevronDown, ChevronUp, Eye, MessageSquare } from "lucide-react";
 import { createPublicAd, uploadAdPhoto, deleteAdPhoto, type PublicAd, type CreateAdInput } from "@/lib/actions/public-ads";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -26,13 +26,22 @@ const WORK_TYPES = [
   { value: "other", label: "Inne" },
 ];
 
+const AD_STATUS_CONFIG: Record<PublicAd["status"], { label: string; className: string }> = {
+  active: { label: "Aktywne", className: "bg-green-100 text-green-700" },
+  closed: { label: "Zamknięte", className: "bg-slate-100 text-slate-600" },
+  pending: { label: "Oczekujące", className: "bg-amber-100 text-amber-700" },
+  suspended: { label: "Zawieszone", className: "bg-red-100 text-red-700" },
+};
+
 interface Props {
   initialAds: PublicAd[];
+  initialMyAds: PublicAd[];
   user: any;
 }
 
-export function PublicAdsClient({ initialAds, user }: Props) {
+export function PublicAdsClient({ initialAds, initialMyAds, user }: Props) {
   const [ads, setAds] = useState<PublicAd[]>(initialAds);
+  const [myAdsOpen, setMyAdsOpen] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
@@ -201,6 +210,56 @@ export function PublicAdsClient({ initialAds, user }: Props) {
           Dodaj ogłoszenie
         </Button>
       </div>
+
+      {/* My ads */}
+      {user && (
+        <Card className="mb-6">
+          <button
+            type="button"
+            onClick={() => setMyAdsOpen((v) => !v)}
+            className="flex w-full items-center justify-between p-4 text-left"
+          >
+            <span className="font-medium">
+              Moje ogłoszenia {initialMyAds.length > 0 && `(${initialMyAds.length})`}
+            </span>
+            {myAdsOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+          </button>
+          {myAdsOpen && (
+            <CardContent className="pt-0 space-y-2">
+              {initialMyAds.length === 0 ? (
+                <p className="text-sm text-muted-foreground">
+                  Nie masz jeszcze żadnych ogłoszeń.
+                </p>
+              ) : (
+                initialMyAds.map((ad) => (
+                  <a
+                    key={ad.id}
+                    href={`/public-ads/${ad.id}`}
+                    className="flex items-center justify-between gap-3 rounded-lg border p-3 text-sm hover:border-primary hover:bg-primary/5 transition-colors"
+                  >
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate font-medium">{ad.title}</p>
+                      <div className="mt-1 flex items-center gap-3 text-xs text-muted-foreground">
+                        <span className="flex items-center gap-1">
+                          <Eye className="h-3 w-3" /> {ad.views_count}
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <MessageSquare className="h-3 w-3" /> {ad.responses_count}
+                        </span>
+                      </div>
+                    </div>
+                    <span
+                      className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-medium ${AD_STATUS_CONFIG[ad.status].className}`}
+                    >
+                      {AD_STATUS_CONFIG[ad.status].label}
+                    </span>
+                  </a>
+                ))
+              )}
+            </CardContent>
+          )}
+        </Card>
+      )}
 
       {/* Filters */}
       <Card className="mb-6">

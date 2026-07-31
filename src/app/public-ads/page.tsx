@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
-import { listPublicAds } from "@/lib/actions/public-ads";
+import { listPublicAds, getUserAds } from "@/lib/actions/public-ads";
 import { PublicAdsClient } from "./public-ads-client";
 
 export default async function PublicAdsPage({
@@ -16,9 +16,15 @@ export default async function PublicAdsPage({
     work_type: searchParams.work_type,
   });
 
+  const myAds = user ? await getUserAds(user.id) : null;
+
   return (
     <div className="min-h-screen bg-background">
-      <PublicAdsClient initialAds={ok ? ads || [] : []} user={user} />
+      <PublicAdsClient
+        initialAds={ok ? ads || [] : []}
+        initialMyAds={myAds?.ok ? myAds.data || [] : []}
+        user={user}
+      />
     </div>
   );
 }
