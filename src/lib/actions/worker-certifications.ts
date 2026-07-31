@@ -3,40 +3,42 @@
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 
+// Must match the `cert_type` check constraint on public.worker_certifications
+// (supabase/migrations/0017_subcontractors_inspections_equipment_po.sql).
 export type CertificationType =
-  | "bhp_general"      // Karta szkolenia BHP ogólnego
-  | "bhp_instruction"  // Instruktaż stanowiskowy
-  | "upe"              // Uprawnienia budowlane
-  | "sep_e"            // SEP — eksploatacja do 1kV
-  | "sep_d"            // SEP — dozór
-  | "udt"              // Uprawnienia UDT (wózki, dźwigi)
-  | "first_aid"        // Kurs pierwszej pomocy
-  | "scaffold"         // Uprawnienia do rusztowań
-  | "asbestos"         // Praca z azbestem
-  | "welding"          // Uprawnienia spawalnicze
-  | "crane_operator"   // Operator dźwigu
-  | "forklift"         // Wózek widłowy
-  | "explosives"       // Materiały wybuchowe
-  | "driving_cat_c"    // Prawo jazdy kat. C
-  | "driving_cat_ce"   // Prawo jazdy kat. CE
-  | "work_at_height"   // Praca na wysokości
-  | "confined_space"   // Przestrzenie ograniczone
-  | "custom";
+  | "bhp_general"      // Szkolenie BHP ogólne
+  | "bhp_work"          // Szkolenie BHP stanowiskowe
+  | "udt_operator"      // Uprawnienia UDT
+  | "electrical_e"      // Uprawnienia elektryczne E (eksploatacja)
+  | "electrical_d"      // Uprawnienia elektryczne D (dozór)
+  | "high_work"         // Praca na wysokości
+  | "forklift"          // Wózek widłowy
+  | "crane"             // Dźwig
+  | "welding"           // Spawanie (np. PREN)
+  | "driving_cat_b"     // Prawo jazdy kat. B
+  | "driving_cat_c"     // Prawo jazdy kat. C
+  | "driving_cat_ce"    // Prawo jazdy kat. CE
+  | "first_aid"         // Pierwsza pomoc
+  | "asbestos"          // Usuwanie azbestu
+  | "scaffolding"       // Rusztowania
+  | "blasting"          // Roboty strzałowe
+  | "gas_installation"  // Instalacje gazowe
+  | "other";
 
 export type WorkerCertification = {
   id: string;
   worker_id: string;
   org_id: string;
-  certification_type: CertificationType;
-  custom_name: string | null;
-  issuing_authority: string | null;
-  certificate_number: string | null;
+  cert_type: CertificationType;
+  cert_name: string;
+  cert_number: string | null;
+  issuing_body: string | null;
   issued_date: string | null;
   expiry_date: string | null;
   is_permanent: boolean;
+  file_url: string | null;
   notes: string | null;
   created_at: string;
-  updated_at: string;
   // joined
   worker_name?: string | null;
   worker_specialty?: string | null;
@@ -78,10 +80,10 @@ export async function listWorkerCertifications(workerId: string): Promise<Worker
 
 export async function createCertification(input: {
   workerId: string;
-  certificationType: CertificationType;
-  customName?: string;
-  issuingAuthority?: string;
-  certificateNumber?: string;
+  certType: CertificationType;
+  certName: string;
+  issuingBody?: string;
+  certNumber?: string;
   issuedDate?: string;
   expiryDate?: string;
   isPermanent?: boolean;
@@ -95,10 +97,10 @@ export async function createCertification(input: {
 
   const { data, error } = await db(supabase).from("worker_certifications").insert({
     worker_id: input.workerId, org_id: member.org_id,
-    certification_type: input.certificationType,
-    custom_name: input.customName ?? null,
-    issuing_authority: input.issuingAuthority ?? null,
-    certificate_number: input.certificateNumber ?? null,
+    cert_type: input.certType,
+    cert_name: input.certName,
+    issuing_body: input.issuingBody ?? null,
+    cert_number: input.certNumber ?? null,
     issued_date: input.issuedDate ?? null,
     expiry_date: input.expiryDate ?? null,
     is_permanent: input.isPermanent ?? false,

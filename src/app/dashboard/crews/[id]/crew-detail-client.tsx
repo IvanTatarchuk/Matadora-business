@@ -286,7 +286,7 @@ export function CrewDetailClient({ crew, initialAssignments, initialSchedules, i
                 <ul className="list-disc space-y-0.5 pl-4">
                   {expiringCertifications.map((cert) => {
                     const days = daysUntilExpiry(cert);
-                    const label = cert.certification_type === "custom" ? cert.custom_name : CERT_LABELS[cert.certification_type];
+                    const label = cert.cert_type === "other" ? cert.cert_name : CERT_LABELS[cert.cert_type];
                     return (
                       <li key={cert.id}>
                         {cert.worker_name ?? "Робітник"} — {label}{" "}

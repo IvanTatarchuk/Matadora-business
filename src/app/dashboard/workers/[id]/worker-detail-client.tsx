@@ -351,7 +351,7 @@ export function WorkerDetailClient({ worker, crews, initialHistory, certificatio
                       <ExpIcon className="h-3 w-3" />{expCfg.label}
                     </span>
                     <p className="mt-1 font-medium text-sm">
-                      {cert.certification_type === "custom" ? cert.custom_name : CERT_LABELS[cert.certification_type]}
+                      {cert.cert_type === "other" ? cert.cert_name : CERT_LABELS[cert.cert_type]}
                     </p>
                     {cert.is_permanent ? (
                       <p className="text-xs text-blue-600 mt-0.5">Bezterminowe</p>
