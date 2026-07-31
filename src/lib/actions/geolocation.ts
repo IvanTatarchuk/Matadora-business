@@ -74,7 +74,7 @@ export async function recordWorkerLocation(input: {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { ok: false, error: "Nie zalogowano" };
   const { data: member } = await supabase.from("organization_members").select("org_id").eq("user_id", user.id).single();
-  if (!member) return { ok: false, error: "Brак організації" };
+  if (!member) return { ok: false, error: "Brak organizacji" };
 
   const { data, error } = await db(supabase).from("worker_locations").insert({
     worker_id: input.workerId,
@@ -138,7 +138,7 @@ export async function createGeofence(input: {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { ok: false, error: "Nie zalogowano" };
   const { data: member } = await supabase.from("organization_members").select("org_id").eq("user_id", user.id).single();
-  if (!member) return { ok: false, error: "Brак організації" };
+  if (!member) return { ok: false, error: "Brak organizacji" };
 
   const { data, error } = await db(supabase).from("geofences").insert({
     project_id: input.projectId ?? null,

@@ -69,9 +69,9 @@ export async function createApiKey(input: {
 }): Promise<{ ok: boolean; key?: string; id?: string; error?: string }> {
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { ok: false, error: "Не залоговано" };
+  if (!user) return { ok: false, error: "Nie zalogowano" };
   const { data: member } = await supabase.from("organization_members").select("org_id").eq("user_id", user.id).single();
-  if (!member) return { ok: false, error: "Брак організації" };
+  if (!member) return { ok: false, error: "Brak organizacji" };
 
   const { key, hash, prefix } = generateApiKey();
 
@@ -127,9 +127,9 @@ export async function createApiWebhook(input: {
 }): Promise<{ ok: boolean; secret?: string; id?: string; error?: string }> {
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { ok: false, error: "Не залоговано" };
+  if (!user) return { ok: false, error: "Nie zalogowano" };
   const { data: member } = await supabase.from("organization_members").select("org_id").eq("user_id", user.id).single();
-  if (!member) return { ok: false, error: "Брак організації" };
+  if (!member) return { ok: false, error: "Brak organizacji" };
 
   const secret = randomBytes(32).toString('hex');
 
@@ -173,7 +173,7 @@ export async function toggleApiWebhook(webhookId: string): Promise<{ ok: boolean
     .eq("id", webhookId)
     .single();
 
-  if (!webhook) return { ok: false, error: "Webhook not found" };
+  if (!webhook) return { ok: false, error: "Nie znaleziono webhooka" };
 
   const { error } = await db(supabase)
     .from("api_webhooks")

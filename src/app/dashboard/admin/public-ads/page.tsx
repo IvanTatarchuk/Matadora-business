@@ -9,7 +9,7 @@ export default async function AdminPublicAdsPage() {
     return (
       <div className="container mx-auto py-8 px-4">
         <div className="text-center text-muted-foreground">
-          <p>Не авторизовано</p>
+          <p>Nie autoryzowano</p>
         </div>
       </div>
     );
@@ -29,7 +29,7 @@ export default async function AdminPublicAdsPage() {
     return (
       <div className="container mx-auto py-8 px-4">
         <div className="text-center text-muted-foreground">
-          <p>Доступ заборонено. Тільки адміністратори можуть переглядати цю сторінку.</p>
+          <p>Dostęp zabroniony. Tylko administratorzy mogą przeglądać tę stronę.</p>
         </div>
       </div>
     );

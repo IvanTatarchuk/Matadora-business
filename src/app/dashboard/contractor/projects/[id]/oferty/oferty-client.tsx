@@ -5,6 +5,7 @@ import Link from "next/link";
 import {
   ArrowLeft, Plus, FileText, Trash2, Send, Download, Eye,
   CheckCircle2, Clock, XCircle, Building2, User, Briefcase,
+  Hammer, Building, Store, Factory, Route, Boxes, Landmark,
 } from "lucide-react";
 import {
   generateOfferFromBoq, updateOfferStatus, deleteGeneratedOffer, signOffer,
@@ -19,6 +20,16 @@ const TEMPLATE_CONFIG: Record<OfferTemplate, { label: string; icon: React.Elemen
   investor: { label: "Inwestor prywatny", icon: User, color: "bg-blue-100 text-blue-700" },
   contractor: { label: "Generalny wykonawca", icon: Briefcase, color: "bg-purple-100 text-purple-700" },
   developer: { label: "Deweloper", icon: Building2, color: "bg-green-100 text-green-700" },
+  renovation: { label: "Remont", icon: Hammer, color: "bg-amber-100 text-amber-700" },
+  new_construction: { label: "Nowy budynek", icon: Building, color: "bg-indigo-100 text-indigo-700" },
+  commercial: { label: "Obiekt komercyjny", icon: Store, color: "bg-pink-100 text-pink-700" },
+  industrial: { label: "Obiekt przemysłowy", icon: Factory, color: "bg-slate-100 text-slate-700" },
+  infrastructure: { label: "Infrastruktura", icon: Route, color: "bg-teal-100 text-teal-700" },
+  knr_standard: { label: "KNR (standard)", icon: FileText, color: "bg-cyan-100 text-cyan-700" },
+  knr_simplified: { label: "KNR (uproszczony)", icon: FileText, color: "bg-sky-100 text-sky-700" },
+  material_labor: { label: "Materiał + robocizna", icon: Boxes, color: "bg-lime-100 text-lime-700" },
+  public_sector: { label: "Sektor publiczny", icon: Landmark, color: "bg-rose-100 text-rose-700" },
+  private_client: { label: "Klient prywatny", icon: User, color: "bg-emerald-100 text-emerald-700" },
 };
 
 const STATUS_CONFIG: Record<GeneratedOffer["status"], { label: string; icon: React.ElementType; color: string }> = {

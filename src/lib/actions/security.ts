@@ -78,9 +78,9 @@ export async function logAuditAction(input: {
 }): Promise<{ ok: boolean; id?: string; error?: string }> {
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { ok: false, error: "Не залоговано" };
+  if (!user) return { ok: false, error: "Nie zalogowano" };
   const { data: member } = await supabase.from("organization_members").select("org_id").eq("user_id", user.id).single();
-  if (!member) return { ok: false, error: "Брак організації" };
+  if (!member) return { ok: false, error: "Brak organizacji" };
 
   const headersList = headers();
   const ip = headersList.get("x-forwarded-for") || headersList.get("x-real-ip") || null;
@@ -127,9 +127,9 @@ export async function createSecurityEvent(input: {
 }): Promise<{ ok: boolean; id?: string; error?: string }> {
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { ok: false, error: "Не залоговано" };
+  if (!user) return { ok: false, error: "Nie zalogowano" };
   const { data: member } = await supabase.from("organization_members").select("org_id").eq("user_id", user.id).single();
-  if (!member) return { ok: false, error: "Брак організації" };
+  if (!member) return { ok: false, error: "Brak organizacji" };
 
   const headersList = headers();
   const ip = headersList.get("x-forwarded-for") || headersList.get("x-real-ip") || null;
@@ -174,7 +174,7 @@ export async function resolveSecurityEvent(
 ): Promise<{ ok: boolean; error?: string }> {
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { ok: false, error: "Не залоговано" };
+  if (!user) return { ok: false, error: "Nie zalogowano" };
 
   const { error } = await db(supabase)
     .from("security_events")

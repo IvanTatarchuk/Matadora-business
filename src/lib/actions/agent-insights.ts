@@ -16,9 +16,9 @@ export interface CashFlowInsight {
 }
 
 /**
- * Виконує CashFlowAnalyzerAgent для конкретного проєкту. Агент сам
- * використовує service-role клієнт (обходить RLS), тому авторизація
- * перевіряється тут явно — тільки контрактор, що володіє проєктом.
+ * Uruchamia CashFlowAnalyzerAgent dla konkretnego projektu. Agent sam
+ * używa klienta service-role (omija RLS), dlatego autoryzacja jest
+ * sprawdzana tutaj jawnie — tylko wykonawca będący właścicielem projektu.
  */
 export async function getCashFlowInsight(
   projectId: string
@@ -27,7 +27,7 @@ export async function getCashFlowInsight(
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) return { error: "unauthorized" };
+  if (!user) return { error: "Nie zalogowano" };
 
   const { data: project } = await supabase
     .from("projects")
@@ -35,7 +35,7 @@ export async function getCashFlowInsight(
     .eq("id", projectId)
     .single();
   if (!project || project.contractor_id !== user.id) {
-    return { error: "unauthorized" };
+    return { error: "Brak dostępu do tego projektu" };
   }
 
   try {
@@ -53,6 +53,6 @@ export async function getCashFlowInsight(
       recommendations: optimization.recommendations,
     };
   } catch (err) {
-    return { error: err instanceof Error ? err.message : "unknown_error" };
+    return { error: err instanceof Error ? err.message : "Nieznany błąd" };
   }
 }

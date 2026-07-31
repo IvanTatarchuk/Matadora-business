@@ -4,9 +4,9 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { AgentConfig } from "@/lib/constants/subcontractors";
 
 /**
- * Cash Flow Analyzer Agent - Агент для аналізу грошового потоку
- * Аналізує грошовий потік проекту на основі реальних даних із
- * cashflow_entries / invoices / retention_payments (не випадкові числа).
+ * Cash Flow Analyzer Agent — analizuje przepływ gotówki projektu na podstawie
+ * rzeczywistych danych z cashflow_entries / invoices / retention_payments
+ * (nie liczb losowych).
  */
 export class CashFlowAnalyzerAgent {
   private config: AgentConfig;
@@ -15,7 +15,7 @@ export class CashFlowAnalyzerAgent {
     this.config = {
       id: "cash-flow-analyzer",
       name: "Cash Flow Analyzer Agent",
-      description: "Аналізує грошовий потік проекту, прогнозує фінансові потреби та виявляє ризики ліквідності",
+      description: "Analizuje przepływ gotówki projektu, prognozuje potrzeby finansowe i wykrywa ryzyka płynności",
       category: "financial",
       capabilities: [
         "cash_flow_projection",
@@ -35,8 +35,8 @@ export class CashFlowAnalyzerAgent {
   }
 
   /**
-   * Агрегує фактичний грошовий потік проекту по місяцях
-   * (public.cashflow_entries: planned_amount / actual_amount по type).
+   * Agreguje faktyczny przepływ gotówki projektu miesięcznie
+   * (public.cashflow_entries: planned_amount / actual_amount wg type).
    */
   async projectCashFlow(
     projectId: string,
@@ -96,9 +96,9 @@ export class CashFlowAnalyzerAgent {
   }
 
   /**
-   * Оцінює позицію ліквідності проекту: скільки грошей реально винні нам
-   * (несплачені вхідні рахунки) проти того, скільки винні ми (несплачені
-   * вихідні), плюс утримання (retention), яке ще не звільнене.
+   * Ocenia pozycję płynności projektu: ile pieniędzy faktycznie są nam winni
+   * (nieopłacone faktury przychodzące) w porównaniu do tego, ile my jesteśmy
+   * winni (nieopłacone wychodzące), plus kaucje gwarancyjne jeszcze nie zwolnione.
    */
   async analyzeLiquidity(projectId: string): Promise<{
     receivableOutstanding: number;
@@ -152,7 +152,7 @@ export class CashFlowAnalyzerAgent {
   }
 
   /**
-   * Реальний список несплачених і сплачених рахунків проекту.
+   * Rzeczywista lista nieopłaconych i opłaconych faktur projektu.
    */
   async trackPayments(projectId: string): Promise<{
     pendingPayments: Array<{
@@ -206,8 +206,8 @@ export class CashFlowAnalyzerAgent {
   }
 
   /**
-   * Оцінює конкретні, перевірювані ризики грошового потоку на основі
-   * реальних прострочених рахунків та утримань, що мали б уже звільнитись.
+   * Ocenia konkretne, weryfikowalne ryzyka przepływu gotówki na podstawie
+   * rzeczywistych przeterminowanych faktur i kaucji, które powinny być już zwolnione.
    */
   async assessRisks(projectId: string): Promise<{
     risks: Array<{
@@ -243,7 +243,7 @@ export class CashFlowAnalyzerAgent {
       risks.push({
         type: "overdue_invoices",
         severity: overdueTotal > 50000 ? "high" : "medium",
-        detail: `${(overdue ?? []).length} прострочених рахунків на суму ${Math.round(overdueTotal)} PLN`,
+        detail: `${(overdue ?? []).length} przeterminowanych faktur na kwotę ${Math.round(overdueTotal)} PLN`,
       });
     }
 
@@ -255,7 +255,7 @@ export class CashFlowAnalyzerAgent {
       risks.push({
         type: "overdue_retention_release",
         severity: "medium",
-        detail: `${(overdueRetention ?? []).length} утримань на суму ${Math.round(overdueRetentionTotal)} PLN пропустили планову дату звільнення`,
+        detail: `${(overdueRetention ?? []).length} kaucji na kwotę ${Math.round(overdueRetentionTotal)} PLN przekroczyło planowany termin zwolnienia`,
       });
     }
 
@@ -269,9 +269,9 @@ export class CashFlowAnalyzerAgent {
   }
 
   /**
-   * Генерує рекомендації щодо оптимізації грошового потоку реальним
-   * викликом Claude на основі щойно зібраних реальних даних проекту
-   * (не захардкоджений список).
+   * Generuje rekomendacje optymalizacji przepływu gotówki rzeczywistym
+   * wywołaniem Claude na podstawie właśnie zebranych danych projektu
+   * (nie zahardkodowana lista).
    */
   async optimizeCashFlow(projectId: string): Promise<{
     summary: string;
@@ -285,7 +285,7 @@ export class CashFlowAnalyzerAgent {
     const apiKey = process.env.ANTHROPIC_API_KEY;
     if (!apiKey) {
       return {
-        summary: "AI-аналіз недоступний: ANTHROPIC_API_KEY не налаштований.",
+        summary: "Analiza AI niedostępna: brak konfiguracji ANTHROPIC_API_KEY.",
         recommendations: [],
       };
     }
@@ -326,12 +326,12 @@ Odpowiedz w formacie: pierwsza linia to jednozdaniowe podsumowanie sytuacji, kol
   }
 
   /**
-   * Отримує конфігурацію агента
+   * Zwraca konfigurację agenta
    */
   getConfig(): AgentConfig {
     return this.config;
   }
 }
 
-// Експорт синглтону
+// Eksport singletonu
 export const cashFlowAnalyzerAgent = new CashFlowAnalyzerAgent();

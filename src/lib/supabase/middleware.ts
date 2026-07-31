@@ -72,12 +72,17 @@ export async function updateSession(request: NextRequest) {
 
     if (role) {
       const home = ROLE_HOME[role];
-      const allowedPrefix = home;
 
-      // If a user visits a dashboard area that is not theirs, redirect home.
-      const isOtherRoleArea =
-        pathname.startsWith("/dashboard/") &&
-        !pathname.startsWith(allowedPrefix);
+      // Only block paths that belong to *another* role's dashboard home
+      // (e.g. a contractor visiting /dashboard/investor/...). Shared modules
+      // like /dashboard/crm, /dashboard/finanse/*, /dashboard/team etc. are
+      // not role-namespaced and must stay reachable for every role.
+      const otherRoleHomes = Object.entries(ROLE_HOME)
+        .filter(([r]) => r !== role)
+        .map(([, otherHome]) => otherHome);
+      const isOtherRoleArea = otherRoleHomes.some(
+        (otherHome) => pathname === otherHome || pathname.startsWith(`${otherHome}/`)
+      );
 
       if (pathname === "/dashboard" || isOtherRoleArea) {
         const url = request.nextUrl.clone();

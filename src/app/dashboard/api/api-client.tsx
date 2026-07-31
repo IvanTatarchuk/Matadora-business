@@ -138,10 +138,10 @@ export function ApiClient({ initialKeys, initialWebhooks, initialLogs, initialSt
       <div>
         <h1 className="text-2xl font-bold flex items-center gap-2">
           <Key className="h-6 w-6" />
-          API та інтеграції
+          API i integracje
         </h1>
         <p className="text-sm text-muted-foreground mt-1">
-          Керування API ключами, вебхуками та логами запитів
+          Zarządzanie kluczami API, webhookami i dziennikami żądań
         </p>
       </div>
 
@@ -150,7 +150,7 @@ export function ApiClient({ initialKeys, initialWebhooks, initialLogs, initialSt
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center justify-between mb-2">
-              <p className="text-sm text-muted-foreground">API ключі</p>
+              <p className="text-sm text-muted-foreground">Klucze API</p>
               <Key className="h-4 w-4 text-blue-500" />
             </div>
             <p className="text-2xl font-bold">{stats.activeKeys}/{stats.totalKeys}</p>
@@ -159,7 +159,7 @@ export function ApiClient({ initialKeys, initialWebhooks, initialLogs, initialSt
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center justify-between mb-2">
-              <p className="text-sm text-muted-foreground">Вебхуки</p>
+              <p className="text-sm text-muted-foreground">Webhooki</p>
               <Webhook className="h-4 w-4 text-purple-500" />
             </div>
             <p className="text-2xl font-bold">{stats.activeWebhooks}/{stats.totalWebhooks}</p>
@@ -168,7 +168,7 @@ export function ApiClient({ initialKeys, initialWebhooks, initialLogs, initialSt
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center justify-between mb-2">
-              <p className="text-sm text-muted-foreground">Запити</p>
+              <p className="text-sm text-muted-foreground">Żądania</p>
               <Activity className="h-4 w-4 text-green-500" />
             </div>
             <p className="text-2xl font-bold">{stats.totalRequests}</p>
@@ -177,7 +177,7 @@ export function ApiClient({ initialKeys, initialWebhooks, initialLogs, initialSt
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center justify-between mb-2">
-              <p className="text-sm text-muted-foreground">Середній час</p>
+              <p className="text-sm text-muted-foreground">Średni czas</p>
               <Clock className="h-4 w-4 text-orange-500" />
             </div>
             <p className="text-2xl font-bold">{stats.avgResponseTime.toFixed(0)}ms</p>
@@ -191,14 +191,14 @@ export function ApiClient({ initialKeys, initialWebhooks, initialLogs, initialSt
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="font-medium">Новий API ключ створено</p>
-                <p className="text-sm text-muted-foreground">Збережіть його зараз - більше не буде доступний</p>
+                <p className="font-medium">Utworzono nowy klucz API</p>
+                <p className="text-sm text-muted-foreground">Zapisz go teraz - nie będzie już dostępny</p>
                 <code className="mt-2 block bg-muted p-2 rounded text-sm">{newKey}</code>
               </div>
               <div className="flex gap-2">
                 <Button size="sm" onClick={() => copyToClipboard(newKey)}>
                   <Copy className="h-4 w-4 mr-2" />
-                  Копіювати
+                  Kopiuj
                 </Button>
                 <Button size="sm" variant="outline" onClick={() => setNewKey(null)}>
                   <X className="h-4 w-4" />
@@ -215,14 +215,14 @@ export function ApiClient({ initialKeys, initialWebhooks, initialLogs, initialSt
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="font-medium">Новий вебхук створено</p>
-                <p className="text-sm text-muted-foreground">Secret для перевірки підпису</p>
+                <p className="font-medium">Utworzono nowy webhook</p>
+                <p className="text-sm text-muted-foreground">Secret do weryfikacji podpisu</p>
                 <code className="mt-2 block bg-muted p-2 rounded text-sm">{newWebhookSecret}</code>
               </div>
               <div className="flex gap-2">
                 <Button size="sm" onClick={() => copyToClipboard(newWebhookSecret)}>
                   <Copy className="h-4 w-4 mr-2" />
-                  Копіювати
+                  Kopiuj
                 </Button>
                 <Button size="sm" variant="outline" onClick={() => setNewWebhookSecret(null)}>
                   <X className="h-4 w-4" />
@@ -237,11 +237,11 @@ export function ApiClient({ initialKeys, initialWebhooks, initialLogs, initialSt
       <div className="flex gap-2 flex-wrap">
         <Button onClick={() => setShowKeyForm(true)}>
           <Plus className="h-4 w-4 mr-2" />
-          Новий API ключ
+          Nowy klucz API
         </Button>
         <Button variant="outline" onClick={() => setShowWebhookForm(true)}>
           <Webhook className="h-4 w-4 mr-2" />
-          Новий вебхук
+          Nowy webhook
         </Button>
       </div>
 
@@ -250,7 +250,7 @@ export function ApiClient({ initialKeys, initialWebhooks, initialLogs, initialSt
         <div className="relative flex-1 max-w-sm">
           <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Шукати..."
+            placeholder="Szukaj..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-9"
@@ -261,9 +261,9 @@ export function ApiClient({ initialKeys, initialWebhooks, initialLogs, initialSt
           onChange={(e) => setFilterStatus(e.target.value as "all" | "active" | "inactive")}
           className="rounded-md border bg-background px-3 py-2 text-sm"
         >
-          <option value="all">Всі статуси</option>
-          <option value="active">Активні</option>
-          <option value="inactive">Неактивні</option>
+          <option value="all">Wszystkie statusy</option>
+          <option value="active">Aktywne</option>
+          <option value="inactive">Nieaktywne</option>
         </select>
       </div>
 
@@ -272,7 +272,7 @@ export function ApiClient({ initialKeys, initialWebhooks, initialLogs, initialSt
         <Card className="border-primary">
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-base">Створити API ключ</CardTitle>
+              <CardTitle className="text-base">Utwórz klucz API</CardTitle>
               <Button variant="ghost" size="sm" onClick={() => { setShowKeyForm(false); setError(null); }}>
                 <X className="h-4 w-4" />
               </Button>
@@ -280,7 +280,7 @@ export function ApiClient({ initialKeys, initialWebhooks, initialLogs, initialSt
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <label className="text-sm font-medium">Назва</label>
+              <label className="text-sm font-medium">Nazwa</label>
               <Input value={keyForm.name} onChange={(e) => setKeyForm({ ...keyForm, name: e.target.value })} className="mt-1" />
             </div>
             <div>
@@ -299,13 +299,13 @@ export function ApiClient({ initialKeys, initialWebhooks, initialLogs, initialSt
               </div>
             </div>
             <div>
-              <label className="text-sm font-medium">Дата закінчення (опційно)</label>
+              <label className="text-sm font-medium">Data wygaśnięcia (opcjonalnie)</label>
               <Input type="date" value={keyForm.expiresAt} onChange={(e) => setKeyForm({ ...keyForm, expiresAt: e.target.value })} className="mt-1" />
             </div>
             {error && <p className="text-sm text-destructive">{error}</p>}
             <div className="flex gap-2">
-              <Button onClick={handleCreateKey} disabled={pending}>{pending ? "Створення..." : "Створити"}</Button>
-              <Button variant="outline" onClick={() => { setShowKeyForm(false); setError(null); }}>Скасувати</Button>
+              <Button onClick={handleCreateKey} disabled={pending}>{pending ? "Tworzenie..." : "Utwórz"}</Button>
+              <Button variant="outline" onClick={() => { setShowKeyForm(false); setError(null); }}>Anuluj</Button>
             </div>
           </CardContent>
         </Card>
@@ -316,7 +316,7 @@ export function ApiClient({ initialKeys, initialWebhooks, initialLogs, initialSt
         <Card className="border-primary">
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-base">Створити вебхук</CardTitle>
+              <CardTitle className="text-base">Utwórz webhook</CardTitle>
               <Button variant="ghost" size="sm" onClick={() => { setShowWebhookForm(false); setError(null); }}>
                 <X className="h-4 w-4" />
               </Button>
@@ -324,7 +324,7 @@ export function ApiClient({ initialKeys, initialWebhooks, initialLogs, initialSt
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <label className="text-sm font-medium">Назва</label>
+              <label className="text-sm font-medium">Nazwa</label>
               <Input value={webhookForm.name} onChange={(e) => setWebhookForm({ ...webhookForm, name: e.target.value })} className="mt-1" />
             </div>
             <div>
@@ -332,7 +332,7 @@ export function ApiClient({ initialKeys, initialWebhooks, initialLogs, initialSt
               <Input value={webhookForm.url} onChange={(e) => setWebhookForm({ ...webhookForm, url: e.target.value })} className="mt-1" />
             </div>
             <div>
-              <label className="text-sm font-medium">Події</label>
+              <label className="text-sm font-medium">Zdarzenia</label>
               <div className="mt-2 grid grid-cols-2 gap-2">
                 {["project.created", "project.updated", "offer.accepted", "offer.rejected", "payment.completed", "task.completed"].map((event) => (
                   <label key={event} className="flex items-center gap-2 text-sm">
@@ -354,8 +354,8 @@ export function ApiClient({ initialKeys, initialWebhooks, initialLogs, initialSt
             </div>
             {error && <p className="text-sm text-destructive">{error}</p>}
             <div className="flex gap-2">
-              <Button onClick={handleCreateWebhook} disabled={pending}>{pending ? "Створення..." : "Створити"}</Button>
-              <Button variant="outline" onClick={() => { setShowWebhookForm(false); setError(null); }}>Скасувати</Button>
+              <Button onClick={handleCreateWebhook} disabled={pending}>{pending ? "Tworzenie..." : "Utwórz"}</Button>
+              <Button variant="outline" onClick={() => { setShowWebhookForm(false); setError(null); }}>Anuluj</Button>
             </div>
           </CardContent>
         </Card>
@@ -364,12 +364,12 @@ export function ApiClient({ initialKeys, initialWebhooks, initialLogs, initialSt
       {/* API Keys */}
       <Card>
         <CardHeader>
-          <CardTitle>API ключі</CardTitle>
+          <CardTitle>Klucze API</CardTitle>
         </CardHeader>
         <CardContent>
           {filteredKeys.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
-              Немає API ключів
+              Brak kluczy API
             </div>
           ) : (
             <div className="space-y-2">
@@ -385,7 +385,7 @@ export function ApiClient({ initialKeys, initialWebhooks, initialLogs, initialSt
                   </div>
                   {key.is_active && (
                     <Button variant="outline" size="sm" onClick={() => revokeApiKey(key.id)}>
-                      Відкликати
+                      Odwołaj
                     </Button>
                   )}
                 </div>
@@ -398,12 +398,12 @@ export function ApiClient({ initialKeys, initialWebhooks, initialLogs, initialSt
       {/* Webhooks */}
       <Card>
         <CardHeader>
-          <CardTitle>Вебхуки</CardTitle>
+          <CardTitle>Webhooki</CardTitle>
         </CardHeader>
         <CardContent>
           {filteredWebhooks.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
-              Немає вебхуків
+              Brak webhooków
             </div>
           ) : (
             <div className="space-y-2">
@@ -418,7 +418,7 @@ export function ApiClient({ initialKeys, initialWebhooks, initialLogs, initialSt
                     <p className="text-xs text-muted-foreground">{webhook.events.join(", ")}</p>
                   </div>
                   <Button variant="outline" size="sm" onClick={() => handleToggleWebhook(webhook.id)}>
-                    {webhook.is_active ? "Вимкнути" : "Увімкнути"}
+                    {webhook.is_active ? "Wyłącz" : "Włącz"}
                   </Button>
                 </div>
               ))}
@@ -430,12 +430,12 @@ export function ApiClient({ initialKeys, initialWebhooks, initialLogs, initialSt
       {/* API Logs */}
       <Card>
         <CardHeader>
-          <CardTitle>Логи запитів</CardTitle>
+          <CardTitle>Dzienniki żądań</CardTitle>
         </CardHeader>
         <CardContent>
           {logs.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
-              Немає логів
+              Brak dzienników
             </div>
           ) : (
             <div className="space-y-2">

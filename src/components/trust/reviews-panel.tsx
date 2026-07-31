@@ -15,7 +15,7 @@ export function ReviewsPanel({ items }: { items: ReviewableProject[] }) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Leave a review</CardTitle>
+        <CardTitle>Zostaw opinię</CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
         {items.map((item) => (
@@ -43,7 +43,7 @@ function ReviewRow({ item }: { item: ReviewableProject }) {
           <span className="text-muted-foreground"> · {item.projectTitle}</span>
         </span>
         <span className="flex items-center gap-1 text-emerald-600">
-          <Check className="h-4 w-4" /> Reviewed
+          <Check className="h-4 w-4" /> Oceniono
         </span>
       </div>
     );
@@ -52,7 +52,7 @@ function ReviewRow({ item }: { item: ReviewableProject }) {
   function submit() {
     setError(null);
     if (rating < 1) {
-      setError("Please select a rating.");
+      setError("Wybierz ocenę.");
       return;
     }
     startTransition(async () => {
@@ -63,7 +63,7 @@ function ReviewRow({ item }: { item: ReviewableProject }) {
         comment,
       });
       if (!res.ok) {
-        setError(res.error ?? "Could not submit");
+        setError(res.error ?? "Nie udało się wysłać");
         return;
       }
       setDone(true);
@@ -86,7 +86,7 @@ function ReviewRow({ item }: { item: ReviewableProject }) {
             onMouseLeave={() => setHover(0)}
             onClick={() => setRating(i)}
             className="p-0.5"
-            aria-label={`${i} star`}
+            aria-label={`${i} gwiazdka`}
           >
             <Star
               className={cn(
@@ -103,11 +103,11 @@ function ReviewRow({ item }: { item: ReviewableProject }) {
         rows={2}
         value={comment}
         onChange={(e) => setComment(e.target.value)}
-        placeholder="Share your experience (optional)"
+        placeholder="Opisz swoje doświadczenie (opcjonalnie)"
       />
       {error && <p className="text-sm text-destructive">{error}</p>}
       <Button type="button" size="sm" onClick={submit} disabled={pending}>
-        {pending ? "Submitting…" : "Submit review"}
+        {pending ? "Wysyłanie…" : "Wyślij opinię"}
       </Button>
     </div>
   );

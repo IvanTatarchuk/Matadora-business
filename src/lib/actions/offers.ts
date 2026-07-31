@@ -38,7 +38,7 @@ export async function createOffer(
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) return { ok: false, error: "Not authenticated" };
+  if (!user) return { ok: false, error: "Nie zalogowano" };
 
   // Two modes:
   //  (a) Bidding on an existing marketplace project (payload.projectId set).
@@ -54,10 +54,10 @@ export async function createOffer(
       .eq("id", payload.projectId!)
       .single();
     if (targetError || !target) {
-      return { ok: false, error: "Project not found" };
+      return { ok: false, error: "Nie znaleziono projektu" };
     }
     if (target.status !== "open") {
-      return { ok: false, error: "This project is not open for bids" };
+      return { ok: false, error: "Ten projekt nie jest otwarty na oferty" };
     }
     projectId = target.id;
 
@@ -79,8 +79,8 @@ export async function createOffer(
           const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://buildmate-app-nu.vercel.app";
           emailNewBid({
             investorEmail: invEmail,
-            investorName: inv.full_name ?? inv.company_name ?? "Investor",
-            contractorName: con.full_name ?? con.company_name ?? "Contractor",
+            investorName: inv.full_name ?? inv.company_name ?? "Inwestor",
+            contractorName: con.full_name ?? con.company_name ?? "Wykonawca",
             projectTitle: payload.projectTitle ?? target.id,
             offerTotal: 0,
             offerUrl: `${siteUrl}/dashboard/investor/offers`,
@@ -103,7 +103,7 @@ export async function createOffer(
       .single();
 
     if (projectError || !project) {
-      return { ok: false, error: projectError?.message ?? "Project failed" };
+      return { ok: false, error: projectError?.message ?? "Nie udało się utworzyć projektu" };
     }
     projectId = project.id;
   }
@@ -131,7 +131,7 @@ export async function createOffer(
     .single();
 
   if (offerError || !offer) {
-    return { ok: false, error: offerError?.message ?? "Offer failed" };
+    return { ok: false, error: offerError?.message ?? "Nie udało się utworzyć kosztorysu" };
   }
 
   if (payload.stages.length > 0) {
@@ -215,7 +215,7 @@ export async function acceptOffer(publicToken: string): Promise<ActionResult> {
     .single();
 
   if (findError || !offer) {
-    return { ok: false, error: "Offer not found" };
+    return { ok: false, error: "Nie znaleziono kosztorysu" };
   }
 
   if (offer.status !== "accepted") {
@@ -255,9 +255,9 @@ export async function acceptOffer(publicToken: string): Promise<ActionResult> {
             .single();
           emailOfferAccepted({
             contractorEmail: email,
-            contractorName: con.full_name ?? con.company_name ?? "Contractor",
+            contractorName: con.full_name ?? con.company_name ?? "Wykonawca",
             projectTitle: projectData.title,
-            investorName: inv?.full_name ?? inv?.company_name ?? "Investor",
+            investorName: inv?.full_name ?? inv?.company_name ?? "Inwestor",
             dashboardUrl: `${siteUrl}/dashboard/contractor/projects`,
           });
       }).catch(() => {});

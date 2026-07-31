@@ -17,8 +17,8 @@ export interface OfferTotals {
 
 /** Standard Polish VAT rates relevant to construction. */
 export const VAT_RATES = [
-  { value: 8, label: "8% (renovation / housing)" },
-  { value: 23, label: "23% (standard)" },
+  { value: 8, label: "8% (remont / mieszkalnictwo)" },
+  { value: 23, label: "23% (standardowy)" },
 ] as const;
 
 export type VatRate = (typeof VAT_RATES)[number]["value"];
@@ -117,8 +117,8 @@ export function groupStagesByLabel<T extends Pick<StageInput, "cost" | "group_la
 
 /** Default professional construction stages used to seed the estimate form. */
 export const DEFAULT_STAGES: StageInput[] = [
-  { stage_name: "Logistics", description: "Transport, site setup, equipment rental", cost: 0, order_index: 0 },
-  { stage_name: "Demolition", description: "Tear-out, debris removal, prep work", cost: 0, order_index: 1 },
-  { stage_name: "Material", description: "Building materials sourced from wholesalers", cost: 0, order_index: 2 },
-  { stage_name: "Labor", description: "Workforce, subcontractors", cost: 0, order_index: 3 },
+  { stage_name: "Logistyka", description: "Transport, przygotowanie placu budowy, wynajem sprzętu", cost: 0, order_index: 0 },
+  { stage_name: "Demontaż", description: "Rozbiórka, wywóz gruzu, prace przygotowawcze", cost: 0, order_index: 1 },
+  { stage_name: "Materiały", description: "Materiały budowlane z hurtowni", cost: 0, order_index: 2 },
+  { stage_name: "Robocizna", description: "Siła robocza, podwykonawcy", cost: 0, order_index: 3 },
 ];

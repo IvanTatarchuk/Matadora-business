@@ -1,10 +1,10 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { BarChart3, Plus, Database, FileText, Layers, X, RefreshCw, Search, Filter } from "lucide-react";
+import { BarChart3, Plus, Database, FileText, Layers, X, RefreshCw, Search, Filter, ChevronDown, ChevronUp } from "lucide-react";
 import {
-  createBIDashboard, createBIWidget, createBIReport, createBIDataSource,
-  type BIDashboard, type BIReport, type BIDataSource, type WidgetType, type ReportType, type SourceType,
+  createBIDashboard, createBIWidget, createBIReport, createBIDataSource, listBIWidgets,
+  type BIDashboard, type BIReport, type BIDataSource, type BIWidget, type WidgetType, type ReportType, type SourceType,
 } from "@/lib/actions/business-intelligence";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -35,6 +35,9 @@ export function BusinessIntelligenceClient({ initialDashboards, initialReports, 
   const [showDataSourceForm, setShowDataSourceForm] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [filterType, setFilterType] = useState<"all" | "public" | "private">("all");
+  const [expandedDashboardId, setExpandedDashboardId] = useState<string | null>(null);
+  const [widgetsByDashboard, setWidgetsByDashboard] = useState<Record<string, BIWidget[]>>({});
+  const [loadingWidgetsFor, setLoadingWidgetsFor] = useState<string | null>(null);
 
   const [dashboardForm, setDashboardForm] = useState({
     name: "",
@@ -57,11 +60,11 @@ export function BusinessIntelligenceClient({ initialDashboards, initialReports, 
   });
 
   function handleCreateDashboard() {
-    if (!dashboardForm.name) { setError("Назва є обов'язковою"); return; }
+    if (!dashboardForm.name) { setError("Nazwa jest wymagana"); return; }
     setError(null);
     startTransition(async () => {
       const res = await createBIDashboard(dashboardForm);
-      if (!res.ok) { setError(res.error ?? "Помилка"); return; }
+      if (!res.ok) { setError(res.error ?? "Błąd"); return; }
       setShowDashboardForm(false);
       setDashboardForm({ name: "", description: "", isPublic: false });
       // Reload dashboards
@@ -72,13 +75,13 @@ export function BusinessIntelligenceClient({ initialDashboards, initialReports, 
 
   function handleCreateReport() {
     if (!reportForm.name || !reportForm.query) {
-      setError("Назва та query є обов'язковими");
+      setError("Nazwa i zapytanie są wymagane");
       return;
     }
     setError(null);
     startTransition(async () => {
       const res = await createBIReport(reportForm);
-      if (!res.ok) { setError(res.error ?? "Помилка"); return; }
+      if (!res.ok) { setError(res.error ?? "Błąd"); return; }
       setShowReportForm(false);
       setReportForm({ name: "", description: "", reportType: "financial", query: "", schedule: "" });
       // Reload reports
@@ -88,17 +91,31 @@ export function BusinessIntelligenceClient({ initialDashboards, initialReports, 
   }
 
   function handleCreateDataSource() {
-    if (!dataSourceForm.name) { setError("Назва є обов'язковою"); return; }
+    if (!dataSourceForm.name) { setError("Nazwa jest wymagana"); return; }
     setError(null);
     startTransition(async () => {
       const res = await createBIDataSource(dataSourceForm);
-      if (!res.ok) { setError(res.error ?? "Помилка"); return; }
+      if (!res.ok) { setError(res.error ?? "Błąd"); return; }
       setShowDataSourceForm(false);
       setDataSourceForm({ name: "", sourceType: "database", connectionConfig: {} });
       // Reload data sources
       const newDataSources = await fetch("/api/bi/data-sources").then(r => r.json());
       setDataSources(newDataSources);
     });
+  }
+
+  function toggleDashboardWidgets(dashboardId: string) {
+    if (expandedDashboardId === dashboardId) {
+      setExpandedDashboardId(null);
+      return;
+    }
+    setExpandedDashboardId(dashboardId);
+    if (!widgetsByDashboard[dashboardId]) {
+      setLoadingWidgetsFor(dashboardId);
+      listBIWidgets(dashboardId)
+        .then((widgets) => setWidgetsByDashboard((prev) => ({ ...prev, [dashboardId]: widgets })))
+        .finally(() => setLoadingWidgetsFor((prev) => (prev === dashboardId ? null : prev)));
+    }
   }
 
   const filteredDashboards = dashboards.filter((d) => {
@@ -114,10 +131,10 @@ export function BusinessIntelligenceClient({ initialDashboards, initialReports, 
       <div>
         <h1 className="text-2xl font-bold flex items-center gap-2">
           <BarChart3 className="h-6 w-6" />
-          Бізнес-інтелект та аналітика
+          Business Intelligence i analityka
         </h1>
         <p className="text-sm text-muted-foreground mt-1">
-          Дашборди, звіти та джерела даних для аналітики
+          Dashboardy, raporty i źródła danych do analiz
         </p>
       </div>
 
@@ -126,7 +143,7 @@ export function BusinessIntelligenceClient({ initialDashboards, initialReports, 
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center justify-between mb-2">
-              <p className="text-sm text-muted-foreground">Дашборди</p>
+              <p className="text-sm text-muted-foreground">Dashboardy</p>
               <Layers className="h-4 w-4 text-blue-500" />
             </div>
             <p className="text-2xl font-bold">{stats.totalDashboards}</p>
@@ -135,7 +152,7 @@ export function BusinessIntelligenceClient({ initialDashboards, initialReports, 
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center justify-between mb-2">
-              <p className="text-sm text-muted-foreground">Віджети</p>
+              <p className="text-sm text-muted-foreground">Widżety</p>
               <BarChart3 className="h-4 w-4 text-purple-500" />
             </div>
             <p className="text-2xl font-bold">{stats.totalWidgets}</p>
@@ -144,7 +161,7 @@ export function BusinessIntelligenceClient({ initialDashboards, initialReports, 
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center justify-between mb-2">
-              <p className="text-sm text-muted-foreground">Звіти</p>
+              <p className="text-sm text-muted-foreground">Raporty</p>
               <FileText className="h-4 w-4 text-green-500" />
             </div>
             <p className="text-2xl font-bold">{stats.totalReports}</p>
@@ -153,7 +170,7 @@ export function BusinessIntelligenceClient({ initialDashboards, initialReports, 
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center justify-between mb-2">
-              <p className="text-sm text-muted-foreground">Джерела даних</p>
+              <p className="text-sm text-muted-foreground">Źródła danych</p>
               <Database className="h-4 w-4 text-orange-500" />
             </div>
             <p className="text-2xl font-bold">{stats.totalDataSources}</p>
@@ -165,15 +182,15 @@ export function BusinessIntelligenceClient({ initialDashboards, initialReports, 
       <div className="flex gap-2 flex-wrap">
         <Button onClick={() => setShowDashboardForm(true)}>
           <Plus className="h-4 w-4 mr-2" />
-          Новий дашборд
+          Nowy dashboard
         </Button>
         <Button variant="outline" onClick={() => setShowReportForm(true)}>
           <FileText className="h-4 w-4 mr-2" />
-          Новий звіт
+          Nowy raport
         </Button>
         <Button variant="outline" onClick={() => setShowDataSourceForm(true)}>
           <Database className="h-4 w-4 mr-2" />
-          Джерело даних
+          Źródło danych
         </Button>
       </div>
 
@@ -182,7 +199,7 @@ export function BusinessIntelligenceClient({ initialDashboards, initialReports, 
         <div className="relative flex-1 max-w-sm">
           <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Шукати дашборди..."
+            placeholder="Szukaj dashboardów..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-9"
@@ -193,9 +210,9 @@ export function BusinessIntelligenceClient({ initialDashboards, initialReports, 
           onChange={(e) => setFilterType(e.target.value as "all" | "public" | "private")}
           className="rounded-md border bg-background px-3 py-2 text-sm"
         >
-          <option value="all">Всі типи</option>
-          <option value="public">Публічні</option>
-          <option value="private">Приватні</option>
+          <option value="all">Wszystkie typy</option>
+          <option value="public">Publiczne</option>
+          <option value="private">Prywatne</option>
         </select>
       </div>
 
@@ -204,7 +221,7 @@ export function BusinessIntelligenceClient({ initialDashboards, initialReports, 
         <Card className="border-primary">
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-base">Створити дашборд</CardTitle>
+              <CardTitle className="text-base">Utwórz dashboard</CardTitle>
               <Button variant="ghost" size="sm" onClick={() => { setShowDashboardForm(false); setError(null); }}>
                 <X className="h-4 w-4" />
               </Button>
@@ -212,11 +229,11 @@ export function BusinessIntelligenceClient({ initialDashboards, initialReports, 
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <label className="text-sm font-medium">Назва</label>
+              <label className="text-sm font-medium">Nazwa</label>
               <Input value={dashboardForm.name} onChange={(e) => setDashboardForm({ ...dashboardForm, name: e.target.value })} className="mt-1" />
             </div>
             <div>
-              <label className="text-sm font-medium">Опис</label>
+              <label className="text-sm font-medium">Opis</label>
               <Input value={dashboardForm.description} onChange={(e) => setDashboardForm({ ...dashboardForm, description: e.target.value })} className="mt-1" />
             </div>
             <div className="flex items-center gap-2">
@@ -226,12 +243,12 @@ export function BusinessIntelligenceClient({ initialDashboards, initialReports, 
                 checked={dashboardForm.isPublic}
                 onChange={(e) => setDashboardForm({ ...dashboardForm, isPublic: e.target.checked })}
               />
-              <label htmlFor="public" className="text-sm">Публічний</label>
+              <label htmlFor="public" className="text-sm">Publiczny</label>
             </div>
             {error && <p className="text-sm text-destructive">{error}</p>}
             <div className="flex gap-2">
-              <Button onClick={handleCreateDashboard} disabled={pending}>{pending ? "Створення..." : "Створити"}</Button>
-              <Button variant="outline" onClick={() => { setShowDashboardForm(false); setError(null); }}>Скасувати</Button>
+              <Button onClick={handleCreateDashboard} disabled={pending}>{pending ? "Tworzenie..." : "Utwórz"}</Button>
+              <Button variant="outline" onClick={() => { setShowDashboardForm(false); setError(null); }}>Anuluj</Button>
             </div>
           </CardContent>
         </Card>
@@ -242,7 +259,7 @@ export function BusinessIntelligenceClient({ initialDashboards, initialReports, 
         <Card className="border-primary">
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-base">Створити звіт</CardTitle>
+              <CardTitle className="text-base">Utwórz raport</CardTitle>
               <Button variant="ghost" size="sm" onClick={() => { setShowReportForm(false); setError(null); }}>
                 <X className="h-4 w-4" />
               </Button>
@@ -250,26 +267,26 @@ export function BusinessIntelligenceClient({ initialDashboards, initialReports, 
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <label className="text-sm font-medium">Назва</label>
+              <label className="text-sm font-medium">Nazwa</label>
               <Input value={reportForm.name} onChange={(e) => setReportForm({ ...reportForm, name: e.target.value })} className="mt-1" />
             </div>
             <div>
-              <label className="text-sm font-medium">Опис</label>
+              <label className="text-sm font-medium">Opis</label>
               <Input value={reportForm.description} onChange={(e) => setReportForm({ ...reportForm, description: e.target.value })} className="mt-1" />
             </div>
             <div>
-              <label className="text-sm font-medium">Тип звіту</label>
+              <label className="text-sm font-medium">Typ raportu</label>
               <select
                 value={reportForm.reportType}
                 onChange={(e) => setReportForm({ ...reportForm, reportType: e.target.value as any })}
                 className="mt-1 w-full rounded-md border bg-background px-3 py-2 text-sm"
               >
-                <option value="financial">Фінансовий</option>
-                <option value="operational">Операційний</option>
-                <option value="sales">Продажі</option>
-                <option value="project">Проектний</option>
-                <option value="resource">Ресурсний</option>
-                <option value="custom">Кастомний</option>
+                <option value="financial">Finansowy</option>
+                <option value="operational">Operacyjny</option>
+                <option value="sales">Sprzedaż</option>
+                <option value="project">Projektowy</option>
+                <option value="resource">Zasobowy</option>
+                <option value="custom">Niestandardowy</option>
               </select>
             </div>
             <div>
@@ -277,13 +294,13 @@ export function BusinessIntelligenceClient({ initialDashboards, initialReports, 
               <Input value={reportForm.query} onChange={(e) => setReportForm({ ...reportForm, query: e.target.value })} className="mt-1" />
             </div>
             <div>
-              <label className="text-sm font-medium">Розклад (cron)</label>
+              <label className="text-sm font-medium">Harmonogram (cron)</label>
               <Input value={reportForm.schedule} onChange={(e) => setReportForm({ ...reportForm, schedule: e.target.value })} className="mt-1" placeholder="0 2 * * *" />
             </div>
             {error && <p className="text-sm text-destructive">{error}</p>}
             <div className="flex gap-2">
-              <Button onClick={handleCreateReport} disabled={pending}>{pending ? "Створення..." : "Створити"}</Button>
-              <Button variant="outline" onClick={() => { setShowReportForm(false); setError(null); }}>Скасувати</Button>
+              <Button onClick={handleCreateReport} disabled={pending}>{pending ? "Tworzenie..." : "Utwórz"}</Button>
+              <Button variant="outline" onClick={() => { setShowReportForm(false); setError(null); }}>Anuluj</Button>
             </div>
           </CardContent>
         </Card>
@@ -294,7 +311,7 @@ export function BusinessIntelligenceClient({ initialDashboards, initialReports, 
         <Card className="border-primary">
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-base">Додати джерело даних</CardTitle>
+              <CardTitle className="text-base">Dodaj źródło danych</CardTitle>
               <Button variant="ghost" size="sm" onClick={() => { setShowDataSourceForm(false); setError(null); }}>
                 <X className="h-4 w-4" />
               </Button>
@@ -302,26 +319,26 @@ export function BusinessIntelligenceClient({ initialDashboards, initialReports, 
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <label className="text-sm font-medium">Назва</label>
+              <label className="text-sm font-medium">Nazwa</label>
               <Input value={dataSourceForm.name} onChange={(e) => setDataSourceForm({ ...dataSourceForm, name: e.target.value })} className="mt-1" />
             </div>
             <div>
-              <label className="text-sm font-medium">Тип джерела</label>
+              <label className="text-sm font-medium">Typ źródła</label>
               <select
                 value={dataSourceForm.sourceType}
                 onChange={(e) => setDataSourceForm({ ...dataSourceForm, sourceType: e.target.value as any })}
                 className="mt-1 w-full rounded-md border bg-background px-3 py-2 text-sm"
               >
-                <option value="database">База даних</option>
+                <option value="database">Baza danych</option>
                 <option value="api">API</option>
-                <option value="file">Файл</option>
-                <option value="external">Зовнішнє</option>
+                <option value="file">Plik</option>
+                <option value="external">Zewnętrzne</option>
               </select>
             </div>
             {error && <p className="text-sm text-destructive">{error}</p>}
             <div className="flex gap-2">
-              <Button onClick={handleCreateDataSource} disabled={pending}>{pending ? "Додавання..." : "Додати"}</Button>
-              <Button variant="outline" onClick={() => { setShowDataSourceForm(false); setError(null); }}>Скасувати</Button>
+              <Button onClick={handleCreateDataSource} disabled={pending}>{pending ? "Dodawanie..." : "Dodaj"}</Button>
+              <Button variant="outline" onClick={() => { setShowDataSourceForm(false); setError(null); }}>Anuluj</Button>
             </div>
           </CardContent>
         </Card>
@@ -330,25 +347,59 @@ export function BusinessIntelligenceClient({ initialDashboards, initialReports, 
       {/* Dashboards */}
       <Card>
         <CardHeader>
-          <CardTitle>Дашборди</CardTitle>
+          <CardTitle>Dashboardy</CardTitle>
         </CardHeader>
         <CardContent>
           {filteredDashboards.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
-              Немає дашбордів
+              Brak dashboardów
             </div>
           ) : (
             <div className="space-y-2">
-              {filteredDashboards.map((dashboard) => (
-                <div key={dashboard.id} className="flex items-center justify-between p-3 rounded-lg border">
-                  <div className="flex-1">
-                    <p className="font-medium">{dashboard.name}</p>
-                    <p className="text-sm text-muted-foreground">{dashboard.description || "Без опису"}</p>
-                    <p className="text-xs text-muted-foreground">{new Date(dashboard.created_at).toLocaleString("pl-PL")}</p>
+              {filteredDashboards.map((dashboard) => {
+                const isExpanded = expandedDashboardId === dashboard.id;
+                const widgets = widgetsByDashboard[dashboard.id];
+                return (
+                  <div key={dashboard.id} className="rounded-lg border">
+                    <button
+                      type="button"
+                      onClick={() => toggleDashboardWidgets(dashboard.id)}
+                      className="flex w-full items-center justify-between p-3 text-left hover:bg-muted/50"
+                    >
+                      <div className="flex-1">
+                        <p className="font-medium">{dashboard.name}</p>
+                        <p className="text-sm text-muted-foreground">{dashboard.description || "Brak opisu"}</p>
+                        <p className="text-xs text-muted-foreground">{new Date(dashboard.created_at).toLocaleString("pl-PL")}</p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {dashboard.is_public && <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded">Publiczny</span>}
+                        {isExpanded ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
+                      </div>
+                    </button>
+                    {isExpanded && (
+                      <div className="border-t p-3">
+                        {loadingWidgetsFor === dashboard.id && !widgets ? (
+                          <p className="text-sm text-muted-foreground">Ładowanie widżetów...</p>
+                        ) : !widgets || widgets.length === 0 ? (
+                          <p className="text-sm text-muted-foreground">Brak widżetów w tym dashboardzie</p>
+                        ) : (
+                          <div className="space-y-1.5">
+                            {widgets.map((widget) => (
+                              <div key={widget.id} className="flex items-center justify-between rounded border bg-muted/30 px-2.5 py-1.5 text-sm">
+                                <span className="font-medium">{widget.title}</span>
+                                <span className="flex items-center gap-2 text-xs text-muted-foreground">
+                                  <span className="rounded bg-purple-100 px-1.5 py-0.5 text-purple-700">{widget.widget_type}</span>
+                                  {widget.width}×{widget.height}
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
-                  {dashboard.is_public && <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded">Публічний</span>}
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </CardContent>
@@ -357,12 +408,12 @@ export function BusinessIntelligenceClient({ initialDashboards, initialReports, 
       {/* Reports */}
       <Card>
         <CardHeader>
-          <CardTitle>Звіти</CardTitle>
+          <CardTitle>Raporty</CardTitle>
         </CardHeader>
         <CardContent>
           {reports.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
-              Немає звітів
+              Brak raportów
             </div>
           ) : (
             <div className="space-y-2">
@@ -373,9 +424,9 @@ export function BusinessIntelligenceClient({ initialDashboards, initialReports, 
                       <p className="font-medium">{report.name}</p>
                       <span className="text-xs bg-gray-100 text-gray-700 px-2 py-0.5 rounded">{report.report_type}</span>
                     </div>
-                    <p className="text-sm text-muted-foreground">{report.description || "Без опису"}</p>
+                    <p className="text-sm text-muted-foreground">{report.description || "Brak opisu"}</p>
                     {report.last_run_at && (
-                      <p className="text-xs text-muted-foreground">Останній запуск: {new Date(report.last_run_at).toLocaleString("pl-PL")}</p>
+                      <p className="text-xs text-muted-foreground">Ostatnie uruchomienie: {new Date(report.last_run_at).toLocaleString("pl-PL")}</p>
                     )}
                   </div>
                   {report.schedule && <span className="text-xs text-muted-foreground">{report.schedule}</span>}
@@ -389,12 +440,12 @@ export function BusinessIntelligenceClient({ initialDashboards, initialReports, 
       {/* Data Sources */}
       <Card>
         <CardHeader>
-          <CardTitle>Джерела даних</CardTitle>
+          <CardTitle>Źródła danych</CardTitle>
         </CardHeader>
         <CardContent>
           {dataSources.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
-              Немає джерел даних
+              Brak źródeł danych
             </div>
           ) : (
             <div className="space-y-2">

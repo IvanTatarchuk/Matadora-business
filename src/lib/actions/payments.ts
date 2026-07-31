@@ -51,9 +51,9 @@ export async function createPaymentMethod(input: {
 }): Promise<{ ok: boolean; id?: string; error?: string }> {
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { ok: false, error: "Не залоговано" };
+  if (!user) return { ok: false, error: "Nie zalogowano" };
   const { data: member } = await supabase.from("organization_members").select("org_id").eq("user_id", user.id).single();
-  if (!member) return { ok: false, error: "Брак організації" };
+  if (!member) return { ok: false, error: "Brak organizacji" };
 
   // If setting as default, unset other defaults
   if (input.isDefault) {
@@ -107,9 +107,9 @@ export async function createPaymentTransaction(input: {
 }): Promise<{ ok: boolean; id?: string; error?: string }> {
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { ok: false, error: "Не залоговано" };
+  if (!user) return { ok: false, error: "Nie zalogowano" };
   const { data: member } = await supabase.from("organization_members").select("org_id").eq("user_id", user.id).single();
-  if (!member) return { ok: false, error: "Брак організації" };
+  if (!member) return { ok: false, error: "Brak organizacji" };
 
   // Get payment method to determine provider
   let provider = "bank_transfer";

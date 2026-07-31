@@ -27,10 +27,14 @@ import {
   CalendarDays,
   Receipt,
   BookOpen,
+  Scale,
+  LifeBuoy,
+  Megaphone,
   type LucideIcon,
 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
+import { APP_VERSION } from "@/lib/version";
 import type { UserRole } from "@/types/database";
 
 type NavItem = { href: string; label: string; icon: LucideIcon };
@@ -40,12 +44,14 @@ const NAV: Record<UserRole, NavItem[]> = {
     { href: "/dashboard/investor", label: "Przegląd", icon: LayoutDashboard },
     { href: "/dashboard/investor/projects", label: "Moje projekty", icon: FolderKanban },
     { href: "/dashboard/investor/offers", label: "Oferty", icon: FileText },
+    { href: "/dashboard/prawnik-ai", label: "Adwokat AI", icon: Scale },
     { href: "/dashboard/team", label: "Zespół", icon: Building2 },
   ],
   contractor: [
     { href: "/dashboard/contractor", label: "Przegląd", icon: LayoutDashboard },
     { href: "/dashboard/analytics", label: "Analytics BI", icon: BarChart3 },
     { href: "/dashboard/contractor/insights", label: "Rekomendacje", icon: Lightbulb },
+    { href: "/dashboard/prawnik-ai", label: "Adwokat AI", icon: Scale },
     { href: "/dashboard/contractor/projects", label: "Projekty", icon: FolderKanban },
     { href: "/dashboard/contractor/offers", label: "Kosztorysy", icon: FileText },
     { href: "/dashboard/contractor/protokoly", label: "Protokoły odbioru", icon: FileSignature },
@@ -72,21 +78,22 @@ const NAV: Record<UserRole, NavItem[]> = {
     { href: "/dashboard/wholesaler/catalog", label: "Katalog", icon: Package },
     { href: "/dashboard/wholesaler/import", label: "Import", icon: Upload },
     { href: "/dashboard/wholesaler/orders", label: "Zamówienia", icon: ShoppingCart },
+    { href: "/dashboard/prawnik-ai", label: "Adwokat AI", icon: Scale },
     { href: "/dashboard/team", label: "Firma", icon: Building2 },
   ],
 };
 
-export function Sidebar({ role }: { role: UserRole }) {
+export function Sidebar({ role, isAdmin = false }: { role: UserRole; isAdmin?: boolean }) {
   const pathname = usePathname();
   const items = NAV[role];
 
   return (
     <aside className="hidden w-64 shrink-0 border-r bg-secondary text-secondary-foreground md:flex md:flex-col">
-      <div className="flex h-16 items-center gap-2 border-b border-white/10 px-4 font-bold text-sm">
+      <div className="flex h-16 items-center gap-2 whitespace-nowrap border-b border-white/10 px-4 font-extrabold text-sm tracking-tight">
         <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary">
           <HardHat className="h-4 w-4 text-white" />
         </div>
-        <span>matadora<span className="text-primary">.business</span></span>
+        <span>MATADORA<span className="text-primary">.business</span></span>
       </div>
       <nav className="flex-1 space-y-1 p-4">
         {items.map((item) => {
@@ -122,9 +129,42 @@ export function Sidebar({ role }: { role: UserRole }) {
           <Settings className="h-4 w-4" />
           Ustawienia
         </Link>
+        {isAdmin && (
+          <>
+            <Link
+              href="/dashboard/support-inbox"
+              className={cn(
+                "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
+                pathname.startsWith("/dashboard/support-inbox")
+                  ? "bg-primary text-primary-foreground"
+                  : "text-secondary-foreground/80 hover:bg-white/10"
+              )}
+            >
+              <LifeBuoy className="h-4 w-4" />
+              Skrzynka wsparcia
+            </Link>
+            <Link
+              href="/dashboard/marketing"
+              className={cn(
+                "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
+                pathname.startsWith("/dashboard/marketing")
+                  ? "bg-primary text-primary-foreground"
+                  : "text-secondary-foreground/80 hover:bg-white/10"
+              )}
+            >
+              <Megaphone className="h-4 w-4" />
+              Marketing AI
+            </Link>
+          </>
+        )}
       </nav>
-      <div className="border-t border-white/10 p-4 text-xs capitalize text-secondary-foreground/60">
-        Panel {role === "contractor" ? "wykonawcy" : role === "investor" ? "inwestora" : "hurtowni"}
+      <div className="border-t border-white/10 p-4 text-xs text-secondary-foreground/60">
+        <span className="capitalize">
+          Panel {role === "contractor" ? "wykonawcy" : role === "investor" ? "inwestora" : "hurtowni"}
+        </span>
+        <Link href="/changelog" className="mt-1 block hover:text-secondary-foreground">
+          matadora.business v{APP_VERSION}
+        </Link>
       </div>
     </aside>
   );

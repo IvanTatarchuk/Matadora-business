@@ -169,7 +169,7 @@ export function CashflowClient({ initialEntries, initialYear }: { initialEntries
         <div className="relative flex-1 max-w-sm">
           <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Шукати записи..."
+            placeholder="Szukaj wpisów..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-9"
@@ -180,16 +180,16 @@ export function CashflowClient({ initialEntries, initialYear }: { initialEntries
           onChange={(e) => setFilterType(e.target.value as CashflowType | "all")}
           className="rounded-md border bg-background px-3 py-2 text-sm"
         >
-          <option value="all">Всі типи</option>
-          <option value="inflow">Впливи</option>
-          <option value="outflow">Видатки</option>
+          <option value="all">Wszystkie typy</option>
+          <option value="inflow">Wpływy</option>
+          <option value="outflow">Wydatki</option>
         </select>
         <select
           value={filterCategory}
           onChange={(e) => setFilterCategory(e.target.value as CashflowCategory | "all")}
           className="rounded-md border bg-background px-3 py-2 text-sm"
         >
-          <option value="all">Всі категорії</option>
+          <option value="all">Wszystkie kategorie</option>
           {Object.entries(CATEGORY_LABELS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
         </select>
       </div>

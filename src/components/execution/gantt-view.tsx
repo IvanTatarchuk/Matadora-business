@@ -10,10 +10,10 @@ const STATUS_COLOR: Record<string, string> = {
 };
 
 const STATUS_LABEL: Record<string, string> = {
-  todo: "До виконання",
-  in_progress: "В роботі",
-  done: "Виконано",
-  blocked: "Заблоковано",
+  todo: "Do wykonania",
+  in_progress: "W trakcie",
+  done: "Wykonano",
+  blocked: "Zablokowano",
 };
 
 function addDays(date: Date, n: number) {
@@ -27,7 +27,7 @@ function daysBetween(a: Date, b: Date) {
 }
 
 function fmtDate(d: Date) {
-  return d.toLocaleDateString("uk-UA", { day: "numeric", month: "short" });
+  return d.toLocaleDateString("pl-PL", { day: "numeric", month: "short" });
 }
 
 export function GanttView({
@@ -87,7 +87,7 @@ export function GanttView({
   if (tasks.length === 0) {
     return (
       <div className="rounded-xl border border-dashed py-12 text-center text-sm text-muted-foreground">
-        Немає задач для відображення на Gantt
+        Brak zadań do wyświetlenia na wykresie Gantta
       </div>
     );
   }
@@ -108,7 +108,7 @@ export function GanttView({
           {/* Timeline header */}
           <div className="relative flex border-b bg-muted/50">
             <div className="w-48 shrink-0 border-r px-3 py-2 text-xs font-medium text-muted-foreground">
-              Задача
+              Zadanie
             </div>
             <div className="relative flex-1 py-2">
               {ticks.map((tick) => (

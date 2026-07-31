@@ -41,13 +41,13 @@ export function CalendarIntegrationClient({ initialConnections, initialSyncLogs,
 
   function handleCreateConnection() {
     if (!connectionForm.email || !connectionForm.accessToken) {
-      setError("Email та access token є обов'язковими");
+      setError("Email i access token są wymagane");
       return;
     }
     setError(null);
     startTransition(async () => {
       const res = await createCalendarConnection(connectionForm);
-      if (!res.ok) { setError(res.error ?? "Помилка"); return; }
+      if (!res.ok) { setError(res.error ?? "Błąd"); return; }
       setShowConnectionForm(false);
       setConnectionForm({ provider: "google", email: "", accessToken: "", refreshToken: "", syncDirection: "bidirectional" });
       // Reload connections
@@ -60,7 +60,7 @@ export function CalendarIntegrationClient({ initialConnections, initialSyncLogs,
     setError(null);
     startTransition(async () => {
       const res = await toggleCalendarSync(connectionId);
-      if (!res.ok) { setError(res.error ?? "Помилка"); return; }
+      if (!res.ok) { setError(res.error ?? "Błąd"); return; }
       // Reload connections
       const newConnections = await fetch("/api/calendar-integration/connections").then(r => r.json());
       setConnections(newConnections);
@@ -71,7 +71,7 @@ export function CalendarIntegrationClient({ initialConnections, initialSyncLogs,
     setError(null);
     startTransition(async () => {
       const res = await deleteCalendarConnection(connectionId);
-      if (!res.ok) { setError(res.error ?? "Помилка"); return; }
+      if (!res.ok) { setError(res.error ?? "Błąd"); return; }
       // Reload connections
       const newConnections = await fetch("/api/calendar-integration/connections").then(r => r.json());
       setConnections(newConnections);
@@ -82,7 +82,7 @@ export function CalendarIntegrationClient({ initialConnections, initialSyncLogs,
     setError(null);
     startTransition(async () => {
       const res = await triggerSync(connectionId);
-      if (!res.ok) { setError(res.error ?? "Помилка"); return; }
+      if (!res.ok) { setError(res.error ?? "Błąd"); return; }
       // Reload logs
       const newLogs = await fetch("/api/calendar-integration/sync-logs").then(r => r.json());
       setSyncLogs(newLogs);
@@ -104,10 +104,10 @@ export function CalendarIntegrationClient({ initialConnections, initialSyncLogs,
       <div>
         <h1 className="text-2xl font-bold flex items-center gap-2">
           <Calendar className="h-6 w-6" />
-          Інтеграція календарів
+          Integracja kalendarzy
         </h1>
         <p className="text-sm text-muted-foreground mt-1">
-          Підключення Google Calendar, Outlook та інших календарів
+          Połączenia z Google Calendar, Outlook i innymi kalendarzami
         </p>
       </div>
 
@@ -116,7 +116,7 @@ export function CalendarIntegrationClient({ initialConnections, initialSyncLogs,
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center justify-between mb-2">
-              <p className="text-sm text-muted-foreground">Підключення</p>
+              <p className="text-sm text-muted-foreground">Połączenia</p>
               <Calendar className="h-4 w-4 text-blue-500" />
             </div>
             <p className="text-2xl font-bold">{stats.activeConnections}/{stats.totalConnections}</p>
@@ -125,7 +125,7 @@ export function CalendarIntegrationClient({ initialConnections, initialSyncLogs,
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center justify-between mb-2">
-              <p className="text-sm text-muted-foreground">Синхронізації</p>
+              <p className="text-sm text-muted-foreground">Synchronizacje</p>
               <RefreshCw className="h-4 w-4 text-purple-500" />
             </div>
             <p className="text-2xl font-bold">{stats.totalSyncs}</p>
@@ -134,7 +134,7 @@ export function CalendarIntegrationClient({ initialConnections, initialSyncLogs,
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center justify-between mb-2">
-              <p className="text-sm text-muted-foreground">Успішні</p>
+              <p className="text-sm text-muted-foreground">Udane</p>
               <CheckCircle2 className="h-4 w-4 text-green-500" />
             </div>
             <p className="text-2xl font-bold">{stats.successfulSyncs}</p>
@@ -143,7 +143,7 @@ export function CalendarIntegrationClient({ initialConnections, initialSyncLogs,
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center justify-between mb-2">
-              <p className="text-sm text-muted-foreground">Останній синк</p>
+              <p className="text-sm text-muted-foreground">Ostatnia synchronizacja</p>
               <Clock className="h-4 w-4 text-orange-500" />
             </div>
             <p className="text-2xl font-bold">{syncLogs.length > 0 && syncLogs[0]?.started_at ? new Date(syncLogs[0].started_at).toLocaleDateString("pl-PL") : "-"}</p>
@@ -155,7 +155,7 @@ export function CalendarIntegrationClient({ initialConnections, initialSyncLogs,
       <div className="flex gap-2 flex-wrap">
         <Button onClick={() => setShowConnectionForm(true)}>
           <Plus className="h-4 w-4 mr-2" />
-          Підключити календар
+          Podłącz kalendarz
         </Button>
       </div>
 
@@ -164,7 +164,7 @@ export function CalendarIntegrationClient({ initialConnections, initialSyncLogs,
         <div className="relative flex-1 max-w-sm">
           <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Шукати календарі..."
+            placeholder="Szukaj kalendarzy..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-9"
@@ -175,9 +175,9 @@ export function CalendarIntegrationClient({ initialConnections, initialSyncLogs,
           onChange={(e) => setFilterStatus(e.target.value as "all" | "active" | "inactive")}
           className="rounded-md border bg-background px-3 py-2 text-sm"
         >
-          <option value="all">Всі статуси</option>
-          <option value="active">Активні</option>
-          <option value="inactive">Неактивні</option>
+          <option value="all">Wszystkie statusy</option>
+          <option value="active">Aktywne</option>
+          <option value="inactive">Nieaktywne</option>
         </select>
       </div>
 
@@ -186,7 +186,7 @@ export function CalendarIntegrationClient({ initialConnections, initialSyncLogs,
         <Card className="border-primary">
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-base">Підключити календар</CardTitle>
+              <CardTitle className="text-base">Podłącz kalendarz</CardTitle>
               <Button variant="ghost" size="sm" onClick={() => { setShowConnectionForm(false); setError(null); }}>
                 <X className="h-4 w-4" />
               </Button>
@@ -195,7 +195,7 @@ export function CalendarIntegrationClient({ initialConnections, initialSyncLogs,
           <CardContent className="space-y-4">
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
-                <label className="text-sm font-medium">Провайдер</label>
+                <label className="text-sm font-medium">Dostawca</label>
                 <select
                   value={connectionForm.provider}
                   onChange={(e) => setConnectionForm({ ...connectionForm, provider: e.target.value as any })}
@@ -215,26 +215,26 @@ export function CalendarIntegrationClient({ initialConnections, initialSyncLogs,
                 <Input value={connectionForm.accessToken} onChange={(e) => setConnectionForm({ ...connectionForm, accessToken: e.target.value })} className="mt-1" />
               </div>
               <div className="sm:col-span-2">
-                <label className="text-sm font-medium">Refresh Token (опційно)</label>
+                <label className="text-sm font-medium">Refresh Token (opcjonalnie)</label>
                 <Input value={connectionForm.refreshToken} onChange={(e) => setConnectionForm({ ...connectionForm, refreshToken: e.target.value })} className="mt-1" />
               </div>
               <div className="sm:col-span-2">
-                <label className="text-sm font-medium">Напрямок синхронізації</label>
+                <label className="text-sm font-medium">Kierunek synchronizacji</label>
                 <select
                   value={connectionForm.syncDirection}
                   onChange={(e) => setConnectionForm({ ...connectionForm, syncDirection: e.target.value as any })}
                   className="mt-1 w-full rounded-md border bg-background px-3 py-2 text-sm"
                 >
-                  <option value="bidirectional">Двосторонній</option>
-                  <option value="to_platform">В платформу</option>
-                  <option value="from_platform">З платформи</option>
+                  <option value="bidirectional">Dwukierunkowa</option>
+                  <option value="to_platform">Do platformy</option>
+                  <option value="from_platform">Z platformy</option>
                 </select>
               </div>
             </div>
             {error && <p className="text-sm text-destructive">{error}</p>}
             <div className="flex gap-2">
-              <Button onClick={handleCreateConnection} disabled={pending}>{pending ? "Підключення..." : "Підключити"}</Button>
-              <Button variant="outline" onClick={() => { setShowConnectionForm(false); setError(null); }}>Скасувати</Button>
+              <Button onClick={handleCreateConnection} disabled={pending}>{pending ? "Łączenie..." : "Podłącz"}</Button>
+              <Button variant="outline" onClick={() => { setShowConnectionForm(false); setError(null); }}>Anuluj</Button>
             </div>
           </CardContent>
         </Card>
@@ -243,12 +243,12 @@ export function CalendarIntegrationClient({ initialConnections, initialSyncLogs,
       {/* Connections */}
       <Card>
         <CardHeader>
-          <CardTitle>Підключення календарів</CardTitle>
+          <CardTitle>Połączenia kalendarzy</CardTitle>
         </CardHeader>
         <CardContent>
           {filteredConnections.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
-              Немає підключених календарів
+              Brak podłączonych kalendarzy
             </div>
           ) : (
             <div className="space-y-2">
@@ -262,7 +262,7 @@ export function CalendarIntegrationClient({ initialConnections, initialSyncLogs,
                     <p className="text-sm text-muted-foreground">{connection.email}</p>
                     <p className="text-xs text-muted-foreground">{connection.calendar_name || "Default calendar"}</p>
                     {connection.last_sync_at && (
-                      <p className="text-xs text-muted-foreground">Останній синк: {new Date(connection.last_sync_at).toLocaleString("pl-PL")}</p>
+                      <p className="text-xs text-muted-foreground">Ostatnia synchronizacja: {new Date(connection.last_sync_at).toLocaleString("pl-PL")}</p>
                     )}
                   </div>
                   <div className="flex gap-1">
@@ -272,7 +272,7 @@ export function CalendarIntegrationClient({ initialConnections, initialSyncLogs,
                       </Button>
                     )}
                     <Button variant="outline" size="sm" onClick={() => handleToggleSync(connection.id)}>
-                      {connection.sync_enabled ? "Вимкнути" : "Увімкнути"}
+                      {connection.sync_enabled ? "Wyłącz" : "Włącz"}
                     </Button>
                     <Button variant="outline" size="sm" onClick={() => handleDeleteConnection(connection.id)}>
                       <Trash2 className="h-4 w-4" />
@@ -288,12 +288,12 @@ export function CalendarIntegrationClient({ initialConnections, initialSyncLogs,
       {/* Sync Logs */}
       <Card>
         <CardHeader>
-          <CardTitle>Логи синхронізації</CardTitle>
+          <CardTitle>Dzienniki synchronizacji</CardTitle>
         </CardHeader>
         <CardContent>
           {syncLogs.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
-              Немає логів синхронізації
+              Brak dzienników synchronizacji
             </div>
           ) : (
             <div className="space-y-2">
@@ -308,10 +308,10 @@ export function CalendarIntegrationClient({ initialConnections, initialSyncLogs,
                       }`}>
                         {log.status}
                       </span>
-                      <p className="text-sm font-medium">{log.events_synced} подій синхронізовано</p>
+                      <p className="text-sm font-medium">{log.events_synced} zdarzeń zsynchronizowano</p>
                     </div>
                     <p className="text-xs text-muted-foreground">
-                      Створено: {log.events_created}, Оновлено: {log.events_updated}, Видалено: {log.events_deleted}
+                      Utworzono: {log.events_created}, Zaktualizowano: {log.events_updated}, Usunięto: {log.events_deleted}
                     </p>
                     <p className="text-xs text-muted-foreground">{new Date(log.started_at).toLocaleString("pl-PL")}</p>
                   </div>

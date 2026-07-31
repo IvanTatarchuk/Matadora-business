@@ -1,4 +1,4 @@
-const CACHE_NAME = "buildmate-v1";
+const CACHE_NAME = "matadora-v1";
 const urlsToCache = [
   "/",
   "/dashboard",

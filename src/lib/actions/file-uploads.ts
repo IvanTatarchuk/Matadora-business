@@ -13,6 +13,50 @@ export interface ActionResult {
 
 const UPLOADS_PATH = "/dashboard/uploads";
 
+const MAX_UPLOAD_BYTES = 25 * 1024 * 1024; // 25 MB
+
+/** Uploads the real file bytes to Supabase Storage, then records the row —
+ * replaces the previous flow where the client fabricated a fake
+ * "https://storage.example.com/..." URL and no file was ever stored. */
+export async function uploadOrgFile(formData: FormData): Promise<ActionResult> {
+  const supabase = createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { ok: false, error: "Nie zalogowano" };
+
+  const file = formData.get("file");
+  const orgId = formData.get("orgId");
+  if (!(file instanceof File) || typeof orgId !== "string" || !orgId) {
+    return { ok: false, error: "Brak pliku lub organizacji" };
+  }
+  if (file.size > MAX_UPLOAD_BYTES) {
+    return { ok: false, error: `Plik jest za duży — limit to ${MAX_UPLOAD_BYTES / (1024 * 1024)} MB.` };
+  }
+
+  const category = (formData.get("category") as string) || "other";
+  const description = (formData.get("description") as string) || undefined;
+  const tagsRaw = (formData.get("tags") as string) || "";
+  const isPublic = formData.get("isPublic") === "true";
+
+  const storagePath = `${orgId}/${Date.now()}_${file.name}`;
+  const { error: uploadError } = await supabase.storage.from("org-uploads").upload(storagePath, file);
+  if (uploadError) return { ok: false, error: uploadError.message };
+
+  const storageUrl = supabase.storage.from("org-uploads").getPublicUrl(storagePath).data.publicUrl;
+
+  return createFileUpload({
+    orgId,
+    fileName: file.name,
+    fileType: file.type || "application/octet-stream",
+    fileSize: file.size,
+    storagePath,
+    storageUrl,
+    category: category as FileCategory,
+    description,
+    tags: tagsRaw ? tagsRaw.split(",").map((t) => t.trim()).filter(Boolean) : [],
+    isPublic,
+  });
+}
+
 export async function createFileUpload(input: {
   orgId: string;
   fileName: string;
@@ -27,7 +71,7 @@ export async function createFileUpload(input: {
 }): Promise<ActionResult> {
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { ok: false, error: "Не залоговано" };
+  if (!user) return { ok: false, error: "Nie zalogowano" };
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data, error } = await (supabase.from("file_uploads") as any).insert({

@@ -18,9 +18,9 @@ type Props = {
 };
 
 const STATUS_CONFIG = {
-  active: { label: "Активний", color: "bg-green-100 text-green-700", icon: CheckCircle2 },
-  inactive: { label: "Неактивний", color: "bg-slate-100 text-slate-500", icon: XCircle },
-  blacklisted: { label: "Заблокований", color: "bg-red-100 text-red-700", icon: AlertCircle },
+  active: { label: "Aktywny", color: "bg-green-100 text-green-700", icon: CheckCircle2 },
+  inactive: { label: "Nieaktywny", color: "bg-slate-100 text-slate-500", icon: XCircle },
+  blacklisted: { label: "Zablokowany", color: "bg-red-100 text-red-700", icon: AlertCircle },
 };
 
 function StarRating({ rating, onRate }: { rating: number | null; onRate: (r: number) => void }) {
@@ -63,7 +63,7 @@ export function PodwykonawcaDetailClient({ subcontractor }: Props) {
   function handleSave() {
     setError(null);
     if (!editForm.name.trim()) {
-      setError("Назва є обов'язковою");
+      setError("Nazwa jest wymagana");
       return;
     }
     // Save logic would go here
@@ -100,7 +100,7 @@ export function PodwykonawcaDetailClient({ subcontractor }: Props) {
         <div className="flex gap-2">
           <Button variant="outline" onClick={() => setIsEditing(!isEditing)}>
             {isEditing ? <Save className="h-4 w-4 mr-2" /> : <Edit className="h-4 w-4 mr-2" />}
-            {isEditing ? "Зберегти" : "Редагувати"}
+            {isEditing ? "Zapisz" : "Edytuj"}
           </Button>
         </div>
       </div>
@@ -108,11 +108,11 @@ export function PodwykonawcaDetailClient({ subcontractor }: Props) {
       {isEditing && (
         <Card className="border-primary">
           <CardHeader>
-            <CardTitle>Редагування підрядника</CardTitle>
+            <CardTitle>Edycja podwykonawcy</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <Label>Назва компанії</Label>
+              <Label>Nazwa firmy</Label>
               <Input value={editForm.name} onChange={(e) => setEditForm({ ...editForm, name: e.target.value })} className="mt-1" />
             </div>
             <div className="grid grid-cols-2 gap-3">
@@ -126,26 +126,26 @@ export function PodwykonawcaDetailClient({ subcontractor }: Props) {
               </div>
             </div>
             <div>
-              <Label>Адреса</Label>
+              <Label>Adres</Label>
               <Input value={editForm.address} onChange={(e) => setEditForm({ ...editForm, address: e.target.value })} className="mt-1" />
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <Label>Місто</Label>
+                <Label>Miasto</Label>
                 <Input value={editForm.city} onChange={(e) => setEditForm({ ...editForm, city: e.target.value })} className="mt-1" />
               </div>
               <div>
-                <Label>Поштовий індекс</Label>
+                <Label>Kod pocztowy</Label>
                 <Input value={editForm.postalCode} onChange={(e) => setEditForm({ ...editForm, postalCode: e.target.value })} className="mt-1" />
               </div>
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <Label>Контактна особа</Label>
+                <Label>Osoba kontaktowa</Label>
                 <Input value={editForm.contactName} onChange={(e) => setEditForm({ ...editForm, contactName: e.target.value })} className="mt-1" />
               </div>
               <div>
-                <Label>Телефон</Label>
+                <Label>Telefon</Label>
                 <Input value={editForm.contactPhone} onChange={(e) => setEditForm({ ...editForm, contactPhone: e.target.value })} className="mt-1" />
               </div>
             </div>
@@ -154,30 +154,30 @@ export function PodwykonawcaDetailClient({ subcontractor }: Props) {
               <Input type="email" value={editForm.contactEmail} onChange={(e) => setEditForm({ ...editForm, contactEmail: e.target.value })} className="mt-1" />
             </div>
             <div>
-              <Label>Веб-сайт</Label>
+              <Label>Strona internetowa</Label>
               <Input value={editForm.website} onChange={(e) => setEditForm({ ...editForm, website: e.target.value })} className="mt-1" />
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <Label>Страхування до</Label>
+                <Label>Ubezpieczenie ważne do</Label>
                 <Input type="date" value={editForm.insuranceExpiry} onChange={(e) => setEditForm({ ...editForm, insuranceExpiry: e.target.value })} className="mt-1" />
               </div>
               <div>
-                <Label>Номер ліцензії</Label>
+                <Label>Numer licencji</Label>
                 <Input value={editForm.licenseNumber} onChange={(e) => setEditForm({ ...editForm, licenseNumber: e.target.value })} className="mt-1" />
               </div>
             </div>
             <div>
-              <Label>Примітки</Label>
+              <Label>Notatki</Label>
               <Input value={editForm.notes} onChange={(e) => setEditForm({ ...editForm, notes: e.target.value })} className="mt-1" />
             </div>
             {error && <p className="text-sm text-destructive">{error}</p>}
             <div className="flex gap-2">
               <Button onClick={handleSave} disabled={pending}>
-                Зберегти зміни
+                Zapisz zmiany
               </Button>
               <Button variant="outline" onClick={() => setIsEditing(false)}>
-                Скасувати
+                Anuluj
               </Button>
             </div>
           </CardContent>
@@ -189,7 +189,7 @@ export function PodwykonawcaDetailClient({ subcontractor }: Props) {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Building2 className="h-5 w-5" />
-              Статус
+              Status
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -206,7 +206,7 @@ export function PodwykonawcaDetailClient({ subcontractor }: Props) {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Star className="h-5 w-5" />
-              Оцінка
+              Ocena
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -220,13 +220,13 @@ export function PodwykonawcaDetailClient({ subcontractor }: Props) {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <FileText className="h-5 w-5" />
-              Контракти
+              Kontrakty
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-center">
               <p className="text-3xl font-bold">{subcontractor.contracts_count || 0}</p>
-              <p className="text-sm text-muted-foreground">контрактів</p>
+              <p className="text-sm text-muted-foreground">kontraktów</p>
             </div>
           </CardContent>
         </Card>
@@ -237,16 +237,16 @@ export function PodwykonawcaDetailClient({ subcontractor }: Props) {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <AlertCircle className="h-5 w-5" />
-              Страхування
+              Ubezpieczenie
             </CardTitle>
           </CardHeader>
           <CardContent>
             <p className={`font-medium ${insuranceDays < 0 ? "text-red-600" : insuranceDays <= 30 ? "text-orange-600" : "text-foreground"}`}>
               {insuranceDays < 0
-                ? `Страхування закінчилось ${Math.abs(insuranceDays)} днів тому`
+                ? `Ubezpieczenie wygasło ${Math.abs(insuranceDays)} dni temu`
                 : insuranceDays <= 30
-                ? `Страхування закінчується через ${insuranceDays} днів`
-                : `Страхування дійсне до: ${new Date(subcontractor.insurance_expiry!).toLocaleDateString("uk-UA")}`}
+                ? `Ubezpieczenie wygasa za ${insuranceDays} dni`
+                : `Ubezpieczenie ważne do: ${new Date(subcontractor.insurance_expiry!).toLocaleDateString("pl-PL")}`}
             </p>
           </CardContent>
         </Card>
@@ -254,7 +254,7 @@ export function PodwykonawcaDetailClient({ subcontractor }: Props) {
 
       <Card>
         <CardHeader>
-          <CardTitle>Контактна інформація</CardTitle>
+          <CardTitle>Dane kontaktowe</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
@@ -262,7 +262,7 @@ export function PodwykonawcaDetailClient({ subcontractor }: Props) {
               <div className="flex items-center gap-3">
                 <Building2 className="h-5 w-5 text-muted-foreground" />
                 <div>
-                  <p className="text-sm text-muted-foreground">Місто</p>
+                  <p className="text-sm text-muted-foreground">Miasto</p>
                   <p className="font-medium">{subcontractor.city}</p>
                 </div>
               </div>
@@ -271,7 +271,7 @@ export function PodwykonawcaDetailClient({ subcontractor }: Props) {
               <div className="flex items-center gap-3">
                 <Building2 className="h-5 w-5 text-muted-foreground" />
                 <div>
-                  <p className="text-sm text-muted-foreground">Контактна особа</p>
+                  <p className="text-sm text-muted-foreground">Osoba kontaktowa</p>
                   <p className="font-medium">{subcontractor.contact_name}</p>
                 </div>
               </div>
@@ -280,7 +280,7 @@ export function PodwykonawcaDetailClient({ subcontractor }: Props) {
               <div className="flex items-center gap-3">
                 <Phone className="h-5 w-5 text-muted-foreground" />
                 <div>
-                  <p className="text-sm text-muted-foreground">Телефон</p>
+                  <p className="text-sm text-muted-foreground">Telefon</p>
                   <p className="font-medium">{subcontractor.contact_phone}</p>
                 </div>
               </div>
@@ -298,7 +298,7 @@ export function PodwykonawcaDetailClient({ subcontractor }: Props) {
               <div className="flex items-center gap-3">
                 <Globe className="h-5 w-5 text-muted-foreground" />
                 <div>
-                  <p className="text-sm text-muted-foreground">Веб-сайт</p>
+                  <p className="text-sm text-muted-foreground">Strona internetowa</p>
                   <a href={subcontractor.website} target="_blank" rel="noopener noreferrer" className="font-medium text-blue-600 hover:underline">
                     {subcontractor.website}
                   </a>
@@ -321,7 +321,7 @@ export function PodwykonawcaDetailClient({ subcontractor }: Props) {
       {subcontractor.notes && (
         <Card>
           <CardHeader>
-            <CardTitle>Примітки</CardTitle>
+            <CardTitle>Notatki</CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-sm">{subcontractor.notes}</p>

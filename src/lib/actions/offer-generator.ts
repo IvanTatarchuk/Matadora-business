@@ -7,7 +7,20 @@ import { type BoqItem } from "./boq";
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const db = (s: any) => s as any;
 
-export type OfferTemplate = "investor" | "contractor" | "developer";
+export type OfferTemplate = 
+  | "investor" 
+  | "contractor" 
+  | "developer"
+  | "renovation"
+  | "new_construction"
+  | "commercial"
+  | "industrial"
+  | "infrastructure"
+  | "knr_standard"
+  | "knr_simplified"
+  | "material_labor"
+  | "public_sector"
+  | "private_client";
 
 export type OfferSection = {
   title: string;
@@ -47,24 +60,98 @@ const TEMPLATE_CONFIG: Record<OfferTemplate, {
   description: string;
   defaultTerms: string;
   defaultPaymentTerms: string;
+  defaultVatRate: number;
 }> = {
   investor: {
     name: "Oferta dla inwestora prywatnego",
     description: "Szczegółowa oferta z podziałem na etapy i koszty",
     defaultTerms: "Oferta ważna 30 dni od daty wystawienia. Zastrzegamy sobie prawo do zmiany cen w przypadku zmian kosztów materiałów.",
     defaultPaymentTerms: "Płatność w ratach: 30% zaliczka, 40% po zakończeniu prac, 30% po odbiorze.",
+    defaultVatRate: 8,
   },
   contractor: {
     name: "Oferta dla generalnego wykonawcy",
     description: "Oferta podwykonawcza z harmonogramem i specyfikacją",
     defaultTerms: "Oferta ważna 14 dni. Prace wykonywane zgodnie z harmonogramem i specyfikacją techniczną.",
     defaultPaymentTerms: "Płatność miesięczna na podstawie protokołów odbioru częściowego.",
+    defaultVatRate: 23,
   },
   developer: {
     name: "Oferta dla dewelopera",
     description: "Kompleksowa oferta wieloetapowa z gwarancjami",
     defaultTerms: "Oferta ważna 21 dni. Gwarancja jakości 5 lat na wykonane prace.",
     defaultPaymentTerms: "Płatność zgodnie z harmonogramem płatności FDD.",
+    defaultVatRate: 8,
+  },
+  renovation: {
+    name: "Kosztorys remontu",
+    description: "Szczegółowy kosztorys prac remontowych z podziałem na pomieszczenia",
+    defaultTerms: "Oferta ważna 14 dni od daty wystawienia. Zastrzegamy sobie prawo do weryfikacji stanu technicznego przed rozpoczęciem prac.",
+    defaultPaymentTerms: "Płatność w ratach: 40% zaliczka, 30% po połowie prac, 30% po odbiorze końcowym.",
+    defaultVatRate: 8,
+  },
+  new_construction: {
+    name: "Kosztorys nowego budynku",
+    description: "Kompleksowy kosztorys budowy od fundamentów do stanu deweloperskiego",
+    defaultTerms: "Oferta ważna 30 dni. Ceny mogą ulec zmianie w przypadku zmian kosztów materiałów lub robocizny.",
+    defaultPaymentTerms: "Płatność etapowa zgodnie z harmonogramem: fundamenty 20%, stan surowy 25%, stan deweloperski 30%, odbiór 25%.",
+    defaultVatRate: 8,
+  },
+  commercial: {
+    name: "Kosztorys obiektu komercyjnego",
+    description: "Profesjonalny kosztorys dla powierzchni biurowych, handlowych i usługowych",
+    defaultTerms: "Oferta ważna 21 dni. Wymaga szczegółowej specyfikacji technicznej.",
+    defaultPaymentTerms: "Płatność miesięczna na podstawie protokołów postępu prac. Zaliczka 15%.",
+    defaultVatRate: 23,
+  },
+  industrial: {
+    name: "Kosztorys obiektu przemysłowego",
+    description: "Specjalistyczny kosztorys dla hal produkcyjnych, magazynów i obiektów przemysłowych",
+    defaultTerms: "Oferta ważna 30 dni. Wymaga uzgodnień technicznych przed rozpoczęciem.",
+    defaultPaymentTerms: "Płatność etapowa: fundamenty i konstrukcja 30%, instalacje 25%, wykończenie 25%, odbiór 20%.",
+    defaultVatRate: 23,
+  },
+  infrastructure: {
+    name: "Kosztorys infrastruktury",
+    description: "Kosztorys prac infrastrukturalnych: drogi, sieci, uzbrojenie terenu",
+    defaultTerms: "Oferta ważna 30 dni. Ceny uzależnione od warunków gruntowych.",
+    defaultPaymentTerms: "Płatność zgodnie z harmonogramem realizacji etapów.",
+    defaultVatRate: 23,
+  },
+  knr_standard: {
+    name: "Kosztorys KNR (standard)",
+    description: "Oficjalny kosztorys zgodny z normami KNR dla przetargów publicznych",
+    defaultTerms: "Oferta ważna 30 dni. Kosztorys sporządzony zgodnie z Katalogiem Norm Rozpadowych.",
+    defaultPaymentTerms: "Płatność zgodnie z umową i protokołami odbioru.",
+    defaultVatRate: 23,
+  },
+  knr_simplified: {
+    name: "Kosztorys KNR (uproszczony)",
+    description: "Uproszczony kosztorys KNR dla małych projektów i klientów prywatnych",
+    defaultTerms: "Oferta ważna 14 dni. Kosztorys oparty na uproszczonych normach.",
+    defaultPaymentTerms: "Płatność w ratach: 50% zaliczka, 50% po odbiorze.",
+    defaultVatRate: 8,
+  },
+  material_labor: {
+    name: "Kosztorys materiał + robocizna",
+    description: "Szczegółowy podział na materiały i robociznę dla pełnej transparacji kosztów",
+    defaultTerms: "Oferta ważna 21 dni. Ceny materiałów mogą ulec zmianie.",
+    defaultPaymentTerms: "Płatność etapowa: materiały z góry, robocizna po wykonaniu.",
+    defaultVatRate: 23,
+  },
+  public_sector: {
+    name: "Kosztorys sektora publicznego",
+    description: "Oficjalny kosztorys zgodny z wymogami zamówień publicznych",
+    defaultTerms: "Oferta ważna 30 dni. Wymaga pełnej dokumentacji technicznej.",
+    defaultPaymentTerms: "Płatność zgodnie z ustawą o zamówieniach publicznych i protokołami odbioru.",
+    defaultVatRate: 23,
+  },
+  private_client: {
+    name: "Kosztorys dla klienta prywatnego",
+    description: "Prosty i przejrzysty kosztorys dla osób prywatnych",
+    defaultTerms: "Oferta ważna 14 dni. Bez zbędnej formalności.",
+    defaultPaymentTerms: "Płatność elastyczna: zaliczka 30%, reszta po zakończeniu prac.",
+    defaultVatRate: 8,
   },
 };
 
