@@ -501,7 +501,7 @@ export async function getContractorReviews(contractorId: string) {
     .from("contractor_reviews")
     .select(`
       *,
-      author:auth.users(id, email, raw_user_meta_data->>'full_name' as full_name)
+      author:auth.users!author_id(id, email, raw_user_meta_data->>'full_name' as full_name)
     `)
     .eq("contractor_id", contractorId)
     .order("created_at", { ascending: false });
