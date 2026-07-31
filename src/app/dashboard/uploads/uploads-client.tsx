@@ -1,13 +1,14 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { Upload, File, Trash2, Download, Search, Filter, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
-  createFileUpload, deleteFileUpload, type FileCategory,
+  uploadOrgFile, deleteFileUpload, incrementDownloadCount, type FileCategory,
 } from "@/lib/actions/file-uploads";
 
 type Props = {
@@ -21,10 +22,13 @@ type Props = {
 };
 
 export function UploadsClient({ orgId, initialUploads, initialStats }: Props) {
+  const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [uploads, setUploads] = useState(initialUploads);
   const [stats, setStats] = useState(initialStats);
+  useEffect(() => setUploads(initialUploads), [initialUploads]);
+  useEffect(() => setStats(initialStats), [initialStats]);
   const [showUploadForm, setShowUploadForm] = useState(false);
   const [uploadForm, setUploadForm] = useState({
     description: "",
@@ -44,34 +48,25 @@ export function UploadsClient({ orgId, initialUploads, initialStats }: Props) {
   function handleUpload() {
     setError(null);
     if (!selectedFile) {
-      setError("Виберіть файл для завантаження");
+      setError("Wybierz plik do przesłania");
       return;
     }
     startTransition(async () => {
-      // Simulate file upload - in production, this would upload to storage
-      const storagePath = `uploads/${Date.now()}_${selectedFile.name}`;
-      const storageUrl = `https://storage.example.com/${storagePath}`;
-      
-      const res = await createFileUpload({
-        orgId,
-        fileName: selectedFile.name,
-        fileType: selectedFile.type,
-        fileSize: selectedFile.size,
-        storagePath,
-        storageUrl,
-        category: uploadForm.category,
-        description: uploadForm.description || undefined,
-        tags: uploadForm.tags ? uploadForm.tags.split(",").map(t => t.trim()) : [],
-        isPublic: uploadForm.isPublic,
-      });
-      
-      if (!res.ok) { setError(res.error ?? "Помилка"); return; }
+      const fd = new FormData();
+      fd.set("file", selectedFile);
+      fd.set("orgId", orgId);
+      fd.set("category", uploadForm.category);
+      if (uploadForm.description) fd.set("description", uploadForm.description);
+      if (uploadForm.tags) fd.set("tags", uploadForm.tags);
+      fd.set("isPublic", String(uploadForm.isPublic));
+
+      const res = await uploadOrgFile(fd);
+
+      if (!res.ok) { setError(res.error ?? "Błąd"); return; }
       setShowUploadForm(false);
       setSelectedFile(null);
       setUploadForm({ description: "", category: "other", tags: "", isPublic: false });
-      // Reload uploads
-      const newUploads = await fetch(`/api/uploads`).then(r => r.json());
-      setUploads(newUploads);
+      router.refresh();
     });
   }
 
@@ -79,25 +74,30 @@ export function UploadsClient({ orgId, initialUploads, initialStats }: Props) {
     setError(null);
     startTransition(async () => {
       const res = await deleteFileUpload(id);
-      if (!res.ok) { setError(res.error ?? "Помилка"); return; }
+      if (!res.ok) { setError(res.error ?? "Błąd"); return; }
       setUploads(uploads.filter((u) => u.id !== id));
+      router.refresh();
     });
   }
 
-  function handleDownload(id: string) {
+  function handleDownload(id: string, storageUrl: string | null) {
     setError(null);
+    if (!storageUrl) {
+      setError("Ten plik nie ma dostępnego adresu do pobrania.");
+      return;
+    }
+    window.open(storageUrl, "_blank", "noopener,noreferrer");
     startTransition(async () => {
-      // In production, this would trigger actual download
-      console.log("Downloading file:", id);
+      await incrementDownloadCount(id);
     });
   }
 
   const categoryLabels: Record<FileCategory, string> = {
-    document: "Документ",
-    image: "Зображення",
-    video: "Відео",
-    audio: "Аудіо",
-    other: "Інше",
+    document: "Dokument",
+    image: "Zdjęcie",
+    video: "Wideo",
+    audio: "Audio",
+    other: "Inne",
   };
 
   const filteredUploads = uploads.filter((upload) => {
@@ -117,9 +117,9 @@ export function UploadsClient({ orgId, initialUploads, initialStats }: Props) {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">Завантаження файлів</h1>
+        <h1 className="text-2xl font-bold">Przesyłanie plików</h1>
         <p className="text-sm text-muted-foreground">
-          Управляйте файлами вашої організації
+          Zarządzaj plikami swojej organizacji
         </p>
       </div>
 
@@ -128,7 +128,7 @@ export function UploadsClient({ orgId, initialUploads, initialStats }: Props) {
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center justify-between mb-2">
-              <p className="text-sm text-muted-foreground">Всього файлів</p>
+              <p className="text-sm text-muted-foreground">Wszystkich plików</p>
               <File className="h-4 w-4 text-blue-500" />
             </div>
             <p className="text-2xl font-bold">{stats.totalFiles}</p>
@@ -137,7 +137,7 @@ export function UploadsClient({ orgId, initialUploads, initialStats }: Props) {
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center justify-between mb-2">
-              <p className="text-sm text-muted-foreground">Загальний розмір</p>
+              <p className="text-sm text-muted-foreground">Łączny rozmiar</p>
               <Upload className="h-4 w-4 text-purple-500" />
             </div>
             <p className="text-2xl font-bold">{formatFileSize(stats.totalSize)}</p>
@@ -146,7 +146,7 @@ export function UploadsClient({ orgId, initialUploads, initialStats }: Props) {
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center justify-between mb-2">
-              <p className="text-sm text-muted-foreground">Документи</p>
+              <p className="text-sm text-muted-foreground">Dokumenty</p>
               <File className="h-4 w-4 text-green-500" />
             </div>
             <p className="text-2xl font-bold">{stats.byCategory.document}</p>
@@ -155,7 +155,7 @@ export function UploadsClient({ orgId, initialUploads, initialStats }: Props) {
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center justify-between mb-2">
-              <p className="text-sm text-muted-foreground">Зображення</p>
+              <p className="text-sm text-muted-foreground">Zdjęcia</p>
               <File className="h-4 w-4 text-orange-500" />
             </div>
             <p className="text-2xl font-bold">{stats.byCategory.image}</p>
@@ -167,7 +167,7 @@ export function UploadsClient({ orgId, initialUploads, initialStats }: Props) {
       <div className="flex gap-2">
         <Button onClick={() => setShowUploadForm(!showUploadForm)}>
           <Plus className="h-4 w-4 mr-2" />
-          Завантажити файл
+          Prześlij plik
         </Button>
       </div>
 
@@ -175,34 +175,34 @@ export function UploadsClient({ orgId, initialUploads, initialStats }: Props) {
       {showUploadForm && (
         <Card className="border-primary">
           <CardHeader>
-            <CardTitle>Завантажити файл</CardTitle>
+            <CardTitle>Prześlij plik</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <Label>Файл</Label>
+              <Label>Plik</Label>
               <Input type="file" onChange={handleFileSelect} className="mt-1" />
               {selectedFile && (
                 <p className="text-sm text-muted-foreground mt-1">
-                  Вибрано: {selectedFile.name} ({formatFileSize(selectedFile.size)})
+                  Wybrano: {selectedFile.name} ({formatFileSize(selectedFile.size)})
                 </p>
               )}
             </div>
             <div>
-              <Label>Категорія</Label>
+              <Label>Kategoria</Label>
               <select
                 className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm mt-1"
                 value={uploadForm.category}
                 onChange={(e) => setUploadForm({ ...uploadForm, category: e.target.value as FileCategory })}
               >
-                <option value="document">Документ</option>
-                <option value="image">Зображення</option>
-                <option value="video">Відео</option>
-                <option value="audio">Аудіо</option>
-                <option value="other">Інше</option>
+                <option value="document">Dokument</option>
+                <option value="image">Zdjęcie</option>
+                <option value="video">Wideo</option>
+                <option value="audio">Audio</option>
+                <option value="other">Inne</option>
               </select>
             </div>
             <div>
-              <Label>Опис</Label>
+              <Label>Opis</Label>
               <Input
                 value={uploadForm.description}
                 onChange={(e) => setUploadForm({ ...uploadForm, description: e.target.value })}
@@ -210,7 +210,7 @@ export function UploadsClient({ orgId, initialUploads, initialStats }: Props) {
               />
             </div>
             <div>
-              <Label>Теги (через кому)</Label>
+              <Label>Tagi (rozdzielone przecinkami)</Label>
               <Input
                 value={uploadForm.tags}
                 onChange={(e) => setUploadForm({ ...uploadForm, tags: e.target.value })}
@@ -225,15 +225,15 @@ export function UploadsClient({ orgId, initialUploads, initialStats }: Props) {
                 checked={uploadForm.isPublic}
                 onChange={(e) => setUploadForm({ ...uploadForm, isPublic: e.target.checked })}
               />
-              <label htmlFor="public" className="text-sm">Публічний файл</label>
+              <label htmlFor="public" className="text-sm">Plik publiczny</label>
             </div>
             {error && <p className="text-sm text-destructive">{error}</p>}
             <div className="flex gap-2">
               <Button onClick={handleUpload} disabled={pending}>
-                {pending ? "Завантаження..." : "Завантажити"}
+                {pending ? "Przesyłanie..." : "Prześlij"}
               </Button>
               <Button variant="outline" onClick={() => setShowUploadForm(false)}>
-                Скасувати
+                Anuluj
               </Button>
             </div>
           </CardContent>
@@ -246,7 +246,7 @@ export function UploadsClient({ orgId, initialUploads, initialStats }: Props) {
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Пошук файлів..."
+              placeholder="Szukaj plików..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-10"
@@ -258,24 +258,24 @@ export function UploadsClient({ orgId, initialUploads, initialStats }: Props) {
           value={filterCategory}
           onChange={(e) => setFilterCategory(e.target.value as FileCategory | "all")}
         >
-          <option value="all">Всі категорії</option>
-          <option value="document">Документи</option>
-          <option value="image">Зображення</option>
-          <option value="video">Відео</option>
-          <option value="audio">Аудіо</option>
-          <option value="other">Інше</option>
+          <option value="all">Wszystkie kategorie</option>
+          <option value="document">Dokumenty</option>
+          <option value="image">Zdjęcia</option>
+          <option value="video">Wideo</option>
+          <option value="audio">Audio</option>
+          <option value="other">Inne</option>
         </select>
       </div>
 
       {/* Files List */}
       <Card>
         <CardHeader>
-          <CardTitle>Файли ({filteredUploads.length})</CardTitle>
+          <CardTitle>Pliki ({filteredUploads.length})</CardTitle>
         </CardHeader>
         <CardContent>
           {filteredUploads.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
-              Немає файлів
+              Brak plików
             </div>
           ) : (
             <div className="space-y-2">
@@ -288,11 +288,11 @@ export function UploadsClient({ orgId, initialUploads, initialStats }: Props) {
                         {categoryLabels[upload.category as FileCategory]}
                       </span>
                       {upload.is_public && (
-                        <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded">Публічний</span>
+                        <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded">Publiczny</span>
                       )}
                     </div>
                     <p className="text-xs text-muted-foreground">
-                      {formatFileSize(upload.file_size)} · {new Date(upload.created_at).toLocaleString("uk-UA")}
+                      {formatFileSize(upload.file_size)} · {new Date(upload.created_at).toLocaleString("pl-PL")}
                     </p>
                     {upload.description && (
                       <p className="text-xs text-muted-foreground">{upload.description}</p>
@@ -308,7 +308,7 @@ export function UploadsClient({ orgId, initialUploads, initialStats }: Props) {
                     )}
                   </div>
                   <div className="flex gap-1">
-                    <Button variant="ghost" size="sm" onClick={() => handleDownload(upload.id)}>
+                    <Button variant="ghost" size="sm" onClick={() => handleDownload(upload.id, upload.storage_url)}>
                       <Download className="h-4 w-4" />
                     </Button>
                     <Button variant="ghost" size="sm" onClick={() => handleDelete(upload.id)}>

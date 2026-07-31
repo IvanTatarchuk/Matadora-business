@@ -12,12 +12,25 @@ export default async function AdDetailsPage({
 
   const { ok, data: ad } = await getPublicAd(params.id);
   const { ok: okResponses, data: responses } = await getAdResponses(params.id);
+  const responseList = okResponses && responses ? responses : [];
+
+  const contractorIds = Array.from(new Set(responseList.map((r: any) => r.contractor_id)));
+  const ratingResults = await Promise.all(
+    contractorIds.map(async (id) => ({ id, res: await getContractorRating(id) }))
+  );
+  const contractorRatings: Record<string, { rating: number; count: number }> = {};
+  for (const { id, res } of ratingResults) {
+    if (res.ok && res.count) {
+      contractorRatings[id] = { rating: res.rating ?? 0, count: res.count };
+    }
+  }
 
   return (
     <div className="min-h-screen bg-background">
-      <AdDetailsClient 
-        ad={ok && ad ? ad : null} 
-        responses={okResponses && responses ? responses : []}
+      <AdDetailsClient
+        ad={ok && ad ? ad : null}
+        responses={responseList}
+        contractorRatings={contractorRatings}
         user={user}
       />
     </div>

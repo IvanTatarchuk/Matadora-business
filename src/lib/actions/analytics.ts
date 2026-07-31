@@ -18,6 +18,8 @@ export type ProjectAnalytics = {
   open_risks: number;
   days_remaining: number | null;
   is_delayed: boolean;
+  margin_pct: number | null;
+  margin_status: "on-track" | "watch" | "at-risk" | null;
 };
 
 export type OrgAnalytics = {
@@ -59,12 +61,14 @@ export async function getOrgAnalytics(): Promise<OrgAnalytics | null> {
     projects.map(async (p) => {
       const pid = p.id as string;
 
-      const [tasksRes, financeRes, rfisRes, punchRes, risksRes] = await Promise.all([
+      const [tasksRes, financeRes, rfisRes, punchRes, risksRes, offerRes] = await Promise.all([
         db(supabase).from("execution_tasks").select("id, status, progress").eq("project_id", pid),
         db(supabase).from("project_costs").select("amount").eq("project_id", pid),
         db(supabase).from("rfis").select("id", { count: "exact", head: true }).eq("project_id", pid).in("status", ["open","answered"]),
         db(supabase).from("punch_items").select("id", { count: "exact", head: true }).eq("project_id", pid).in("status", ["open","in_progress"]),
         db(supabase).from("project_risks").select("id", { count: "exact", head: true }).eq("project_id", pid).eq("status", "open"),
+        db(supabase).from("offers").select("total_net").eq("project_id", pid).eq("status", "accepted")
+          .order("accepted_at", { ascending: false }).limit(1).maybeSingle(),
       ]);
 
       const tasks: Record<string, unknown>[] = tasksRes.data ?? [];
@@ -75,6 +79,11 @@ export async function getOrgAnalytics(): Promise<OrgAnalytics | null> {
       const budget = Number(p.budget ?? 0);
       const endDate = p.end_date ? new Date(p.end_date as string) : null;
       const daysRemaining = endDate ? Math.floor((endDate.getTime() - Date.now()) / 86400000) : null;
+
+      const revenue = offerRes.data?.total_net != null ? Number(offerRes.data.total_net) : null;
+      const marginPct = revenue && revenue > 0 ? Math.round(((revenue - spent) / revenue) * 100) : null;
+      const marginStatus: ProjectAnalytics["margin_status"] =
+        marginPct === null ? null : marginPct >= 15 ? "on-track" : marginPct >= 0 ? "watch" : "at-risk";
 
       return {
         project_id: pid,
@@ -92,6 +101,8 @@ export async function getOrgAnalytics(): Promise<OrgAnalytics | null> {
         open_risks: risksRes.count ?? 0,
         days_remaining: daysRemaining,
         is_delayed: daysRemaining !== null && daysRemaining < 0 && p.status !== "completed",
+        margin_pct: marginPct,
+        margin_status: marginStatus,
       };
     })
   );

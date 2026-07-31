@@ -40,7 +40,7 @@ export default async function ProjectExecutionPage({
         href="/dashboard/contractor/projects"
         className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
       >
-        <ArrowLeft className="h-4 w-4" /> Back to projects
+        <ArrowLeft className="h-4 w-4" /> Wróć do projektów
       </Link>
 
       <ProjectSubnav projectId={project.id} role="contractor" />

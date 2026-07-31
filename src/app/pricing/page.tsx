@@ -1,121 +1,32 @@
 import Link from "next/link";
-import { HardHat, CheckCircle2, ArrowRight, Zap, Phone, X, Clock, TrendingDown } from "lucide-react";
+import { HardHat, CheckCircle2, ArrowRight, Sparkles, Phone, Clock, TrendingDown } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { BuyButton } from "./buy-button";
-
-const PAY_PER_USE = [
-  {
-    name: "Pierwszy kosztorys",
-    price: "0",
-    priceLabel: "bezpłatnie",
-    desc: "Wypróbuj bez rejestracji",
-    highlight: false,
-    tag: null,
-    features: [
-      "Kalkulator KNR online",
-      "Podgląd w przeglądarce",
-      "Eksport PDF",
-    ],
-    excluded: [
-      "Wysyłka do klienta",
-      "Podpis elektroniczny",
-      "Zapis w chmurze",
-      "Faktura KSeF",
-    ],
-    cta: "Stwórz kosztorys",
-    href: "/kosztorys",
-  },
-  {
-    name: "Mały",
-    price: "149",
-    priceLabel: "zł / kosztorys",
-    desc: "Mieszkania, proste remonty",
-    highlight: false,
-    tag: null,
-    tier: "maly" as const,
-    features: [
-      "Do 30 pozycji KNR",
-      "Kalkulacja robocizna + materiały",
-      "Eksport PDF ze stopką firmy",
-      "Wysyłka do klienta e-mailem",
-      "Podpis elektroniczny (art. 60 KC)",
-      "Zapis w chmurze (1 rok)",
-    ],
-    excluded: [
-      "Wieloetapowy harmonogram",
-      "Faktura KSeF automatyczna",
-    ],
-  },
-  {
-    name: "Standardowy",
-    price: "299",
-    priceLabel: "zł / kosztorys",
-    desc: "Większe budowy, inwestycje",
-    highlight: true,
-    tag: "Najpopularniejszy",
-    tier: "standardowy" as const,
-    features: [
-      "Do 100 pozycji KNR",
-      "Wieloetapowy harmonogram",
-      "Eksport PDF + .ath (Norma PRO)",
-      "Wysyłka do klienta e-mailem",
-      "Podpis elektroniczny (art. 60 KC)",
-      "Zapis w chmurze (bezterminowo)",
-      "Faktura KSeF po akceptacji",
-      "Śledzenie projektu po wygraniu",
-    ],
-    excluded: [],
-  },
-  {
-    name: "Kompleksowy",
-    price: "499",
-    priceLabel: "zł / kosztorys",
-    desc: "Przetargi publiczne, deweloperzy",
-    highlight: false,
-    tag: null,
-    tier: "kompleksowy" as const,
-    features: [
-      "Nielimitowane pozycje KNR",
-      "Wieloetapowy harmonogram Gantt",
-      "Eksport PDF + .ath + XML (e-Zamówienia)",
-      "Wysyłka do klienta e-mailem",
-      "Podpis elektroniczny (art. 60 KC)",
-      "Zapis w chmurze (bezterminowo)",
-      "Faktura KSeF po akceptacji",
-      "Pełny moduł zarządzania projektem",
-      "Portal inwestora real-time",
-      "Wsparcie priorytetowe",
-    ],
-    excluded: [],
-  },
-];
 
 const FAQ = [
   {
-    q: "Czy za pierwszy kosztorys naprawdę nie płacę?",
-    a: "Tak. Pierwszy kosztorys jest całkowicie bezpłatny — bez karty kredytowej i bez rejestracji. Dopiero przy wysyłce do klienta lub zapisie w chmurze wybierasz opcję płatną.",
+    q: "Czy platforma Matadora jest naprawdę bezpłatna?",
+    a: "Tak. Rejestracja, zarządzanie projektami, finanse, brygady, podwykonawcy, kosztorysy budowane ręcznie w kalkulatorze KNR — wszystko jest bezpłatne, bez limitów i bez subskrypcji.",
   },
   {
-    q: "Kiedy opłaca się subskrypcja PRO zamiast pay-per-use?",
-    a: "Jeśli tworzysz 3 lub więcej kosztorysy miesięcznie, subskrypcja PRO (499 zł/mies.) jest tańsza — jeden kosztorys standardowy kosztuje 299 zł, więc już przy trzech masz oszczędność.",
+    q: "Za co więc płacę?",
+    a: "Wyłącznie za trzy funkcje AI, każda rozliczana jednorazowo, tylko wtedy gdy z niej korzystasz: analiza AI kosztorysu z PDF (500 zł), analiza AI zdjęcia budowy pod kątem BHP (99 zł) oraz sesja Adwokata AI — generator umów i analiza dokumentu prawnego (19,99 zł).",
   },
   {
     q: "Ile kosztuje kosztorysant na rynku?",
-    a: "Stawki rynkowe kosztorysantów to 600–1500 zł za kosztorys, plus czas oczekiwania 3–10 dni roboczych. Matadora daje wynik w 3 minuty, od 149 zł.",
+    a: "Stawki rynkowe kosztorysantów to 600–1500 zł za kosztorys, plus czas oczekiwania 3–10 dni roboczych. Analiza AI w Matadorze daje wynik w kilkadziesiąt sekund, za 500 zł.",
   },
   {
-    q: "Czy mogę eksportować kosztorys do formatu Norma PRO?",
-    a: "Tak. W opcjach Standardowy i Kompleksowy eksport do formatu .ath (kompatybilny z Norma PRO, ATH) jest dostępny od razu.",
+    q: "Czy mogę stworzyć kosztorys bez płacenia?",
+    a: "Tak — kalkulator KNR (dodawanie pozycji ręcznie, wyszukiwanie w katalogu, eksport PDF, wysyłka do klienta) jest w pełni bezpłatny. Płatna jest wyłącznie automatyczna analiza AI z przesłanego pliku PDF.",
   },
   {
-    q: "Co to jest podpis elektroniczny klienta?",
-    a: "Klient otrzymuje SMS lub e-mail z linkiem, otwiera kosztorys na telefonie i podpisuje palcem lub myszą. Podpis jest prawnie ważny na podstawie art. 60 KC.",
+    q: "Czy dostanę fakturę VAT za zakup?",
+    a: "Tak — faktura VAT jest wystawiana i wysyłana automatycznie na Twój adres e-mail od razu po zaksięgowaniu płatności, a dodatkowo zawsze dostępna do pobrania pod stałym linkiem.",
   },
   {
-    q: "Czy mogę anulować subskrypcję PRO w dowolnym momencie?",
-    a: "Tak, w każdej chwili bez dodatkowych opłat. Twoje kosztorysy i projekty pozostają dostępne przez 90 dni po anulowaniu.",
+    q: "Co się dzieje, jeśli zapłacę, a analiza się nie powiedzie?",
+    a: "Napisz do nas na vanbud.felix@gmail.com z numerem transakcji — rozliczymy zwrot lub ponowną analizę ręcznie.",
   },
 ];
 
@@ -125,12 +36,13 @@ export default function PricingPage() {
       {/* HEADER */}
       <header className="sticky top-0 z-50 border-b bg-white/95 backdrop-blur">
         <div className="container flex h-16 items-center justify-between">
-          <Link href="/" className="flex items-center gap-2 font-bold text-xl">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
+          <Link href="/" className="flex items-center gap-2 whitespace-nowrap font-extrabold text-xl tracking-tight">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary">
               <HardHat className="h-5 w-5 text-white" />
             </div>
-            <span>matadora</span>
-            <span className="text-primary">.business</span>
+            <span>
+              MATADORA<span className="text-primary">.business</span>
+            </span>
           </Link>
           <div className="flex items-center gap-3">
             <Button variant="ghost" size="sm" asChild>
@@ -148,16 +60,17 @@ export default function PricingPage() {
         <section className="bg-gradient-to-br from-slate-900 to-slate-800 py-16 text-white text-center">
           <div className="container">
             <div className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-1.5 text-sm font-medium mb-4">
-              <Zap className="h-3.5 w-3.5 text-yellow-400" />
-              Płacisz za kosztorys — nie za subskrypcję
+              <Sparkles className="h-3.5 w-3.5 text-yellow-400" />
+              Cała platforma bezpłatna — płacisz tylko za funkcje AI
             </div>
             <h1 className="text-4xl font-extrabold sm:text-5xl">Cennik</h1>
             <p className="mt-4 text-xl text-white/70 max-w-xl mx-auto">
-              Pierwszy kosztorys bezpłatnie. Kolejne od 149 zł za sztukę.
+              Matadora jest bezpłatna. Płatne są wyłącznie trzy funkcje AI — analiza kosztorysu z PDF,
+              analiza BHP zdjęcia budowy oraz sesja Adwokata AI — każda rozliczana jednorazowo.
             </p>
             <div className="mt-4 inline-flex items-center gap-2 rounded-full bg-green-500/20 border border-green-500/30 px-4 py-2 text-sm text-green-300">
               <CheckCircle2 className="h-4 w-4" />
-              Bez miesięcznych zobowiązań · Bez karty kredytowej na start
+              Bez subskrypcji · Bez kart na start · Bez ukrytych opłat
             </div>
           </div>
         </section>
@@ -179,123 +92,118 @@ export default function PricingPage() {
                 <div className="text-center">
                   <TrendingDown className="h-8 w-8 text-green-600 mx-auto" />
                   <p className="mt-1 text-sm font-bold text-green-700">Oszczędzasz</p>
-                  <p className="text-2xl font-extrabold text-green-600">751 zł</p>
-                  <p className="text-xs text-muted-foreground">vs kosztorys Mały</p>
+                  <p className="text-2xl font-extrabold text-green-600">400 zł</p>
+                  <p className="text-xs text-muted-foreground">vs kosztorysant ręczny</p>
                 </div>
               </div>
               <div className="rounded-xl border border-green-200 bg-white p-5">
-                <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-2">Matadora</p>
-                <p className="text-3xl font-extrabold text-green-600">149 zł</p>
-                <p className="text-sm text-muted-foreground mt-1">kosztorys Mały</p>
+                <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-2">Matadora — analiza AI</p>
+                <p className="text-3xl font-extrabold text-green-600">500 zł</p>
+                <p className="text-sm text-muted-foreground mt-1">za dokument</p>
                 <div className="mt-3 flex items-center justify-center gap-1.5 text-xs text-green-700 font-semibold">
-                  <Zap className="h-3.5 w-3.5" />
-                  W 3 minuty zamiast 3 dni
+                  <Sparkles className="h-3.5 w-3.5" />
+                  Wynik w kilkadziesiąt sekund
                 </div>
               </div>
             </div>
           </div>
         </section>
 
-        {/* PAY-PER-USE CARDS */}
+        {/* CO JEST BEZPŁATNE / CO JEST PŁATNE */}
         <section className="container py-16">
           <div className="text-center mb-10">
-            <h2 className="text-2xl font-bold">Pay-per-use — płać za kosztorys</h2>
-            <p className="mt-2 text-muted-foreground">Idealne gdy zlecenia są nieregularne lub dopiero zaczynasz</p>
+            <h2 className="text-2xl font-bold">Prosty podział: platforma bezpłatna, AI płatne</h2>
+            <p className="mt-2 text-muted-foreground">Bez taryf, bez subskrypcji — płacisz tylko wtedy, gdy korzystasz z konkretnej funkcji AI</p>
           </div>
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4 items-start">
-            {PAY_PER_USE.map((plan) => (
-              <Card
-                key={plan.name}
-                className={`relative overflow-hidden ${plan.highlight ? "border-primary shadow-2xl" : "border"}`}
-              >
-                {plan.tag && (
-                  <div className="absolute top-0 left-0 right-0 bg-primary py-1.5 text-center text-xs font-bold text-white tracking-widest uppercase">
-                    {plan.tag}
-                  </div>
-                )}
-                <CardContent className={`p-5 ${plan.tag ? "pt-9" : ""}`}>
-                  <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">{plan.name}</p>
-                  <p className="mt-0.5 text-xs text-muted-foreground">{plan.desc}</p>
-                  <div className="mt-3 flex items-end gap-1">
-                    <span className="text-4xl font-extrabold">{plan.price}</span>
-                    <span className="mb-1 text-xs text-muted-foreground leading-tight">{plan.priceLabel}</span>
-                  </div>
-                  <ul className="mt-4 space-y-1.5">
-                    {plan.features.map((f) => (
-                      <li key={f} className="flex items-start gap-1.5 text-xs">
-                        <CheckCircle2 className="h-3.5 w-3.5 mt-0.5 shrink-0 text-green-500" />
-                        {f}
-                      </li>
-                    ))}
-                    {plan.excluded.map((f) => (
-                      <li key={f} className="flex items-start gap-1.5 text-xs text-muted-foreground/50">
-                        <X className="h-3.5 w-3.5 mt-0.5 shrink-0" />
-                        {f}
-                      </li>
-                    ))}
-                  </ul>
-                  {"tier" in plan && plan.tier ? (
-                    <BuyButton
-                      tier={plan.tier}
-                      variant={plan.highlight ? "default" : "outline"}
-                      label="Kup kosztorys"
-                    />
-                  ) : (
-                    <Button
-                      className="mt-6 w-full"
-                      size="sm"
-                      variant="outline"
-                      asChild
-                    >
-                      <Link href={plan.href}>
-                        {plan.cta} <ArrowRight className="ml-1 h-3 w-3" />
-                      </Link>
-                    </Button>
-                  )}
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </section>
 
-        {/* PRO SUBSCRIPTION */}
-        <section className="bg-slate-900 text-white py-14">
-          <div className="container max-w-2xl text-center">
-            <p className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-2">Dla aktywnych firm</p>
-            <h2 className="text-3xl font-bold">Subskrypcja PRO</h2>
-            <div className="mt-4 flex items-end justify-center gap-1">
-              <span className="text-6xl font-extrabold">499</span>
-              <span className="mb-3 text-xl text-slate-400">zł / miesiąc</span>
-            </div>
-            <p className="mt-2 text-slate-300">Nielimitowane kosztorysy + pełny projekt management</p>
-            <p className="mt-1 text-sm text-slate-400">
-              Opłaca się już przy <strong className="text-white">2 kosztorysach Standardowych</strong> miesięcznie (2 × 299 = 598 zł)
-            </p>
-            <ul className="mt-6 grid gap-2 sm:grid-cols-2 text-left max-w-lg mx-auto">
+          <div className="mx-auto mb-6 max-w-3xl rounded-xl border border-green-200 bg-green-50/50 p-6">
+            <p className="text-xs font-bold uppercase tracking-widest text-green-700 mb-3">Bezpłatnie, zawsze</p>
+            <ul className="grid gap-2 text-sm sm:grid-cols-2">
               {[
-                "Nielimitowane kosztorysy KNR",
-                "Pełny projekt management",
-                "Protokoły odbioru + e-podpis",
-                "Faktury KSeF automatyczne",
-                "Alerty przetargowe",
-                "BHP dokumentacja",
-                "Harmonogram Gantt",
-                "Finanse P&L + payroll",
-                "Portal inwestora real-time",
-                "Eksport .ath (Norma PRO)",
+                "Konto i pełny dostęp do dashboardu",
+                "Kalkulator KNR — ręczne tworzenie kosztorysu",
+                "Zarządzanie projektami, harmonogram, finanse",
+                "Brygady, podwykonawcy, sprzęt, CRM",
+                "Eksport PDF, wysyłka do klienta, podpis elektroniczny",
+                "Faktury KSeF, portal inwestora",
               ].map((f) => (
-                <li key={f} className="flex items-center gap-2 text-sm">
-                  <CheckCircle2 className="h-4 w-4 shrink-0 text-green-400" />
+                <li key={f} className="flex items-start gap-2">
+                  <CheckCircle2 className="h-4 w-4 mt-0.5 shrink-0 text-green-600" />
                   {f}
                 </li>
               ))}
             </ul>
-            <Button size="lg" className="mt-8 bg-primary hover:bg-primary/90 font-bold" asChild>
-              <Link href="/register?plan=pro">
-                Zacznij PRO — 30 dni gratis <ArrowRight className="ml-2 h-4 w-4" />
-              </Link>
-            </Button>
-            <p className="mt-3 text-xs text-slate-500">Bez karty kredytowej · Anulowanie w każdej chwili</p>
+          </div>
+
+          <div className="mx-auto grid max-w-4xl gap-6 sm:grid-cols-3">
+            <div className="rounded-xl border border-primary/30 bg-primary/5 p-6">
+              <p className="text-xs font-bold uppercase tracking-widest text-primary mb-1">Analiza AI kosztorysu</p>
+              <p className="text-2xl font-extrabold">500 zł</p>
+              <p className="mb-3 text-xs text-muted-foreground">za dokument</p>
+              <ul className="space-y-2 text-sm">
+                {[
+                  "Analiza AI przesłanego PDF (rzut, przedmiar, inwentaryzacja)",
+                  "Wyodrębnienie pozycji robót z ilościami",
+                  "Dopasowanie kodów KNR i orientacyjnych stawek",
+                ].map((f) => (
+                  <li key={f} className="flex items-start gap-2">
+                    <CheckCircle2 className="h-4 w-4 mt-0.5 shrink-0 text-primary" />
+                    {f}
+                  </li>
+                ))}
+              </ul>
+              <Button className="mt-6 w-full" asChild>
+                <Link href="/kosztorys">
+                  Wypróbuj <ArrowRight className="ml-1 h-3.5 w-3.5" />
+                </Link>
+              </Button>
+            </div>
+
+            <div className="rounded-xl border border-primary/30 bg-primary/5 p-6">
+              <p className="text-xs font-bold uppercase tracking-widest text-primary mb-1">Analiza BHP zdjęcia</p>
+              <p className="text-2xl font-extrabold">99 zł</p>
+              <p className="mb-3 text-xs text-muted-foreground">za zdjęcie</p>
+              <ul className="space-y-2 text-sm">
+                {[
+                  "Analiza AI zdjęcia placu budowy",
+                  "Wykrycie naruszeń przepisów BHP",
+                  "Podstawa prawna i rekomendacje naprawcze",
+                ].map((f) => (
+                  <li key={f} className="flex items-start gap-2">
+                    <CheckCircle2 className="h-4 w-4 mt-0.5 shrink-0 text-primary" />
+                    {f}
+                  </li>
+                ))}
+              </ul>
+              <Button className="mt-6 w-full" variant="outline" asChild>
+                <Link href="/login">
+                  Zaloguj się, aby skorzystać <ArrowRight className="ml-1 h-3.5 w-3.5" />
+                </Link>
+              </Button>
+            </div>
+
+            <div className="rounded-xl border border-primary/30 bg-primary/5 p-6">
+              <p className="text-xs font-bold uppercase tracking-widest text-primary mb-1">Adwokat AI — sesja</p>
+              <p className="text-2xl font-extrabold">19,99 zł</p>
+              <p className="mb-3 text-xs text-muted-foreground">za sesję</p>
+              <ul className="space-y-2 text-sm">
+                {[
+                  "Wygenerowanie jednego projektu umowy",
+                  "Analiza jednego dokumentu prawnego",
+                  "Obie funkcje w ramach tej samej sesji",
+                ].map((f) => (
+                  <li key={f} className="flex items-start gap-2">
+                    <CheckCircle2 className="h-4 w-4 mt-0.5 shrink-0 text-primary" />
+                    {f}
+                  </li>
+                ))}
+              </ul>
+              <Button className="mt-6 w-full" variant="outline" asChild>
+                <Link href="/login">
+                  Zaloguj się, aby skorzystać <ArrowRight className="ml-1 h-3.5 w-3.5" />
+                </Link>
+              </Button>
+            </div>
           </div>
         </section>
 
@@ -315,8 +223,8 @@ export default function PricingPage() {
         {/* CTA */}
         <section className="bg-primary py-14 text-white text-center">
           <div className="container">
-            <h2 className="text-3xl font-bold">Zacznij od darmowego kosztorysu</h2>
-            <p className="mt-2 text-white/80">Bez rejestracji · Bez karty · Gotowy w 3 minuty</p>
+            <h2 className="text-3xl font-bold">Zacznij bezpłatnie</h2>
+            <p className="mt-2 text-white/80">Bez karty · Bez subskrypcji · Płacisz tylko za analizę AI, jeśli z niej skorzystasz</p>
             <div className="mt-8 flex flex-wrap justify-center gap-4">
               <Button size="lg" className="bg-white text-primary hover:bg-white/90 font-bold" asChild>
                 <Link href="/kosztorys">

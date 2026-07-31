@@ -43,10 +43,10 @@ export async function logTimeEntry(input: {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) return { ok: false, error: "Not authenticated" };
+  if (!user) return { ok: false, error: "Nie zalogowano" };
 
   const hours = Number(input.hours);
-  if (!(hours > 0)) return { ok: false, error: "Hours must be positive" };
+  if (!(hours > 0)) return { ok: false, error: "Liczba godzin musi być dodatnia" };
 
   const { data, error } = await supabase
     .from("time_entries")
@@ -94,10 +94,10 @@ export async function addExpense(input: {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) return { ok: false, error: "Not authenticated" };
+  if (!user) return { ok: false, error: "Nie zalogowano" };
 
   const amount = Number(input.amount);
-  if (!(amount >= 0)) return { ok: false, error: "Amount must be ≥ 0" };
+  if (!(amount >= 0)) return { ok: false, error: "Kwota musi być ≥ 0" };
 
   const { data, error } = await supabase
     .from("project_expenses")
@@ -192,7 +192,7 @@ export async function getProjectPnL(
     if (cost != null) laborCost += cost;
     workerBreakdown.push({
       workerId: wid,
-      name: w?.full_name ?? "Unknown",
+      name: w?.full_name ?? "Nieznany",
       specialty: w?.specialty ?? null,
       hours,
       hourlyRate: rate,

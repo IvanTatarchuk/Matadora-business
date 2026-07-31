@@ -55,7 +55,7 @@ export default async function ProjectFinancePage({
 
       <div>
         <h1 className="text-2xl font-bold">{project.title}</h1>
-        <p className="text-muted-foreground">Finance & P&amp;L</p>
+        <p className="text-muted-foreground">Finanse i rentowność projektu</p>
       </div>
 
       <FinancePanel

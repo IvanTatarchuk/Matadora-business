@@ -211,7 +211,7 @@ export function FakturyClient({ initialInvoices }: { initialInvoices: Invoice[] 
         <div className="relative flex-1 max-w-sm">
           <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Шукати фактури..."
+            placeholder="Szukaj faktur..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-9"

@@ -6,31 +6,11 @@ import {
   createCertification, deleteCertification,
   type WorkerCertification, type CertificationType,
 } from "@/lib/actions/worker-certifications";
+import { CERT_LABELS } from "@/lib/certifications";
 import type { Worker } from "@/types/database";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-
-const CERT_LABELS: Record<CertificationType, string> = {
-  bhp_general:     "Szkolenie BHP ogólne",
-  bhp_instruction: "Instruktaż stanowiskowy BHP",
-  upe:             "Uprawnienia budowlane",
-  sep_e:           "Uprawnienia SEP — eksploatacja (do 1kV)",
-  sep_d:           "Uprawnienia SEP — dozór",
-  udt:             "Uprawnienia UDT (wózki, dźwigi)",
-  first_aid:       "Kurs pierwszej pomocy",
-  scaffold:        "Uprawnienia rusztowaniowe",
-  asbestos:        "Praca z azbestem",
-  welding:         "Uprawnienia spawalnicze",
-  crane_operator:  "Operator dźwigu",
-  forklift:        "Wózek widłowy — operator",
-  explosives:      "Materiały wybuchowe",
-  driving_cat_c:   "Prawo jazdy kat. C",
-  driving_cat_ce:  "Prawo jazdy kat. C+E",
-  work_at_height:  "Praca na wysokości",
-  confined_space:  "Przestrzenie ograniczone",
-  custom:          "Własne / Inne",
-};
 
 function expiryStatus(cert: WorkerCertification) {
   if (cert.is_permanent) return "permanent";

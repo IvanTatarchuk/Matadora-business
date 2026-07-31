@@ -62,11 +62,11 @@ export function BackupsClient({ initialBackupJobs, initialSchedules, initialRest
   });
 
   function handleCreateBackup() {
-    if (!backupForm.name) { setError("Назва є обов'язковою"); return; }
+    if (!backupForm.name) { setError("Nazwa jest wymagana"); return; }
     setError(null);
     startTransition(async () => {
       const res = await createBackupJob(backupForm);
-      if (!res.ok) { setError(res.error ?? "Помилка"); return; }
+      if (!res.ok) { setError(res.error ?? "Błąd"); return; }
       setShowBackupForm(false);
       setBackupForm({ name: "", type: "full", tables: [], includeStorage: true });
       // Reload backups
@@ -77,13 +77,13 @@ export function BackupsClient({ initialBackupJobs, initialSchedules, initialRest
 
   function handleCreateSchedule() {
     if (!scheduleForm.name || !scheduleForm.schedule) {
-      setError("Назва та розклад є обов'язковими");
+      setError("Nazwa i harmonogram są wymagane");
       return;
     }
     setError(null);
     startTransition(async () => {
       const res = await createBackupSchedule(scheduleForm);
-      if (!res.ok) { setError(res.error ?? "Помилка"); return; }
+      if (!res.ok) { setError(res.error ?? "Błąd"); return; }
       setShowScheduleForm(false);
       setScheduleForm({ name: "", type: "full", schedule: "0 2 * * *", timezone: "UTC", tables: [], includeStorage: true, retentionDays: 30 });
       // Reload schedules
@@ -96,7 +96,7 @@ export function BackupsClient({ initialBackupJobs, initialSchedules, initialRest
     setError(null);
     startTransition(async () => {
       const res = await toggleBackupSchedule(scheduleId);
-      if (!res.ok) { setError(res.error ?? "Помилка"); return; }
+      if (!res.ok) { setError(res.error ?? "Błąd"); return; }
       // Reload schedules
       const newSchedules = await fetch("/api/backups/schedules").then(r => r.json());
       setSchedules(newSchedules);
@@ -104,11 +104,11 @@ export function BackupsClient({ initialBackupJobs, initialSchedules, initialRest
   }
 
   function handleCreateRestore() {
-    if (!restoreForm.backupJobId) { setError("Виберіть бекап"); return; }
+    if (!restoreForm.backupJobId) { setError("Wybierz kopię zapasową"); return; }
     setError(null);
     startTransition(async () => {
       const res = await createRestoreJob(restoreForm);
-      if (!res.ok) { setError(res.error ?? "Помилка"); return; }
+      if (!res.ok) { setError(res.error ?? "Błąd"); return; }
       setShowRestoreForm(false);
       setRestoreForm({ backupJobId: "", targetTables: [], restoreStorage: true, previewOnly: true });
       // Reload restore jobs
@@ -136,10 +136,10 @@ export function BackupsClient({ initialBackupJobs, initialSchedules, initialRest
       <div>
         <h1 className="text-2xl font-bold flex items-center gap-2">
           <Database className="h-6 w-6" />
-          Бекапи та відновлення
+          Kopie zapasowe i przywracanie
         </h1>
         <p className="text-sm text-muted-foreground mt-1">
-          Керування бекапами, розкладами та відновленням даних
+          Zarządzanie kopiami zapasowymi, harmonogramami i przywracaniem danych
         </p>
       </div>
 
@@ -148,7 +148,7 @@ export function BackupsClient({ initialBackupJobs, initialSchedules, initialRest
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center justify-between mb-2">
-              <p className="text-sm text-muted-foreground">Всього бекапів</p>
+              <p className="text-sm text-muted-foreground">Wszystkich kopii</p>
               <Database className="h-4 w-4 text-blue-500" />
             </div>
             <p className="text-2xl font-bold">{stats.totalBackups}</p>
@@ -157,7 +157,7 @@ export function BackupsClient({ initialBackupJobs, initialSchedules, initialRest
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center justify-between mb-2">
-              <p className="text-sm text-muted-foreground">Успішні</p>
+              <p className="text-sm text-muted-foreground">Udane</p>
               <CheckCircle2 className="h-4 w-4 text-green-500" />
             </div>
             <p className="text-2xl font-bold">{stats.successfulBackups}</p>
@@ -166,7 +166,7 @@ export function BackupsClient({ initialBackupJobs, initialSchedules, initialRest
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center justify-between mb-2">
-              <p className="text-sm text-muted-foreground">Помилки</p>
+              <p className="text-sm text-muted-foreground">Błędy</p>
               <AlertCircle className="h-4 w-4 text-red-500" />
             </div>
             <p className="text-2xl font-bold">{stats.failedBackups}</p>
@@ -175,7 +175,7 @@ export function BackupsClient({ initialBackupJobs, initialSchedules, initialRest
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center justify-between mb-2">
-              <p className="text-sm text-muted-foreground">Використано</p>
+              <p className="text-sm text-muted-foreground">Wykorzystano</p>
               <Download className="h-4 w-4 text-purple-500" />
             </div>
             <p className="text-2xl font-bold">{formatBytes(stats.totalStorageUsed)}</p>
@@ -187,15 +187,15 @@ export function BackupsClient({ initialBackupJobs, initialSchedules, initialRest
       <div className="flex gap-2 flex-wrap">
         <Button onClick={() => setShowBackupForm(true)}>
           <Plus className="h-4 w-4 mr-2" />
-          Створити бекап
+          Utwórz kopię zapasową
         </Button>
         <Button variant="outline" onClick={() => setShowScheduleForm(true)}>
           <Calendar className="h-4 w-4 mr-2" />
-          Додати розклад
+          Dodaj harmonogram
         </Button>
         <Button variant="outline" onClick={() => setShowRestoreForm(true)}>
           <RefreshCw className="h-4 w-4 mr-2" />
-          Відновити
+          Przywróć
         </Button>
       </div>
 
@@ -204,7 +204,7 @@ export function BackupsClient({ initialBackupJobs, initialSchedules, initialRest
         <div className="relative flex-1 max-w-sm">
           <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Шукати бекапи..."
+            placeholder="Szukaj kopii zapasowych..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-9"
@@ -215,10 +215,10 @@ export function BackupsClient({ initialBackupJobs, initialSchedules, initialRest
           onChange={(e) => setFilterStatus(e.target.value as "all" | "completed" | "running" | "failed")}
           className="rounded-md border bg-background px-3 py-2 text-sm"
         >
-          <option value="all">Всі статуси</option>
-          <option value="completed">Завершені</option>
-          <option value="running">Виконуються</option>
-          <option value="failed">Помилки</option>
+          <option value="all">Wszystkie statusy</option>
+          <option value="completed">Zakończone</option>
+          <option value="running">W trakcie</option>
+          <option value="failed">Błędy</option>
         </select>
       </div>
 
@@ -227,7 +227,7 @@ export function BackupsClient({ initialBackupJobs, initialSchedules, initialRest
         <Card className="border-primary">
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-base">Створити бекап</CardTitle>
+              <CardTitle className="text-base">Utwórz kopię zapasową</CardTitle>
               <Button variant="ghost" size="sm" onClick={() => { setShowBackupForm(false); setError(null); }}>
                 <X className="h-4 w-4" />
               </Button>
@@ -235,19 +235,19 @@ export function BackupsClient({ initialBackupJobs, initialSchedules, initialRest
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <label className="text-sm font-medium">Назва</label>
+              <label className="text-sm font-medium">Nazwa</label>
               <Input value={backupForm.name} onChange={(e) => setBackupForm({ ...backupForm, name: e.target.value })} className="mt-1" />
             </div>
             <div>
-              <label className="text-sm font-medium">Тип</label>
+              <label className="text-sm font-medium">Typ</label>
               <select
                 value={backupForm.type}
                 onChange={(e) => setBackupForm({ ...backupForm, type: e.target.value as any })}
                 className="mt-1 w-full rounded-md border bg-background px-3 py-2 text-sm"
               >
-                <option value="full">Повний</option>
-                <option value="incremental">Інкрементальний</option>
-                <option value="differential">Диференційний</option>
+                <option value="full">Pełny</option>
+                <option value="incremental">Przyrostowy</option>
+                <option value="differential">Różnicowy</option>
               </select>
             </div>
             <div className="flex items-center gap-2">
@@ -257,12 +257,12 @@ export function BackupsClient({ initialBackupJobs, initialSchedules, initialRest
                 checked={backupForm.includeStorage}
                 onChange={(e) => setBackupForm({ ...backupForm, includeStorage: e.target.checked })}
               />
-              <label htmlFor="storage" className="text-sm">Включити сховище</label>
+              <label htmlFor="storage" className="text-sm">Uwzględnij magazyn plików</label>
             </div>
             {error && <p className="text-sm text-destructive">{error}</p>}
             <div className="flex gap-2">
-              <Button onClick={handleCreateBackup} disabled={pending}>{pending ? "Створення..." : "Створити"}</Button>
-              <Button variant="outline" onClick={() => { setShowBackupForm(false); setError(null); }}>Скасувати</Button>
+              <Button onClick={handleCreateBackup} disabled={pending}>{pending ? "Tworzenie..." : "Utwórz"}</Button>
+              <Button variant="outline" onClick={() => { setShowBackupForm(false); setError(null); }}>Anuluj</Button>
             </div>
           </CardContent>
         </Card>
@@ -273,7 +273,7 @@ export function BackupsClient({ initialBackupJobs, initialSchedules, initialRest
         <Card className="border-primary">
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-base">Додати розклад</CardTitle>
+              <CardTitle className="text-base">Dodaj harmonogram</CardTitle>
               <Button variant="ghost" size="sm" onClick={() => { setShowScheduleForm(false); setError(null); }}>
                 <X className="h-4 w-4" />
               </Button>
@@ -281,37 +281,37 @@ export function BackupsClient({ initialBackupJobs, initialSchedules, initialRest
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <label className="text-sm font-medium">Назва</label>
+              <label className="text-sm font-medium">Nazwa</label>
               <Input value={scheduleForm.name} onChange={(e) => setScheduleForm({ ...scheduleForm, name: e.target.value })} className="mt-1" />
             </div>
             <div>
-              <label className="text-sm font-medium">Тип</label>
+              <label className="text-sm font-medium">Typ</label>
               <select
                 value={scheduleForm.type}
                 onChange={(e) => setScheduleForm({ ...scheduleForm, type: e.target.value as any })}
                 className="mt-1 w-full rounded-md border bg-background px-3 py-2 text-sm"
               >
-                <option value="full">Повний</option>
-                <option value="incremental">Інкрементальний</option>
-                <option value="differential">Диференційний</option>
+                <option value="full">Pełny</option>
+                <option value="incremental">Przyrostowy</option>
+                <option value="differential">Różnicowy</option>
               </select>
             </div>
             <div>
-              <label className="text-sm font-medium">Cron розклад</label>
+              <label className="text-sm font-medium">Harmonogram cron</label>
               <Input value={scheduleForm.schedule} onChange={(e) => setScheduleForm({ ...scheduleForm, schedule: e.target.value })} className="mt-1" placeholder="0 2 * * *" />
             </div>
             <div>
-              <label className="text-sm font-medium">Часовий пояс</label>
+              <label className="text-sm font-medium">Strefa czasowa</label>
               <Input value={scheduleForm.timezone} onChange={(e) => setScheduleForm({ ...scheduleForm, timezone: e.target.value })} className="mt-1" />
             </div>
             <div>
-              <label className="text-sm font-medium">Зберігання (днів)</label>
+              <label className="text-sm font-medium">Przechowywanie (dni)</label>
               <Input type="number" value={scheduleForm.retentionDays} onChange={(e) => setScheduleForm({ ...scheduleForm, retentionDays: Number(e.target.value) })} className="mt-1" />
             </div>
             {error && <p className="text-sm text-destructive">{error}</p>}
             <div className="flex gap-2">
-              <Button onClick={handleCreateSchedule} disabled={pending}>{pending ? "Додавання..." : "Додати"}</Button>
-              <Button variant="outline" onClick={() => { setShowScheduleForm(false); setError(null); }}>Скасувати</Button>
+              <Button onClick={handleCreateSchedule} disabled={pending}>{pending ? "Dodawanie..." : "Dodaj"}</Button>
+              <Button variant="outline" onClick={() => { setShowScheduleForm(false); setError(null); }}>Anuluj</Button>
             </div>
           </CardContent>
         </Card>
@@ -322,7 +322,7 @@ export function BackupsClient({ initialBackupJobs, initialSchedules, initialRest
         <Card className="border-primary">
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-base">Відновити з бекапу</CardTitle>
+              <CardTitle className="text-base">Przywróć z kopii zapasowej</CardTitle>
               <Button variant="ghost" size="sm" onClick={() => { setShowRestoreForm(false); setError(null); }}>
                 <X className="h-4 w-4" />
               </Button>
@@ -330,13 +330,13 @@ export function BackupsClient({ initialBackupJobs, initialSchedules, initialRest
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <label className="text-sm font-medium">Бекап</label>
+              <label className="text-sm font-medium">Kopia zapasowa</label>
               <select
                 value={restoreForm.backupJobId}
                 onChange={(e) => setRestoreForm({ ...restoreForm, backupJobId: e.target.value })}
                 className="mt-1 w-full rounded-md border bg-background px-3 py-2 text-sm"
               >
-                <option value="">Виберіть бекап</option>
+                <option value="">Wybierz kopię zapasową</option>
                 {backupJobs.filter((b) => b.status === "completed").map((b) => (
                   <option key={b.id} value={b.id}>{b.name} - {new Date(b.created_at).toLocaleString("pl-PL")}</option>
                 ))}
@@ -349,7 +349,7 @@ export function BackupsClient({ initialBackupJobs, initialSchedules, initialRest
                 checked={restoreForm.previewOnly}
                 onChange={(e) => setRestoreForm({ ...restoreForm, previewOnly: e.target.checked })}
               />
-              <label htmlFor="preview" className="text-sm">Тільки попередній перегляд</label>
+              <label htmlFor="preview" className="text-sm">Tylko podgląd</label>
             </div>
             <div className="flex items-center gap-2">
               <input
@@ -358,12 +358,12 @@ export function BackupsClient({ initialBackupJobs, initialSchedules, initialRest
                 checked={restoreForm.restoreStorage}
                 onChange={(e) => setRestoreForm({ ...restoreForm, restoreStorage: e.target.checked })}
               />
-              <label htmlFor="restoreStorage" className="text-sm">Відновити сховище</label>
+              <label htmlFor="restoreStorage" className="text-sm">Przywróć magazyn plików</label>
             </div>
             {error && <p className="text-sm text-destructive">{error}</p>}
             <div className="flex gap-2">
-              <Button onClick={handleCreateRestore} disabled={pending}>{pending ? "Відновлення..." : "Відновити"}</Button>
-              <Button variant="outline" onClick={() => { setShowRestoreForm(false); setError(null); }}>Скасувати</Button>
+              <Button onClick={handleCreateRestore} disabled={pending}>{pending ? "Przywracanie..." : "Przywróć"}</Button>
+              <Button variant="outline" onClick={() => { setShowRestoreForm(false); setError(null); }}>Anuluj</Button>
             </div>
           </CardContent>
         </Card>
@@ -372,12 +372,12 @@ export function BackupsClient({ initialBackupJobs, initialSchedules, initialRest
       {/* Backup Jobs */}
       <Card>
         <CardHeader>
-          <CardTitle>Бекапи</CardTitle>
+          <CardTitle>Kopie zapasowe</CardTitle>
         </CardHeader>
         <CardContent>
           {filteredBackupJobs.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
-              Немає бекапів
+              Brak kopii zapasowych
             </div>
           ) : (
             <div className="space-y-2">
@@ -408,12 +408,12 @@ export function BackupsClient({ initialBackupJobs, initialSchedules, initialRest
       {/* Schedules */}
       <Card>
         <CardHeader>
-          <CardTitle>Розклади</CardTitle>
+          <CardTitle>Harmonogramy</CardTitle>
         </CardHeader>
         <CardContent>
           {schedules.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
-              Немає розкладів
+              Brak harmonogramów
             </div>
           ) : (
             <div className="space-y-2">
@@ -425,10 +425,10 @@ export function BackupsClient({ initialBackupJobs, initialSchedules, initialRest
                       {schedule.is_active ? <CheckCircle2 className="h-4 w-4 text-green-500" /> : <Clock className="h-4 w-4 text-gray-400" />}
                     </div>
                     <p className="text-sm text-muted-foreground">{schedule.schedule} • {schedule.timezone}</p>
-                    <p className="text-xs text-muted-foreground">Зберігання: {schedule.retention_days} днів</p>
+                    <p className="text-xs text-muted-foreground">Przechowywanie: {schedule.retention_days} dni</p>
                   </div>
                   <Button variant="outline" size="sm" onClick={() => handleToggleSchedule(schedule.id)}>
-                    {schedule.is_active ? "Вимкнути" : "Увімкнути"}
+                    {schedule.is_active ? "Wyłącz" : "Włącz"}
                   </Button>
                 </div>
               ))}
@@ -440,12 +440,12 @@ export function BackupsClient({ initialBackupJobs, initialSchedules, initialRest
       {/* Restore Jobs */}
       <Card>
         <CardHeader>
-          <CardTitle>Завдання відновлення</CardTitle>
+          <CardTitle>Zadania przywracania</CardTitle>
         </CardHeader>
         <CardContent>
           {restoreJobs.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
-              Немає завдань відновлення
+              Brak zadań przywracania
             </div>
           ) : (
             <div className="space-y-2">
@@ -461,7 +461,7 @@ export function BackupsClient({ initialBackupJobs, initialSchedules, initialRest
                       }`}>
                         {job.status}
                       </span>
-                      {job.preview_only && <span className="text-xs text-muted-foreground">(попередній перегляд)</span>}
+                      {job.preview_only && <span className="text-xs text-muted-foreground">(podgląd)</span>}
                     </div>
                     <p className="text-xs text-muted-foreground">{new Date(job.created_at).toLocaleString("pl-PL")}</p>
                   </div>

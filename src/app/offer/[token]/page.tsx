@@ -5,6 +5,7 @@ import { HardHat, CheckCircle2, MapPin, Ruler, Globe, Phone } from "lucide-react
 
 import { createAdminClient } from "@/lib/supabase/admin";
 import { acceptOffer } from "@/lib/actions/offers";
+import { formatPLN } from "@/lib/utils";
 import { OfferSummary } from "@/components/offers/offer-summary";
 import { PrintButton } from "@/components/offers/print-button";
 import { RatingStars } from "@/components/trust/rating-stars";
@@ -75,6 +76,13 @@ export default async function PublicOfferView({
 
   const accepted = offer.status === "accepted" || searchParams.accepted === "1";
 
+  const STATUS_LABEL: Record<string, string> = {
+    draft: "Szkic",
+    sent: "Oczekuje na decyzję",
+    accepted: "Zaakceptowana",
+    rejected: "Odrzucona",
+  };
+
   return (
     <div className="min-h-screen bg-muted/40 py-10 print:bg-white print:py-0">
       <div className="mx-auto max-w-3xl space-y-6 px-4">
@@ -85,9 +93,22 @@ export default async function PublicOfferView({
           <div className="flex items-center gap-3">
             <PrintButton />
             <Badge variant={accepted ? "success" : "default"}>
-              {accepted ? "Accepted" : offer.status}
+              {accepted ? "Zaakceptowana" : STATUS_LABEL[offer.status] ?? offer.status}
             </Badge>
           </div>
+        </div>
+
+        {/* PRICE HERO — the number an investor scans for first */}
+        <div className="overflow-hidden rounded-2xl bg-gradient-to-br from-primary to-orange-600 p-6 text-white shadow-lg print:break-inside-avoid print:rounded-none print:from-white print:to-white print:text-foreground print:shadow-none print:border">
+          <p className="text-sm font-medium text-white/80 print:text-muted-foreground">
+            {project?.title ?? offer.title}
+          </p>
+          <p className="mt-1 text-4xl font-extrabold tracking-tight">
+            {formatPLN(Number(offer.total_gross))}
+          </p>
+          <p className="mt-1 text-xs text-white/70 print:text-muted-foreground">
+            brutto · VAT {Number(offer.vat_rate)}%
+          </p>
         </div>
 
         {(contractor?.logo_url || contractor?.company_name) && (
@@ -147,7 +168,7 @@ export default async function PublicOfferView({
                     href={`/firm/${contractor.id}`}
                     className="mt-1 inline-block text-xs font-medium text-primary hover:underline print:hidden"
                   >
-                    View company profile →
+                    Zobacz profil firmy →
                   </Link>
                 )}
               </div>
@@ -189,18 +210,18 @@ export default async function PublicOfferView({
               <>
                 <CheckCircle2 className="h-12 w-12 text-emerald-500" />
                 <div>
-                  <p className="text-lg font-semibold">Offer accepted</p>
+                  <p className="text-lg font-semibold">Oferta zaakceptowana</p>
                   <p className="text-sm text-muted-foreground">
-                    {contractor?.company_name || contractor?.full_name} has been
-                    notified. Material orders will be dispatched to wholesalers.
+                    {contractor?.company_name || contractor?.full_name} został
+                    powiadomiony. Zamówienia materiałów zostaną przekazane do hurtowni.
                   </p>
                 </div>
               </>
             ) : (
               <>
                 <p className="text-sm text-muted-foreground">
-                  Review the estimate above. Accepting confirms the scope and
-                  pricing with{" "}
+                  Zapoznaj się z kosztorysem powyżej. Akceptacja potwierdza
+                  zakres i wycenę z{" "}
                   <span className="font-medium text-foreground">
                     {contractor?.company_name || contractor?.full_name}
                   </span>
@@ -213,7 +234,7 @@ export default async function PublicOfferView({
                   }}
                 >
                   <Button size="lg" type="submit">
-                    <CheckCircle2 className="h-5 w-5" /> Accept offer
+                    <CheckCircle2 className="h-5 w-5" /> Zaakceptuj ofertę
                   </Button>
                 </form>
               </>
@@ -222,7 +243,7 @@ export default async function PublicOfferView({
         </Card>
 
         <p className="text-center text-xs text-muted-foreground">
-          Powered by matadora.business — transparent construction estimates.
+          Obsługiwane przez matadora.business — przejrzyste kosztorysy budowlane.
         </p>
       </div>
     </div>

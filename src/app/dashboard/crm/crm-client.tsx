@@ -226,7 +226,7 @@ export function CRMClient({ initialLeads }: { initialLeads: Lead[] }) {
         <div className="relative flex-1 max-w-sm">
           <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Шукати ліди..."
+            placeholder="Szukaj leadów..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-9"
@@ -237,7 +237,7 @@ export function CRMClient({ initialLeads }: { initialLeads: Lead[] }) {
           onChange={(e) => setFilterStage(e.target.value as LeadStage | "all")}
           className="rounded-md border bg-background px-3 py-2 text-sm"
         >
-          <option value="all">Всі етапи</option>
+          <option value="all">Wszystkie etapy</option>
           {Object.entries(STAGE_CONFIG).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
         </select>
         <select
@@ -245,7 +245,7 @@ export function CRMClient({ initialLeads }: { initialLeads: Lead[] }) {
           onChange={(e) => setFilterSource(e.target.value as LeadSource | "all")}
           className="rounded-md border bg-background px-3 py-2 text-sm"
         >
-          <option value="all">Всі джерела</option>
+          <option value="all">Wszystkie źródła</option>
           {Object.entries(SOURCE_LABELS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
         </select>
       </div>

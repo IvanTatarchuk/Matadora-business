@@ -357,7 +357,7 @@ export default function ProtokolDetailPage() {
               <a href="https://ksef.podatki.gov.pl" target="_blank" rel="noopener noreferrer" className="text-primary underline">
                 ksef.podatki.gov.pl
               </a>{" "}
-              lub skonfiguruj automatyczne wysyłanie w Ustawieniach → KSeF.
+              lub swojego programu księgowego — automatyczna wysyłka z poziomu Matadory nie jest jeszcze dostępna.
             </p>
           </CardContent>
         </Card>

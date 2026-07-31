@@ -299,7 +299,7 @@ Podstawa prawna:
             <Card className="h-full flex items-center justify-center border-dashed">
               <CardContent className="text-center text-muted-foreground p-10">
                 <FileText className="mx-auto h-12 w-12 opacity-20 mb-3" />
-                <p className="text-sm">Wypełnij formularz i kliknij „Generuj"</p>
+                <p className="text-sm">Wypełnij formularz i kliknij „Generuj&rdquo;</p>
                 <p className="text-xs mt-1">Wezwanie pojawi się tutaj</p>
               </CardContent>
             </Card>

@@ -5,7 +5,7 @@ import Link from "next/link";
 import {
   BarChart3, TrendingUp, AlertTriangle, Users, DollarSign,
   FolderKanban, CheckCircle2, Clock, XCircle, ArrowRight,
-  Search, Filter, Download, Calendar,
+  Search, Filter, Download, Calendar, TrendingDown, Gauge,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -99,6 +99,64 @@ function ProjectCard({ p }: { p: ProjectAnalytics }) {
         </div>
       </CardContent>
     </Card>
+  );
+}
+
+const MARGIN_STATUS_CONFIG: Record<
+  NonNullable<ProjectAnalytics["margin_status"]>,
+  { label: string; rowColor: string; textColor: string; Icon: typeof TrendingUp }
+> = {
+  "on-track": { label: "Rentowny", rowColor: "bg-green-50", textColor: "text-green-700", Icon: TrendingUp },
+  "watch": { label: "Do obserwacji", rowColor: "bg-yellow-50", textColor: "text-yellow-700", Icon: Gauge },
+  "at-risk": { label: "Zagrożony", rowColor: "bg-red-50", textColor: "text-red-700", Icon: TrendingDown },
+};
+
+function ProfitabilityHeatmap({ projects }: { projects: ProjectAnalytics[] }) {
+  const withMargin = projects
+    .filter((p) => p.margin_status !== null)
+    .sort((a, b) => (a.margin_pct ?? 0) - (b.margin_pct ?? 0));
+
+  if (withMargin.length === 0) return null;
+
+  return (
+    <div>
+      <h2 className="text-lg font-semibold mb-1">Rentowność portfela</h2>
+      <p className="text-sm text-muted-foreground mb-4">
+        Marża = (wartość zaakceptowanej oferty − poniesione koszty) / wartość oferty
+      </p>
+      <div className="rounded-lg border overflow-hidden">
+        <table className="w-full text-sm">
+          <thead className="bg-muted/50">
+            <tr>
+              <th className="text-left px-3 py-2 font-medium text-muted-foreground">Projekt</th>
+              <th className="text-right px-3 py-2 font-medium text-muted-foreground">Marża</th>
+              <th className="text-left px-3 py-2 font-medium text-muted-foreground">Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {withMargin.map((p) => {
+              const cfg = MARGIN_STATUS_CONFIG[p.margin_status!];
+              const Icon = cfg.Icon;
+              return (
+                <tr key={p.project_id} className={`border-t ${cfg.rowColor}`}>
+                  <td className="px-3 py-2">
+                    <Link href={`/dashboard/contractor/projects/${p.project_id}`} className="font-medium hover:underline">
+                      {p.project_name}
+                    </Link>
+                  </td>
+                  <td className={`px-3 py-2 text-right font-semibold ${cfg.textColor}`}>{p.margin_pct}%</td>
+                  <td className={`px-3 py-2 ${cfg.textColor}`}>
+                    <span className="inline-flex items-center gap-1 text-xs font-medium">
+                      <Icon className="h-3.5 w-3.5" />{cfg.label}
+                    </span>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    </div>
   );
 }
 
@@ -286,6 +344,9 @@ export function AnalyticsClient({ analytics }: { analytics: OrgAnalytics | null 
           </CardContent>
         </Card>
       </div>
+
+      {/* PORTFOLIO PROFITABILITY HEATMAP */}
+      <ProfitabilityHeatmap projects={a.projects} />
 
       {/* PROJECT CARDS */}
       {filteredProjects.length > 0 && (

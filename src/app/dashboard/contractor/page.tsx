@@ -14,23 +14,51 @@ const STATUS_VARIANT: Record<string, "default" | "secondary" | "success"> = {
   accepted: "success",
 };
 
+const STATUS_LABEL: Record<string, string> = {
+  draft: "Szkic",
+  sent: "Wysłany",
+  accepted: "Zaakceptowany",
+};
+
 export default async function ContractorDashboard() {
   const supabase = createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const { data: offers } = await supabase
-    .from("offers")
-    .select("id, title, status, total_gross, created_at")
-    .eq("contractor_id", user!.id)
-    .order("created_at", { ascending: false })
-    .limit(8);
+  const dayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+  const in30Days = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+    .toISOString()
+    .slice(0, 10);
+  const today = new Date().toISOString().slice(0, 10);
 
-  const { count: projectCount } = await supabase
-    .from("projects")
-    .select("id", { count: "exact", head: true })
-    .eq("contractor_id", user!.id);
+  const [
+    { data: offers },
+    { count: projectCount },
+    { count: newTendersCount },
+    { count: bhpExpiringCount },
+  ] = await Promise.all([
+    supabase
+      .from("offers")
+      .select("id, title, status, total_gross, created_at")
+      .eq("contractor_id", user!.id)
+      .order("created_at", { ascending: false })
+      .limit(8),
+    supabase
+      .from("projects")
+      .select("id", { count: "exact", head: true })
+      .eq("contractor_id", user!.id),
+    supabase
+      .from("przetargi")
+      .select("id", { count: "exact", head: true })
+      .eq("is_active", true)
+      .gte("fetched_at", dayAgo),
+    supabase
+      .from("bhp_documents")
+      .select("id", { count: "exact", head: true })
+      .eq("contractor_id", user!.id)
+      .or(`is_expired.eq.true,and(valid_until.lte.${in30Days},valid_until.gte.${today})`),
+  ]);
 
   const list = offers ?? [];
   const accepted = list.filter((o) => o.status === "accepted").length;
@@ -61,7 +89,11 @@ export default async function ContractorDashboard() {
             </div>
             <span className="font-semibold text-sm">Przetargi AI</span>
           </div>
-          <p className="text-xs text-muted-foreground">6 nowych przetargów dopasowanych do Ciebie dziś</p>
+          <p className="text-xs text-muted-foreground">
+            {(newTendersCount ?? 0) > 0
+              ? `${newTendersCount} nowych przetargów w ciągu ostatnich 24h`
+              : "Sprawdź najnowsze przetargi dopasowane do Ciebie"}
+          </p>
         </Link>
         <Link href="/dashboard/contractor/protokoly" className="group rounded-xl border bg-gradient-to-br from-blue-50 to-blue-100/50 p-4 hover:shadow-md transition-all">
           <div className="flex items-center gap-2 mb-2">
@@ -70,7 +102,7 @@ export default async function ContractorDashboard() {
             </div>
             <span className="font-semibold text-sm">Protokoły odbioru</span>
           </div>
-          <p className="text-xs text-muted-foreground">Cyfrowe podpisanie — faktura KSeF automatycznie</p>
+          <p className="text-xs text-muted-foreground">Cyfrowe podpisanie — faktura KSeF generuje się automatycznie</p>
         </Link>
         <Link href="/dashboard/contractor/bhp" className="group rounded-xl border bg-gradient-to-br from-red-50 to-red-100/50 p-4 hover:shadow-md transition-all">
           <div className="flex items-center gap-2 mb-2">
@@ -79,12 +111,19 @@ export default async function ContractorDashboard() {
             </div>
             <span className="font-semibold text-sm">BHP Dokumentacja</span>
           </div>
-          <p className="text-xs text-muted-foreground">2 dokumenty wymagają aktualizacji</p>
+          <p className="text-xs text-muted-foreground">
+            {(bhpExpiringCount ?? 0) > 0
+              ? `${bhpExpiringCount} ${bhpExpiringCount === 1 ? "dokument wymaga" : "dokumenty wymagają"} aktualizacji`
+              : "Wszystkie dokumenty BHP aktualne"}
+          </p>
         </Link>
       </div>
 
       {/* INLINE RECOMMENDATIONS WIDGET */}
-      <RecommendationsWidget projectCount={projectCount ?? 0} offerSentCount={list.filter(o => o.status === "sent").length} />
+      <RecommendationsWidget
+        bhpExpiringCount={bhpExpiringCount ?? 0}
+        offerSentCount={list.filter((o) => o.status === "sent").length}
+      />
 
       <Card>
         <CardHeader>
@@ -114,7 +153,7 @@ export default async function ContractorDashboard() {
                       {formatPLN(Number(o.total_gross))}
                     </span>
                     <Badge variant={STATUS_VARIANT[o.status] ?? "secondary"}>
-                      {o.status}
+                      {STATUS_LABEL[o.status] ?? o.status}
                     </Badge>
                   </div>
                 </Link>
@@ -130,10 +169,10 @@ export default async function ContractorDashboard() {
 // ─── Inline widget: top recommendations ─────────────────────────────────────
 
 function RecommendationsWidget({
-  projectCount,
+  bhpExpiringCount,
   offerSentCount,
 }: {
-  projectCount: number;
+  bhpExpiringCount: number;
   offerSentCount: number;
 }) {
   const daysToKsef = Math.floor(
@@ -173,12 +212,12 @@ function RecommendationsWidget({
     });
   }
 
-  if (projectCount > 0) {
+  if (bhpExpiringCount > 0) {
     alerts.push({
       Icon: AlertTriangle,
       color: "text-orange-600",
       bg: "bg-orange-50 border-orange-200",
-      text: "Sprawdź ważność dokumentów BHP",
+      text: `${bhpExpiringCount} ${bhpExpiringCount === 1 ? "dokument BHP wygasa" : "dokumenty BHP wygasają"} w ciągu 30 dni`,
       sub: "Kontrola PIP: kara do 100 000 zł za brakujące dokumenty.",
       href: "/dashboard/contractor/bhp",
     });

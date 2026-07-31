@@ -26,15 +26,15 @@ export function CrewCreateClient({ orgId, workers }: Props) {
   function handleSave() {
     setError(null);
     if (!name.trim()) {
-      setError("Назва бригади є обов'язковою");
+      setError("Nazwa brygady jest wymagana");
       return;
     }
     startTransition(async () => {
       const res = await createCrew(orgId, name, foreman || null);
-      if (!res.ok) { setError(res.error ?? "Помилка"); return; }
+      if (!res.ok) { setError(res.error ?? "Błąd"); return; }
       if (selectedMembers.length > 0 && res.id) {
         const membersRes = await setCrewMembers(res.id, selectedMembers);
-        if (!membersRes.ok) { setError(membersRes.error ?? "Помилка"); return; }
+        if (!membersRes.ok) { setError(membersRes.error ?? "Błąd"); return; }
       }
       router.push("/dashboard/crews");
     });
@@ -55,35 +55,35 @@ export function CrewCreateClient({ orgId, workers }: Props) {
           <ArrowLeft className="h-4 w-4" />
         </Button>
         <div>
-          <h1 className="text-2xl font-bold">Нова бригада</h1>
+          <h1 className="text-2xl font-bold">Nowa brygada</h1>
           <p className="text-sm text-muted-foreground">
-            Створіть нову бригаду та додайте членів
+            Utwórz nową brygadę i dodaj jej członków
           </p>
         </div>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>Інформація про бригаду</CardTitle>
+          <CardTitle>Informacje o brygadzie</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div>
-            <Label>Назва бригади</Label>
+            <Label>Nazwa brygady</Label>
             <Input
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="Бригада A"
+              placeholder="Brygada A"
               className="mt-1"
             />
           </div>
           <div>
-            <Label>Бригадир</Label>
+            <Label>Brygadzista</Label>
             <select
               className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm mt-1"
               value={foreman}
               onChange={(e) => setForeman(e.target.value)}
             >
-              <option value="">— немає —</option>
+              <option value="">— brak —</option>
               {workers.map((w) => (
                 <option key={w.id} value={w.id}>
                   {w.full_name}
@@ -99,13 +99,13 @@ export function CrewCreateClient({ orgId, workers }: Props) {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Users className="h-5 w-5" />
-            Члени бригади
+            Członkowie brygady
           </CardTitle>
         </CardHeader>
         <CardContent>
           {workers.length === 0 ? (
             <p className="text-sm text-muted-foreground">
-              Спочатку додайте працівників
+              Najpierw dodaj pracowników
             </p>
           ) : (
             <div className="space-y-2">
@@ -128,7 +128,7 @@ export function CrewCreateClient({ orgId, workers }: Props) {
             </div>
           )}
           <p className="mt-2 text-sm text-muted-foreground">
-            Вибрано: {selectedMembers.length} працівників
+            Wybrano: {selectedMembers.length} pracowników
           </p>
         </CardContent>
       </Card>
@@ -136,10 +136,10 @@ export function CrewCreateClient({ orgId, workers }: Props) {
       <div className="flex gap-2">
         <Button onClick={handleSave} disabled={pending}>
           <Save className="h-4 w-4 mr-2" />
-          Створити бригаду
+          Utwórz brygadę
         </Button>
         <Button variant="outline" onClick={() => router.back()}>
-          Скасувати
+          Anuluj
         </Button>
       </div>
     </div>

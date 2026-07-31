@@ -42,13 +42,13 @@ export function CrewsManager({
   function add() {
     setError(null);
     if (!name.trim()) {
-      setError("Назва бригади є обов'язковою");
+      setError("Nazwa brygady jest wymagana");
       return;
     }
     startTransition(async () => {
       const res = await createCrew(orgId, name, foreman || null);
       if (!res.ok) {
-        setError(res.error ?? "Помилка створення");
+        setError(res.error ?? "Błąd tworzenia");
         return;
       }
       setName("");
@@ -86,25 +86,25 @@ export function CrewsManager({
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle>Створити бригаду</CardTitle>
+          <CardTitle>Utwórz brygadę</CardTitle>
         </CardHeader>
         <CardContent className="grid gap-3 sm:grid-cols-[1fr_1fr_auto_auto] sm:items-end">
           <div className="space-y-1">
-            <Label>Назва бригади</Label>
+            <Label>Nazwa brygady</Label>
             <Input
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="Бригада А"
+              placeholder="Brygada A"
             />
           </div>
           <div className="space-y-1">
-            <Label>Бригадир</Label>
+            <Label>Brygadzista</Label>
             <select
               className={selectClass}
               value={foreman}
               onChange={(e) => setForeman(e.target.value)}
             >
-              <option value="">— не обрано —</option>
+              <option value="">— nie wybrano —</option>
               {workers.map((w) => (
                 <option key={w.id} value={w.id}>
                   {w.full_name}
@@ -113,10 +113,10 @@ export function CrewsManager({
             </select>
           </div>
           <Button onClick={add} disabled={pending}>
-            <Plus className="mr-1 h-4 w-4" /> Створити
+            <Plus className="mr-1 h-4 w-4" /> Utwórz
           </Button>
           <Button variant="outline" onClick={() => router.push("/dashboard/crews/new")} disabled={pending}>
-            <Plus className="mr-1 h-4 w-4" /> Нова
+            <Plus className="mr-1 h-4 w-4" /> Nowa
           </Button>
           {error && (
             <p className="text-sm text-destructive sm:col-span-4">{error}</p>
@@ -129,7 +129,7 @@ export function CrewsManager({
         <div className="relative flex-1 max-w-sm">
           <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Шукати бригади..."
+            placeholder="Szukaj brygad..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-9"
@@ -140,17 +140,17 @@ export function CrewsManager({
           onChange={(e) => setFilterStatus(e.target.value as "all" | "with_members" | "without_members")}
           className="rounded-md border bg-background px-3 py-2 text-sm"
         >
-          <option value="all">Всі статуси</option>
-          <option value="with_members">З членами</option>
-          <option value="without_members">Без членів</option>
+          <option value="all">Wszystkie statusy</option>
+          <option value="with_members">Z członkami</option>
+          <option value="without_members">Bez członków</option>
         </select>
       </div>
 
       {filteredCrews.length === 0 ? (
         <Card>
           <CardContent className="p-12 text-center text-muted-foreground">
-            <p className="font-medium">Бригад ще немає</p>
-            <p className="text-sm mt-1">Створіть першу бригаду, щоб почати групувати працівників</p>
+            <p className="font-medium">Nie ma jeszcze żadnych brygad</p>
+            <p className="text-sm mt-1">Utwórz pierwszą brygadę, aby zacząć grupować pracowników</p>
           </CardContent>
         </Card>
       ) : (
@@ -162,7 +162,7 @@ export function CrewsManager({
                   <CardTitle>{crew.name}</CardTitle>
                   {crew.foreman_worker_id && (
                     <p className="text-xs text-muted-foreground">
-                      Бригадир: {workerName(crew.foreman_worker_id)}
+                      Brygadzista: {workerName(crew.foreman_worker_id)}
                     </p>
                   )}
                 </div>
@@ -187,11 +187,11 @@ export function CrewsManager({
               </CardHeader>
               <CardContent>
                 <p className="mb-2 text-sm font-medium">
-                  Члени ({crew.memberIds.length})
+                  Członkowie ({crew.memberIds.length})
                 </p>
                 {workers.length === 0 ? (
                   <p className="text-sm text-muted-foreground">
-                    Спочатку додайте працівників.
+                    Najpierw dodaj pracowników.
                   </p>
                 ) : (
                   <div className="space-y-1">

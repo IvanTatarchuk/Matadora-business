@@ -12,12 +12,13 @@ export default function PolitykaPrywatnosciPage() {
     <div className="flex min-h-screen flex-col bg-white">
       <header className="sticky top-0 z-50 border-b bg-white/95 backdrop-blur">
         <div className="container flex h-16 items-center justify-between">
-          <Link href="/" className="flex items-center gap-2 font-bold text-xl">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
+          <Link href="/" className="flex items-center gap-2 whitespace-nowrap font-extrabold text-xl tracking-tight">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary">
               <HardHat className="h-5 w-5 text-white" />
             </div>
-            <span>matadora</span>
-            <span className="text-primary">.business</span>
+            <span>
+              MATADORA<span className="text-primary">.business</span>
+            </span>
           </Link>
           <nav className="hidden items-center gap-6 text-sm font-medium md:flex">
             <Link href="/kosztorys" className="text-muted-foreground hover:text-foreground">Kosztorys</Link>
@@ -31,11 +32,11 @@ export default function PolitykaPrywatnosciPage() {
       <main className="flex-1 bg-white">
         <div className="container max-w-3xl py-12">
           <h1 className="text-3xl font-extrabold sm:text-4xl">Polityka prywatności</h1>
-          <p className="mt-2 text-sm text-muted-foreground">Data ostatniej aktualizacji: 2 lipca 2026 r.</p>
+          <p className="mt-2 text-sm text-muted-foreground">Data ostatniej aktualizacji: 19 lipca 2026 r.</p>
           <p className="mt-4 text-sm leading-relaxed text-slate-700">
             Niniejsza Polityka prywatności opisuje zasady przetwarzania danych osobowych Użytkowników
             platformy matadora.business, zgodnie z Rozporządzeniem Parlamentu Europejskiego i Rady (UE)
-            2016/679 z dnia 27 kwietnia 2016 r. (dalej: „RODO") oraz ustawą z dnia 10 maja 2018 r. o ochronie
+            2016/679 z dnia 27 kwietnia 2016 r. (dalej: „RODO&rdquo;) oraz ustawą z dnia 10 maja 2018 r. o ochronie
             danych osobowych.
           </p>
 
@@ -84,8 +85,12 @@ export default function PolitykaPrywatnosciPage() {
                       <td className="px-3 py-2">art. 6 ust. 1 lit. b) i c) — wykonanie umowy, obowiązek prawny (przepisy podatkowe)</td>
                     </tr>
                     <tr>
-                      <td className="px-3 py-2">Analiza dokumentów PDF (kosztorysy, rzuty) z wykorzystaniem AI (Claude API)</td>
-                      <td className="px-3 py-2">art. 6 ust. 1 lit. b) — wykonanie umowy, na wyraźne żądanie Użytkownika (wgranie pliku)</td>
+                      <td className="px-3 py-2">Analiza dokumentów PDF (kosztorysy, rzuty), zdjęć placu budowy (BHP) oraz dokumentów i umów prawnych (Adwokat AI) z wykorzystaniem AI (Claude API)</td>
+                      <td className="px-3 py-2">art. 6 ust. 1 lit. b) — wykonanie umowy, na wyraźne żądanie Użytkownika (wgranie pliku lub zdjęcia)</td>
+                    </tr>
+                    <tr>
+                      <td className="px-3 py-2">Generowanie projektów umów przez AI (Adwokat AI) na podstawie danych podanych przez Użytkownika</td>
+                      <td className="px-3 py-2">art. 6 ust. 1 lit. b) — wykonanie umowy, na wyraźne żądanie Użytkownika</td>
                     </tr>
                     <tr>
                       <td className="px-3 py-2">Wysyłka wiadomości transakcyjnych i powitalnych e-mail</td>
@@ -113,10 +118,19 @@ export default function PolitykaPrywatnosciPage() {
               <p className="mt-3">W zależności od zakresu korzystania z Platformy, Administrator może przetwarzać:</p>
               <ul className="mt-3 list-disc space-y-1.5 pl-5">
                 <li>dane identyfikacyjne i kontaktowe: imię, nazwisko, adres e-mail, numer telefonu, nazwa firmy, NIP;</li>
-                <li>dane związane z realizacją usługi: treść kosztorysów, projektów, ofert, wiadomości w ramach Platformy, dokumenty wgrywane w celu analizy (np. pliki PDF);</li>
+                <li>dane związane z realizacją usługi: treść kosztorysów, projektów, ofert, wiadomości w ramach Platformy, dokumenty i zdjęcia wgrywane w celu analizy AI (np. pliki PDF, zdjęcia placu budowy w module BHP), treść umów i dokumentów prawnych wprowadzana do modułu Adwokat AI — która może obejmować dane osób trzecich (np. drugiej strony umowy) wskazane przez Użytkownika, za których prawidłowość i podstawę prawną przetwarzania odpowiada Użytkownik jako podmiot wprowadzający te dane;</li>
                 <li>dane dotyczące płatności (w zakresie przetwarzanym po stronie Stripe — Administrator nie przechowuje pełnych danych karty płatniczej);</li>
                 <li>dane techniczne: adres IP, identyfikatory urządzenia, dane z plików cookies, logi systemowe.</li>
               </ul>
+              <p className="mt-3">
+                W przypadku modułu Adwokat AI (generator umów oraz analiza dokumentów prawnych) Użytkownik
+                może samodzielnie wprowadzić dane osób trzecich (np. danych drugiej strony umowy) w celu
+                wygenerowania lub przeanalizowania dokumentu. W tym zakresie to Użytkownik decyduje o
+                zakresie wprowadzanych danych i ponosi odpowiedzialność za posiadanie odpowiedniej podstawy
+                prawnej do ich przetwarzania, natomiast Administrator przetwarza te dane wyłącznie w celu
+                technicznej realizacji żądanej funkcji (przekazanie do modelu AI i zwrócenie wyniku
+                Użytkownikowi), bez ich dalszego wykorzystywania ani trwałego przechowywania.
+              </p>
             </section>
 
             <section>
@@ -146,7 +160,7 @@ export default function PolitykaPrywatnosciPage() {
               <ul className="mt-3 list-disc space-y-1.5 pl-5">
                 <li>Dane związane z Kontem Użytkownika przechowywane są przez okres jego aktywności oraz przez okres do 3 lat po usunięciu Konta, w celu obrony przed ewentualnymi roszczeniami.</li>
                 <li>Dane związane z transakcjami i dokumentami księgowymi (faktury) przechowywane są przez okres wymagany przepisami prawa podatkowego — co do zasady 5 lat, licząc od końca roku kalendarzowego, w którym upłynął termin płatności podatku.</li>
-                <li>Dokumenty PDF wgrywane w celu analizy AI przetwarzane są jednorazowo, w celu wygenerowania wyniku analizy, i nie są trwale przechowywane przez Administratora dłużej niż jest to konieczne do realizacji tej usługi.</li>
+                <li>Dokumenty PDF i zdjęcia wgrywane w celu analizy AI (kosztorys, BHP, Adwokat AI) przetwarzane są jednorazowo, w celu wygenerowania wyniku analizy, i nie są trwale przechowywane przez Administratora dłużej niż jest to konieczne do realizacji tej usługi — sam plik nie jest zapisywany po zakończeniu analizy. W module BHP zapisywany jest wyłącznie tekstowy wynik analizy (nie zdjęcie) w dokumentacji BHP Użytkownika. Wyniki wygenerowane w module Adwokat AI (projekt umowy, wynik analizy dokumentu) nie są przechowywane przez Administratora po zakończeniu sesji — ich zapisanie leży w gestii Użytkownika (pobranie/skopiowanie wyniku).</li>
                 <li>Dane przetwarzane na podstawie zgody (np. newsletter, alerty przetargowe) przechowywane są do czasu wycofania zgody.</li>
               </ul>
             </section>
@@ -157,7 +171,7 @@ export default function PolitykaPrywatnosciPage() {
               <ul className="mt-3 list-disc space-y-1.5 pl-5">
                 <li><strong>prawo dostępu do danych</strong> (art. 15 RODO) — uzyskania informacji o przetwarzanych danych i otrzymania ich kopii;</li>
                 <li><strong>prawo do sprostowania danych</strong> (art. 16 RODO) — poprawienia nieprawidłowych lub niekompletnych danych;</li>
-                <li><strong>prawo do usunięcia danych</strong> („prawo do bycia zapomnianym", art. 17 RODO);</li>
+                <li><strong>prawo do usunięcia danych</strong> („prawo do bycia zapomnianym&rdquo;, art. 17 RODO);</li>
                 <li><strong>prawo do ograniczenia przetwarzania</strong> (art. 18 RODO);</li>
                 <li><strong>prawo do przenoszenia danych</strong> (art. 20 RODO) — otrzymania danych w ustrukturyzowanym formacie i przekazania ich innemu administratorowi;</li>
                 <li><strong>prawo do sprzeciwu</strong> wobec przetwarzania danych opartego na uzasadnionym interesie Administratora (art. 21 RODO);</li>

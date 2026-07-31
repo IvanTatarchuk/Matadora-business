@@ -7,7 +7,7 @@ import {
   FileText, X, ChevronDown, ChevronUp, AlertCircle, Trash2,
 } from "lucide-react";
 import {
-  createMeeting, addMeetingItem, updateMeetingItemStatus, publishMeeting, deleteMeeting,
+  createMeeting, addMeetingItem, updateMeetingItemStatus, publishMeeting, deleteMeeting, getMeetingWithItems,
   type Meeting, type MeetingType, type MeetingItem, type MeetingItemType, type MeetingItemStatus,
 } from "@/lib/actions/meetings";
 import { Button } from "@/components/ui/button";
@@ -157,6 +157,20 @@ export function SpotkaniakClient({
     });
   }
 
+  function handleSelectMeeting(meetingId: string) {
+    const isSelected = selectedMeeting === meetingId;
+    setSelectedMeeting(isSelected ? null : meetingId);
+    if (isSelected) return;
+    const meeting = meetings.find((m) => m.id === meetingId);
+    if (meeting && meeting.items === undefined) {
+      startTransition(async () => {
+        const full = await getMeetingWithItems(meetingId);
+        if (!full) return;
+        setMeetings((prev) => prev.map((m) => (m.id === meetingId ? { ...m, items: full.items } : m)));
+      });
+    }
+  }
+
   function handleDelete(meetingId: string) {
     startTransition(async () => {
       await deleteMeeting(meetingId, projectId);
@@ -256,7 +270,7 @@ export function SpotkaniakClient({
               return (
                 <Card key={m.id}
                   className={`cursor-pointer hover:shadow-sm transition-all ${isSelected ? "border-primary ring-1 ring-primary/20" : ""}`}
-                  onClick={() => setSelectedMeeting(isSelected ? null : m.id)}>
+                  onClick={() => handleSelectMeeting(m.id)}>
                   <CardContent className="p-3">
                     <div className="flex items-start justify-between gap-2">
                       <div className="flex-1 min-w-0">
@@ -413,7 +427,13 @@ export function SpotkaniakClient({
               </Card>
             )}
 
-            {(active.items?.length ?? 0) === 0 ? (
+            {active.items === undefined && pending ? (
+              <Card className="border-dashed">
+                <CardContent className="p-8 text-center text-muted-foreground">
+                  <p className="text-sm">Ładowanie punktów...</p>
+                </CardContent>
+              </Card>
+            ) : (active.items?.length ?? 0) === 0 ? (
               <Card className="border-dashed">
                 <CardContent className="p-8 text-center text-muted-foreground">
                   <p className="text-sm">Brak punktów. Dodaj tematy, decyzje i działania.</p>

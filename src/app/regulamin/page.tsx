@@ -12,12 +12,13 @@ export default function RegulaminPage() {
     <div className="flex min-h-screen flex-col bg-white">
       <header className="sticky top-0 z-50 border-b bg-white/95 backdrop-blur">
         <div className="container flex h-16 items-center justify-between">
-          <Link href="/" className="flex items-center gap-2 font-bold text-xl">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
+          <Link href="/" className="flex items-center gap-2 whitespace-nowrap font-extrabold text-xl tracking-tight">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary">
               <HardHat className="h-5 w-5 text-white" />
             </div>
-            <span>matadora</span>
-            <span className="text-primary">.business</span>
+            <span>
+              MATADORA<span className="text-primary">.business</span>
+            </span>
           </Link>
           <nav className="hidden items-center gap-6 text-sm font-medium md:flex">
             <Link href="/kosztorys" className="text-muted-foreground hover:text-foreground">Kosztorys</Link>
@@ -38,16 +39,16 @@ export default function RegulaminPage() {
               <h2 className="text-lg font-bold text-slate-900">§ 1. Postanowienia ogólne</h2>
               <ol className="mt-3 list-decimal space-y-2 pl-5">
                 <li>
-                  Niniejszy regulamin (dalej: „Regulamin") określa zasady korzystania z platformy internetowej
-                  dostępnej pod adresem <strong>matadora.business</strong> (dalej: „Platforma" lub „Serwis"),
+                  Niniejszy regulamin (dalej: „Regulamin&rdquo;) określa zasady korzystania z platformy internetowej
+                  dostępnej pod adresem <strong>matadora.business</strong> (dalej: „Platforma&rdquo; lub „Serwis&rdquo;),
                   w tym zasady świadczenia usług drogą elektroniczną w rozumieniu ustawy z dnia 18 lipca 2002 r.
                   o świadczeniu usług drogą elektroniczną (Dz. U. z 2020 r. poz. 344 z późn. zm.).
                 </li>
                 <li>
                   Operatorem Platformy i podmiotem świadczącym usługi opisane w Regulaminie jest{" "}
                   <strong>VANBUD Ivan Tatarchuk</strong>, prowadzący działalność gospodarczą pod adresem
-                  ul. Mielecka 5, 70-740 Szczecin, NIP: <strong>955-235-98-44</strong> (dalej: „Operator" lub
-                  „Usługodawca").
+                  ul. Mielecka 5, 70-740 Szczecin, NIP: <strong>955-235-98-44</strong> (dalej: „Operator&rdquo; lub
+                  „Usługodawca&rdquo;).
                 </li>
                 <li>
                   Kontakt z Operatorem możliwy jest pod adresem e-mail:{" "}
@@ -126,14 +127,20 @@ export default function RegulaminPage() {
                   brutto (zawierają podatek VAT wg obowiązującej stawki).
                 </li>
                 <li>
-                  Model rozliczeń oparty jest o zasadę <strong>„płać za użycie"</strong> (pay-per-use) — Użytkownik
-                  ponosi opłatę za konkretny, jednorazowo wygenerowany kosztorys lub pakiet funkcji, zgodnie z
-                  cennikiem dostępnym na stronie <Link href="/pricing" className="text-primary underline">/pricing</Link>,
-                  lub — w przypadku wybrania planu abonamentowego — cykliczną opłatę subskrypcyjną.
+                  Korzystanie z Platformy jest bezpłatne. Odpłatne są wyłącznie następujące Usługi, rozliczane
+                  jednorazowo (<strong>„płać za użycie&rdquo;</strong>, pay-per-use), zgodnie z cennikiem dostępnym
+                  na stronie <Link href="/pricing" className="text-primary underline">/pricing</Link>:
+                  analiza AI kosztorysu z przesłanego dokumentu PDF, analiza AI zdjęcia budowy pod kątem
+                  zgodności z przepisami BHP oraz sesja modułu Adwokat AI (generowanie projektu umowy i
+                  analiza dokumentu prawnego). Platforma nie oferuje planów abonamentowych ani cyklicznych
+                  opłat subskrypcyjnych.
                 </li>
                 <li>
-                  Po zaksięgowaniu płatności Użytkownik otrzymuje dostęp do zakupionej Usługi. Na żądanie
-                  Użytkownika, w szczególności dla celów księgowych, Operator wystawia fakturę zgodnie z
+                  Po zaksięgowaniu płatności Użytkownik otrzymuje dostęp do zakupionej Usługi. Faktura VAT
+                  jest wystawiana i przesyłana automatycznie na adres e-mail Użytkownika niezwłocznie po
+                  zaksięgowaniu płatności, a dodatkowo dostępna jest do pobrania na stronie Platformy pod
+                  unikalnym adresem przekazanym w wiadomości e-mail. Na żądanie Użytkownika, w szczególności
+                  dla celów księgowych, Operator wystawia fakturę korygującą lub duplikat zgodnie z
                   obowiązującymi przepisami, w tym — jeśli dotyczy — w formacie ustrukturyzowanym zgodnym z
                   Krajowym Systemem e-Faktur (KSeF).
                 </li>

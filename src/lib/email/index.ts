@@ -4,6 +4,8 @@
  * If the key is absent emails are silently skipped (dev-friendly).
  */
 
+import { formatPLN } from "@/lib/utils";
+
 const RESEND_API = "https://api.resend.com/emails";
 const FROM = "Matadora <no-reply@matadora.business>";
 
@@ -43,14 +45,14 @@ export function emailNewBid(opts: {
 }) {
   return sendEmail({
     to: opts.investorEmail,
-    subject: `💼 New bid on "${opts.projectTitle}"`,
+    subject: `💼 Nowa oferta na „${opts.projectTitle}”`,
     html: baseTemplate(`
-      <h2>New bid received</h2>
-      <p>Hello <strong>${opts.investorName}</strong>,</p>
-      <p><strong>${opts.contractorName}</strong> has submitted a bid of
-         <strong>${fmtUAH(opts.offerTotal)}</strong> on your project
+      <h2>Otrzymano nową ofertę</h2>
+      <p>Cześć <strong>${opts.investorName}</strong>,</p>
+      <p><strong>${opts.contractorName}</strong> złożył ofertę na kwotę
+         <strong>${formatPLN(opts.offerTotal)}</strong> dla Twojego projektu
          <em>${opts.projectTitle}</em>.</p>
-      <a href="${opts.offerUrl}" class="btn">Review offer</a>
+      <a href="${opts.offerUrl}" class="btn">Zobacz ofertę</a>
     `),
   });
 }
@@ -64,13 +66,13 @@ export function emailOfferAccepted(opts: {
 }) {
   return sendEmail({
     to: opts.contractorEmail,
-    subject: `🎉 Offer accepted — "${opts.projectTitle}"`,
+    subject: `🎉 Oferta zaakceptowana — „${opts.projectTitle}”`,
     html: baseTemplate(`
-      <h2>Your offer was accepted!</h2>
-      <p>Hello <strong>${opts.contractorName}</strong>,</p>
-      <p><strong>${opts.investorName}</strong> accepted your offer for
-         <em>${opts.projectTitle}</em>. The project is now active.</p>
-      <a href="${opts.dashboardUrl}" class="btn">Open project</a>
+      <h2>Twoja oferta została zaakceptowana!</h2>
+      <p>Cześć <strong>${opts.contractorName}</strong>,</p>
+      <p><strong>${opts.investorName}</strong> zaakceptował Twoją ofertę dla
+         <em>${opts.projectTitle}</em>. Projekt jest teraz aktywny.</p>
+      <a href="${opts.dashboardUrl}" class="btn">Otwórz projekt</a>
     `),
   });
 }
@@ -85,14 +87,14 @@ export function emailTaskAssigned(opts: {
 }) {
   return sendEmail({
     to: opts.workerEmail,
-    subject: `📋 New task: "${opts.taskTitle}"`,
+    subject: `📋 Nowe zadanie: „${opts.taskTitle}”`,
     html: baseTemplate(`
-      <h2>You have a new task</h2>
-      <p>Hello <strong>${opts.workerName}</strong>,</p>
-      <p>Task <strong>${opts.taskTitle}</strong> has been assigned to you on
-         project <em>${opts.projectTitle}</em>.
-         ${opts.dueDate ? `Due: <strong>${opts.dueDate}</strong>.` : ""}</p>
-      <a href="${opts.boardUrl}" class="btn">View task</a>
+      <h2>Masz nowe zadanie</h2>
+      <p>Cześć <strong>${opts.workerName}</strong>,</p>
+      <p>Zadanie <strong>${opts.taskTitle}</strong> zostało Ci przypisane w
+         projekcie <em>${opts.projectTitle}</em>.
+         ${opts.dueDate ? `Termin: <strong>${opts.dueDate}</strong>.` : ""}</p>
+      <a href="${opts.boardUrl}" class="btn">Zobacz zadanie</a>
     `),
   });
 }
@@ -107,14 +109,14 @@ export function emailProgressUpdate(opts: {
 }) {
   return sendEmail({
     to: opts.investorEmail,
-    subject: `📊 Progress update — "${opts.projectTitle}" ${opts.progress}%`,
+    subject: `📊 Aktualizacja postępu — „${opts.projectTitle}” ${opts.progress}%`,
     html: baseTemplate(`
-      <h2>Progress update</h2>
-      <p>Hello <strong>${opts.investorName}</strong>,</p>
-      <p>Project <em>${opts.projectTitle}</em> is now
-         <strong>${opts.progress}% complete</strong>.</p>
+      <h2>Aktualizacja postępu</h2>
+      <p>Cześć <strong>${opts.investorName}</strong>,</p>
+      <p>Projekt <em>${opts.projectTitle}</em> jest ukończony w
+         <strong>${opts.progress}%</strong>.</p>
       ${opts.note ? `<blockquote>${opts.note}</blockquote>` : ""}
-      <a href="${opts.projectUrl}" class="btn">View progress</a>
+      <a href="${opts.projectUrl}" class="btn">Zobacz postęp</a>
     `),
   });
 }
@@ -127,13 +129,74 @@ export function emailProjectComplete(opts: {
 }) {
   return sendEmail({
     to: opts.investorEmail,
-    subject: `✅ Project completed — "${opts.projectTitle}"`,
+    subject: `✅ Projekt zakończony — „${opts.projectTitle}”`,
     html: baseTemplate(`
-      <h2>Project completed 🎉</h2>
-      <p>Hello <strong>${opts.investorName}</strong>,</p>
-      <p>Your project <strong>${opts.projectTitle}</strong> has been marked as
-         <strong>completed</strong> by the contractor.</p>
-      <a href="${opts.projectUrl}" class="btn">View final report</a>
+      <h2>Projekt zakończony 🎉</h2>
+      <p>Cześć <strong>${opts.investorName}</strong>,</p>
+      <p>Twój projekt <strong>${opts.projectTitle}</strong> został oznaczony jako
+         <strong>zakończony</strong> przez wykonawcę.</p>
+      <a href="${opts.projectUrl}" class="btn">Zobacz raport końcowy</a>
+    `),
+  });
+}
+
+export function emailInvoice(opts: {
+  buyerEmail: string;
+  productLabel: string;
+  amountPln: number;
+  invoiceUrl: string;
+}) {
+  return sendEmail({
+    to: opts.buyerEmail,
+    subject: `🧾 Faktura VAT — ${opts.productLabel}`,
+    html: baseTemplate(`
+      <h2>Dziękujemy za zakup</h2>
+      <p>Twoja płatność za usługę <strong>${opts.productLabel}</strong> na kwotę
+         <strong>${formatPLN(opts.amountPln)}</strong> brutto została zaksięgowana.</p>
+      <p>Faktura VAT jest już dostępna do pobrania:</p>
+      <a href="${opts.invoiceUrl}" class="btn">Pobierz fakturę VAT</a>
+      <p style="margin-top:20px;font-size:13px;color:#64748b;">Link do faktury zachowaj na przyszłość —
+         możesz ją w każdej chwili pobrać ponownie pod tym samym adresem.</p>
+    `),
+  });
+}
+
+export function emailNewSupportTicket(opts: {
+  ticketId: string;
+  reporterEmail: string;
+  reporterRole: string;
+  pageUrl: string | null;
+  message: string;
+}) {
+  const adminEmails = (process.env.SUPPORT_ADMIN_EMAILS ?? "itatarchuk1202@gmail.com,vanbud.felix@gmail.com")
+    .split(",")
+    .map((e) => e.trim())
+    .filter(Boolean);
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://matadora.business";
+
+  return sendEmail({
+    to: adminEmails,
+    subject: `🆘 Nowe zgłoszenie — ${opts.reporterRole}`,
+    html: baseTemplate(`
+      <h2>Nowe zgłoszenie problemu</h2>
+      <p><strong>Od:</strong> ${opts.reporterEmail} (${opts.reporterRole})</p>
+      ${opts.pageUrl ? `<p><strong>Strona:</strong> ${opts.pageUrl}</p>` : ""}
+      <blockquote>${opts.message}</blockquote>
+      <a href="${siteUrl}/dashboard/support-inbox" class="btn">Otwórz skrzynkę zgłoszeń</a>
+    `),
+  });
+}
+
+export function emailTicketReply(opts: { reporterEmail: string; reply: string }) {
+  return sendEmail({
+    to: opts.reporterEmail,
+    subject: "💬 Odpowiedź na Twoje zgłoszenie — matadora.business",
+    html: baseTemplate(`
+      <h2>Odpowiedź na Twoje zgłoszenie</h2>
+      <p>Dziękujemy za zgłoszenie problemu. Oto nasza odpowiedź:</p>
+      <blockquote>${opts.reply}</blockquote>
+      <p style="margin-top:16px;font-size:13px;color:#64748b;">Jeśli sprawa nadal wymaga uwagi, odpisz
+         na ten e-mail lub zgłoś to ponownie w aplikacji.</p>
     `),
   });
 }
@@ -147,30 +210,22 @@ export function emailPunchItemOpened(opts: {
 }) {
   return sendEmail({
     to: opts.contractorEmail,
-    subject: `🔴 Defect reported — "${opts.projectTitle}"`,
+    subject: `🔴 Zgłoszono usterkę — „${opts.projectTitle}”`,
     html: baseTemplate(`
-      <h2>New defect / punch item</h2>
-      <p>Hello <strong>${opts.contractorName}</strong>,</p>
-      <p>A new punch item <strong>"${opts.itemTitle}"</strong> was reported on
-         <em>${opts.projectTitle}</em> and requires your attention.</p>
-      <a href="${opts.projectUrl}" class="btn">View punch list</a>
+      <h2>Nowa usterka / pozycja z listy usterek</h2>
+      <p>Cześć <strong>${opts.contractorName}</strong>,</p>
+      <p>Nowa pozycja <strong>„${opts.itemTitle}”</strong> została zgłoszona w
+         projekcie <em>${opts.projectTitle}</em> i wymaga Twojej uwagi.</p>
+      <a href="${opts.projectUrl}" class="btn">Zobacz listę usterek</a>
     `),
   });
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
-function fmtUAH(n: number) {
-  return new Intl.NumberFormat("uk-UA", {
-    style: "currency",
-    currency: "UAH",
-    maximumFractionDigits: 0,
-  }).format(n);
-}
-
 function baseTemplate(body: string) {
   return `<!DOCTYPE html>
-<html lang="uk">
+<html lang="pl">
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -191,7 +246,7 @@ function baseTemplate(body: string) {
 <div class="wrapper">
   <div class="header"><span>🏗 matadora.business</span></div>
   <div class="content">${body}</div>
-  <div class="footer">Matadora · ConTech Platform · <a href="https://matadora.business" style="color:#f97316;">matadora.business</a></div>
+  <div class="footer">Matadora · Platforma ConTech · <a href="https://matadora.business" style="color:#f97316;">matadora.business</a></div>
 </div>
 </body>
 </html>`;

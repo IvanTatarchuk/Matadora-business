@@ -186,7 +186,7 @@ export function EmailSettingsClient({ initialPreferences }: Props) {
             <div className="relative flex-1 max-w-sm">
               <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Шукати email..."
+                placeholder="Szukaj email..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-9"
@@ -197,10 +197,10 @@ export function EmailSettingsClient({ initialPreferences }: Props) {
               onChange={(e) => setFilterStatus(e.target.value as "all" | "sent" | "pending" | "failed")}
               className="rounded-md border bg-background px-3 py-2 text-sm"
             >
-              <option value="all">Всі статуси</option>
-              <option value="sent">Надіслані</option>
-              <option value="pending">Очікуючі</option>
-              <option value="failed">З помилками</option>
+              <option value="all">Wszystkie statusy</option>
+              <option value="sent">Wysłane</option>
+              <option value="pending">Oczekujące</option>
+              <option value="failed">Z błędami</option>
             </select>
           </div>
 

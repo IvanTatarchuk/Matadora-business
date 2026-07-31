@@ -11,9 +11,9 @@ export default async function NewOfferPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">Create a new offer</h1>
+        <h1 className="text-2xl font-bold">Utwórz nowy kosztorys</h1>
         <p className="text-muted-foreground">
-          Build a professional, stage-based estimate, then attach materials.
+          Zbuduj profesjonalny kosztorys etapowy, a następnie dołącz materiały.
         </p>
       </div>
       <OfferWizard materials={materials ?? []} />
