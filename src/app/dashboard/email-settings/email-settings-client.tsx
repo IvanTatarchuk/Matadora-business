@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { Mail, Bell, CheckCircle2, RefreshCw, Clock, AlertCircle, Search, Filter } from "lucide-react";
-import { updateEmailPreferences, listEmailQueue, type EmailConfig } from "@/lib/actions/email";
+import { updateEmailPreferences, listEmailQueue, retryEmail, type EmailConfig } from "@/lib/actions/email";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -37,10 +37,7 @@ export function EmailSettingsClient({ initialPreferences }: Props) {
   function handleRetry(emailId: string) {
     setError(null);
     startTransition(async () => {
-      const res = await fetch("/api/email/retry", {
-        method: "POST",
-        body: JSON.stringify({ emailId }),
-      }).then(r => r.json());
+      const res = await retryEmail(emailId);
       if (!res.ok) { setError(res.error ?? "Błąd"); return; }
       // Reload queue
       const queueData = await listEmailQueue();
