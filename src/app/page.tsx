@@ -568,6 +568,7 @@ export default function HomePage() {
             <span>© {new Date().getFullYear()} matadora.business — Wszystkie prawa zastrzeżone</span>
             <div className="flex gap-4">
               <Link href="/o-nas" className="hover:text-white">O nas</Link>
+              <Link href="/bezpieczenstwo" className="hover:text-white">Bezpieczeństwo</Link>
               <Link href="/polityka-prywatnosci" className="hover:text-white">Polityka prywatności</Link>
               <Link href="/regulamin" className="hover:text-white">Regulamin</Link>
             </div>
