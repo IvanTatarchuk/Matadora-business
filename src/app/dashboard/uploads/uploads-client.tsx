@@ -2,13 +2,13 @@
 
 import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Upload, File, Trash2, Download, Search, Filter, Plus } from "lucide-react";
+import { Upload, File, Trash2, Download, Search, Filter, Plus, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
-  uploadOrgFile, deleteFileUpload, incrementDownloadCount, type FileCategory,
+  uploadOrgFile, deleteFileUpload, incrementDownloadCount, updateFileUpload, type FileCategory,
 } from "@/lib/actions/file-uploads";
 
 type Props = {
@@ -39,6 +39,8 @@ export function UploadsClient({ orgId, initialUploads, initialStats }: Props) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [filterCategory, setFilterCategory] = useState<FileCategory | "all">("all");
   const [searchQuery, setSearchQuery] = useState("");
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editForm, setEditForm] = useState({ description: "", tags: "", isPublic: false });
 
   function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -76,6 +78,33 @@ export function UploadsClient({ orgId, initialUploads, initialStats }: Props) {
       const res = await deleteFileUpload(id);
       if (!res.ok) { setError(res.error ?? "Błąd"); return; }
       setUploads(uploads.filter((u) => u.id !== id));
+      router.refresh();
+    });
+  }
+
+  function startEdit(upload: (typeof uploads)[number]) {
+    setError(null);
+    setEditingId(upload.id);
+    setEditForm({
+      description: upload.description || "",
+      tags: (upload.tags || []).join(", "),
+      isPublic: !!upload.is_public,
+    });
+  }
+
+  function handleSaveEdit(id: string) {
+    setError(null);
+    startTransition(async () => {
+      const res = await updateFileUpload(id, {
+        description: editForm.description || null,
+        tags: editForm.tags ? editForm.tags.split(",").map((t) => t.trim()).filter(Boolean) : [],
+        is_public: editForm.isPublic,
+      });
+      if (!res.ok) { setError(res.error ?? "Błąd"); return; }
+      setUploads(uploads.map((u) => (u.id === id
+        ? { ...u, description: editForm.description || null, tags: editForm.tags ? editForm.tags.split(",").map((t) => t.trim()).filter(Boolean) : [], is_public: editForm.isPublic }
+        : u)));
+      setEditingId(null);
       router.refresh();
     });
   }
@@ -280,41 +309,84 @@ export function UploadsClient({ orgId, initialUploads, initialStats }: Props) {
           ) : (
             <div className="space-y-2">
               {filteredUploads.map((upload) => (
-                <div key={upload.id} className="flex items-center justify-between p-3 rounded bg-muted">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2">
-                      <p className="text-sm font-medium">{upload.file_name}</p>
-                      <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded">
-                        {categoryLabels[upload.category as FileCategory]}
-                      </span>
-                      {upload.is_public && (
-                        <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded">Publiczny</span>
+                <div key={upload.id} className="p-3 rounded bg-muted">
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        <p className="text-sm font-medium">{upload.file_name}</p>
+                        <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded">
+                          {categoryLabels[upload.category as FileCategory]}
+                        </span>
+                        {upload.is_public && (
+                          <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded">Publiczny</span>
+                        )}
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        {formatFileSize(upload.file_size)} · {new Date(upload.created_at).toLocaleString("pl-PL")}
+                      </p>
+                      {upload.description && (
+                        <p className="text-xs text-muted-foreground">{upload.description}</p>
+                      )}
+                      {upload.tags && upload.tags.length > 0 && (
+                        <div className="flex gap-1 mt-1">
+                          {upload.tags.map((tag: string) => (
+                            <span key={tag} className="text-xs bg-gray-100 text-gray-700 px-2 py-0.5 rounded">
+                              {tag}
+                            </span>
+                          ))}
+                        </div>
                       )}
                     </div>
-                    <p className="text-xs text-muted-foreground">
-                      {formatFileSize(upload.file_size)} · {new Date(upload.created_at).toLocaleString("pl-PL")}
-                    </p>
-                    {upload.description && (
-                      <p className="text-xs text-muted-foreground">{upload.description}</p>
-                    )}
-                    {upload.tags && upload.tags.length > 0 && (
-                      <div className="flex gap-1 mt-1">
-                        {upload.tags.map((tag: string) => (
-                          <span key={tag} className="text-xs bg-gray-100 text-gray-700 px-2 py-0.5 rounded">
-                            {tag}
-                          </span>
-                        ))}
+                    <div className="flex gap-1">
+                      <Button variant="ghost" size="sm" onClick={() => startEdit(upload)}>
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                      <Button variant="ghost" size="sm" onClick={() => handleDownload(upload.id, upload.storage_url)}>
+                        <Download className="h-4 w-4" />
+                      </Button>
+                      <Button variant="ghost" size="sm" onClick={() => handleDelete(upload.id)}>
+                        <Trash2 className="h-4 w-4 text-destructive" />
+                      </Button>
+                    </div>
+                  </div>
+                  {editingId === upload.id && (
+                    <div className="mt-3 pt-3 border-t space-y-3">
+                      <div>
+                        <Label>Opis</Label>
+                        <Input
+                          value={editForm.description}
+                          onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
+                          className="mt-1"
+                        />
                       </div>
-                    )}
-                  </div>
-                  <div className="flex gap-1">
-                    <Button variant="ghost" size="sm" onClick={() => handleDownload(upload.id, upload.storage_url)}>
-                      <Download className="h-4 w-4" />
-                    </Button>
-                    <Button variant="ghost" size="sm" onClick={() => handleDelete(upload.id)}>
-                      <Trash2 className="h-4 w-4 text-destructive" />
-                    </Button>
-                  </div>
+                      <div>
+                        <Label>Tagi (rozdzielone przecinkami)</Label>
+                        <Input
+                          value={editForm.tags}
+                          onChange={(e) => setEditForm({ ...editForm, tags: e.target.value })}
+                          className="mt-1"
+                          placeholder="tag1, tag2, tag3"
+                        />
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          id={`public-${upload.id}`}
+                          checked={editForm.isPublic}
+                          onChange={(e) => setEditForm({ ...editForm, isPublic: e.target.checked })}
+                        />
+                        <label htmlFor={`public-${upload.id}`} className="text-sm">Plik publiczny</label>
+                      </div>
+                      <div className="flex gap-2">
+                        <Button size="sm" onClick={() => handleSaveEdit(upload.id)} disabled={pending}>
+                          {pending ? "Zapisywanie..." : "Zapisz"}
+                        </Button>
+                        <Button size="sm" variant="outline" onClick={() => setEditingId(null)}>
+                          Anuluj
+                        </Button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
