@@ -561,6 +561,7 @@ export default function HomePage() {
                     vanbud.felix@gmail.com
                   </a>
                 </li>
+                <li>Odpowiadamy w ciągu 24h w dni robocze</li>
               </ul>
             </div>
           </div>
@@ -569,6 +570,7 @@ export default function HomePage() {
             <div className="flex gap-4">
               <Link href="/o-nas" className="hover:text-white">O nas</Link>
               <Link href="/bezpieczenstwo" className="hover:text-white">Bezpieczeństwo</Link>
+              <Link href="/status" className="hover:text-white">Status</Link>
               <Link href="/polityka-prywatnosci" className="hover:text-white">Polityka prywatności</Link>
               <Link href="/regulamin" className="hover:text-white">Regulamin</Link>
             </div>
