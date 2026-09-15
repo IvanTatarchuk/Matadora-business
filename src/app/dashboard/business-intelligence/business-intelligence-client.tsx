@@ -38,6 +38,7 @@ export function BusinessIntelligenceClient({ initialDashboards, initialReports, 
   const [expandedDashboardId, setExpandedDashboardId] = useState<string | null>(null);
   const [widgetsByDashboard, setWidgetsByDashboard] = useState<Record<string, BIWidget[]>>({});
   const [loadingWidgetsFor, setLoadingWidgetsFor] = useState<string | null>(null);
+  const [showWidgetFormFor, setShowWidgetFormFor] = useState<string | null>(null);
 
   const [dashboardForm, setDashboardForm] = useState({
     name: "",
@@ -57,6 +58,13 @@ export function BusinessIntelligenceClient({ initialDashboards, initialReports, 
     name: "",
     sourceType: "database" as SourceType,
     connectionConfig: {},
+  });
+
+  const [widgetForm, setWidgetForm] = useState({
+    title: "",
+    widgetType: "kpi_card" as WidgetType,
+    width: 4,
+    height: 3,
   });
 
   function handleCreateDashboard() {
@@ -116,6 +124,28 @@ export function BusinessIntelligenceClient({ initialDashboards, initialReports, 
         .then((widgets) => setWidgetsByDashboard((prev) => ({ ...prev, [dashboardId]: widgets })))
         .finally(() => setLoadingWidgetsFor((prev) => (prev === dashboardId ? null : prev)));
     }
+  }
+
+  function handleCreateWidget(dashboardId: string) {
+    if (!widgetForm.title) { setError("Nazwa widżetu jest wymagana"); return; }
+    setError(null);
+    startTransition(async () => {
+      const res = await createBIWidget({
+        dashboardId,
+        widgetType: widgetForm.widgetType,
+        title: widgetForm.title,
+        config: {},
+        queryConfig: {},
+        width: widgetForm.width,
+        height: widgetForm.height,
+      });
+      if (!res.ok) { setError(res.error ?? "Błąd"); return; }
+      setShowWidgetFormFor(null);
+      setWidgetForm({ title: "", widgetType: "kpi_card", width: 4, height: 3 });
+      const widgets = await listBIWidgets(dashboardId);
+      setWidgetsByDashboard((prev) => ({ ...prev, [dashboardId]: widgets }));
+      setStats((prev) => ({ ...prev, totalWidgets: prev.totalWidgets + 1 }));
+    });
   }
 
   const filteredDashboards = dashboards.filter((d) => {
@@ -377,7 +407,7 @@ export function BusinessIntelligenceClient({ initialDashboards, initialReports, 
                       </div>
                     </button>
                     {isExpanded && (
-                      <div className="border-t p-3">
+                      <div className="border-t p-3 space-y-3">
                         {loadingWidgetsFor === dashboard.id && !widgets ? (
                           <p className="text-sm text-muted-foreground">Ładowanie widżetów...</p>
                         ) : !widgets || widgets.length === 0 ? (
@@ -394,6 +424,52 @@ export function BusinessIntelligenceClient({ initialDashboards, initialReports, 
                               </div>
                             ))}
                           </div>
+                        )}
+
+                        {showWidgetFormFor === dashboard.id ? (
+                          <div className="space-y-2 rounded border border-primary/50 p-2.5">
+                            <div className="grid gap-2 sm:grid-cols-2">
+                              <div>
+                                <label className="text-xs font-medium">Nazwa widżetu</label>
+                                <Input
+                                  value={widgetForm.title}
+                                  onChange={(e) => setWidgetForm({ ...widgetForm, title: e.target.value })}
+                                  className="mt-1 h-8 text-sm"
+                                />
+                              </div>
+                              <div>
+                                <label className="text-xs font-medium">Typ widżetu</label>
+                                <select
+                                  value={widgetForm.widgetType}
+                                  onChange={(e) => setWidgetForm({ ...widgetForm, widgetType: e.target.value as WidgetType })}
+                                  className="mt-1 h-8 w-full rounded-md border bg-background px-2 text-sm"
+                                >
+                                  <option value="kpi_card">KPI</option>
+                                  <option value="chart">Wykres</option>
+                                  <option value="table">Tabela</option>
+                                  <option value="gauge">Wskaźnik</option>
+                                  <option value="funnel">Lejek</option>
+                                  <option value="heatmap">Mapa cieplna</option>
+                                  <option value="treemap">Treemap</option>
+                                  <option value="pivot_table">Tabela przestawna</option>
+                                </select>
+                              </div>
+                            </div>
+                            {error && <p className="text-sm text-destructive">{error}</p>}
+                            <div className="flex gap-2">
+                              <Button size="sm" onClick={() => handleCreateWidget(dashboard.id)} disabled={pending}>
+                                {pending ? "Dodawanie..." : "Dodaj widżet"}
+                              </Button>
+                              <Button size="sm" variant="outline" onClick={() => { setShowWidgetFormFor(null); setError(null); }}>
+                                Anuluj
+                              </Button>
+                            </div>
+                          </div>
+                        ) : (
+                          <Button size="sm" variant="outline" onClick={() => setShowWidgetFormFor(dashboard.id)}>
+                            <Plus className="h-3.5 w-3.5 mr-1.5" />
+                            Dodaj widżet
+                          </Button>
                         )}
                       </div>
                     )}
