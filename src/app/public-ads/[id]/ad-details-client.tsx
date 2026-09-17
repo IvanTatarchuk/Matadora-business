@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { MapPin, Home, Phone, Mail, Calendar, DollarSign, Send, X, Star, MessageSquare, CheckCircle2, Clock, ThumbsUp } from "lucide-react";
-import { respondToAd, updateResponseStatus, createContractorReview, closePublicAd, type PublicAd, type AdResponse } from "@/lib/actions/public-ads";
+import { MapPin, Home, Phone, Mail, Calendar, DollarSign, Send, X, Star, MessageSquare, CheckCircle2, Clock, ThumbsUp, Trash2 } from "lucide-react";
+import { respondToAd, updateResponseStatus, createContractorReview, closePublicAd, deletePublicAd, type PublicAd, type AdResponse } from "@/lib/actions/public-ads";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -153,6 +153,22 @@ export function AdDetailsClient({ ad, responses, contractorRatings = {}, contrac
         return;
       }
       window.location.reload();
+    });
+  }
+
+  function handleDeleteAd() {
+    if (!ad) return;
+    if (!window.confirm("Czy na pewno chcesz usunąć to ogłoszenie? Tej operacji nie można cofnąć.")) {
+      return;
+    }
+    setError(null);
+    startTransition(async () => {
+      const res = await deletePublicAd(ad.id);
+      if (!res.ok) {
+        setError(res.error ?? "Błąd usuwania ogłoszenia");
+        return;
+      }
+      window.location.href = "/public-ads";
     });
   }
 
@@ -569,7 +585,6 @@ export function AdDetailsClient({ ad, responses, contractorRatings = {}, contrac
                   <p className="text-sm text-muted-foreground">
                     Jesteś właścicielem tego ogłoszenia
                   </p>
-                  {error && <p className="text-sm text-destructive">{error}</p>}
                   <Button
                     variant="outline"
                     className="w-full"
@@ -585,6 +600,20 @@ export function AdDetailsClient({ ad, responses, contractorRatings = {}, contrac
                 <p className="text-sm text-muted-foreground">
                   Ogłoszenie zostało zamknięte
                 </p>
+              )}
+              {isOwner && (
+                <div className="pt-2 border-t space-y-2">
+                  {error && <p className="text-sm text-destructive">{error}</p>}
+                  <Button
+                    variant="destructive"
+                    className="w-full"
+                    onClick={handleDeleteAd}
+                    disabled={pending}
+                  >
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    {pending ? "Usuwanie..." : "Usuń ogłoszenie"}
+                  </Button>
+                </div>
               )}
             </CardContent>
           </Card>
