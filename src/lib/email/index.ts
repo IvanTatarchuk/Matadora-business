@@ -209,17 +209,24 @@ export function emailAdContactMessage(opts: {
   senderPhone: string | null;
   message: string;
 }) {
+  // senderName/senderEmail/senderPhone/message come from an anonymous, unauthenticated
+  // form (/public-ads/[id]) — escape before interpolating into the outbound email HTML.
+  const senderName = escapeHtml(opts.senderName);
+  const senderEmail = escapeHtml(opts.senderEmail);
+  const senderPhone = opts.senderPhone ? escapeHtml(opts.senderPhone) : null;
+  const message = escapeHtml(opts.message);
+
   return sendEmail({
     to: opts.ownerEmail,
     subject: `📩 Nowa wiadomość — „${opts.adTitle}”`,
     html: baseTemplate(`
       <h2>Nowa wiadomość od zainteresowanego</h2>
-      <p><strong>${opts.senderName}</strong> napisał(a) w sprawie Twojego ogłoszenia
+      <p><strong>${senderName}</strong> napisał(a) w sprawie Twojego ogłoszenia
          <em>${opts.adTitle}</em>.</p>
-      <p><strong>Email:</strong> ${opts.senderEmail}${opts.senderPhone ? `<br /><strong>Telefon:</strong> ${opts.senderPhone}` : ""}</p>
-      <blockquote>${opts.message}</blockquote>
+      <p><strong>Email:</strong> ${senderEmail}${senderPhone ? `<br /><strong>Telefon:</strong> ${senderPhone}` : ""}</p>
+      <blockquote>${message}</blockquote>
       <p style="margin-top:16px;font-size:13px;color:#64748b;">Skontaktuj się z nadawcą pod adresem
-         ${opts.senderEmail}${opts.senderPhone ? ` lub telefonicznie: ${opts.senderPhone}` : ""}.</p>
+         ${senderEmail}${senderPhone ? ` lub telefonicznie: ${senderPhone}` : ""}.</p>
     `),
   });
 }
@@ -245,6 +252,15 @@ export function emailPunchItemOpened(opts: {
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
+
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
 
 function baseTemplate(body: string) {
   return `<!DOCTYPE html>
