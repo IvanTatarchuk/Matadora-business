@@ -201,6 +201,29 @@ export function emailTicketReply(opts: { reporterEmail: string; reply: string })
   });
 }
 
+export function emailAdContactMessage(opts: {
+  ownerEmail: string;
+  adTitle: string;
+  senderName: string;
+  senderEmail: string;
+  senderPhone: string | null;
+  message: string;
+}) {
+  return sendEmail({
+    to: opts.ownerEmail,
+    subject: `📩 Nowa wiadomość — „${opts.adTitle}”`,
+    html: baseTemplate(`
+      <h2>Nowa wiadomość od zainteresowanego</h2>
+      <p><strong>${opts.senderName}</strong> napisał(a) w sprawie Twojego ogłoszenia
+         <em>${opts.adTitle}</em>.</p>
+      <p><strong>Email:</strong> ${opts.senderEmail}${opts.senderPhone ? `<br /><strong>Telefon:</strong> ${opts.senderPhone}` : ""}</p>
+      <blockquote>${opts.message}</blockquote>
+      <p style="margin-top:16px;font-size:13px;color:#64748b;">Skontaktuj się z nadawcą pod adresem
+         ${opts.senderEmail}${opts.senderPhone ? ` lub telefonicznie: ${opts.senderPhone}` : ""}.</p>
+    `),
+  });
+}
+
 export function emailPunchItemOpened(opts: {
   contractorEmail: string;
   contractorName: string;
