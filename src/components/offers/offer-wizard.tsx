@@ -18,6 +18,8 @@ import {
   X,
   Sparkles,
   AlertTriangle,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -98,6 +100,7 @@ export function OfferWizard({ materials }: { materials: CatalogMaterial[] }) {
 
   // Step 3 — materials (materialId -> quantity)
   const [quantities, setQuantities] = useState<Record<string, number>>({});
+  const [collapsedReviewGroups, setCollapsedReviewGroups] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     try {
@@ -127,6 +130,15 @@ export function OfferWizard({ materials }: { materials: CatalogMaterial[] }) {
     [stages]
   );
   const hasSections = reviewGroups.some((g) => g.label !== null);
+
+  function toggleReviewGroupCollapsed(key: string) {
+    setCollapsedReviewGroups((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+  }
 
   // Non-blocking sanity checks before the offer is created — same idea as
   // the warnings already surfaced on the public /kosztorys builder.
@@ -911,42 +923,63 @@ export function OfferWizard({ materials }: { materials: CatalogMaterial[] }) {
                     </tr>
                   </thead>
                   <tbody className="divide-y">
-                    {reviewGroups.map((group, gi) => (
-                      <Fragment key={`group-${gi}`}>
-                        {hasSections && (
-                          <tr className="bg-muted/30">
-                            <td className="p-3 font-semibold" colSpan={2}>
-                              {group.label ?? "Bez sekcji"}
-                            </td>
-                          </tr>
-                        )}
-                        {group.items.map((s, i) => (
-                          <tr key={`item-${gi}-${i}`}>
-                            <td className="p-3">
-                              <p className="font-medium">{s.stage_name}</p>
-                              {s.description && (
-                                <p className="text-xs text-muted-foreground">
-                                  {s.description}
-                                </p>
-                              )}
-                            </td>
-                            <td className="p-3 text-right">
-                              {formatPLN(Number(s.cost))}
-                            </td>
-                          </tr>
-                        ))}
-                        {hasSections && group.items.length > 1 && (
-                          <tr>
-                            <td className="p-3 text-right text-xs text-muted-foreground">
-                              Razem: {group.label ?? "Bez sekcji"}
-                            </td>
-                            <td className="p-3 text-right text-xs font-semibold text-muted-foreground">
-                              {formatPLN(group.subtotal)}
-                            </td>
-                          </tr>
-                        )}
-                      </Fragment>
-                    ))}
+                    {reviewGroups.map((group, gi) => {
+                      const key = group.label ?? "__ungrouped__";
+                      const collapsed = hasSections && collapsedReviewGroups.has(key);
+                      return (
+                        <Fragment key={`group-${gi}`}>
+                          {hasSections && (
+                            <tr className="bg-muted/30">
+                              <td className="p-0" colSpan={2}>
+                                <button
+                                  type="button"
+                                  onClick={() => toggleReviewGroupCollapsed(key)}
+                                  className="flex w-full items-center justify-between gap-2 p-3 text-left font-semibold hover:bg-muted/70"
+                                >
+                                  <span className="flex items-center gap-1.5">
+                                    {collapsed ? (
+                                      <ChevronDown className="h-4 w-4" />
+                                    ) : (
+                                      <ChevronUp className="h-4 w-4" />
+                                    )}
+                                    {group.label ?? "Bez sekcji"}
+                                  </span>
+                                  <span className="text-xs font-normal text-muted-foreground">
+                                    {formatPLN(group.subtotal)}
+                                  </span>
+                                </button>
+                              </td>
+                            </tr>
+                          )}
+                          {!collapsed &&
+                            group.items.map((s, i) => (
+                              <tr key={`item-${gi}-${i}`}>
+                                <td className="p-3">
+                                  <p className="font-medium">{s.stage_name}</p>
+                                  {s.description && (
+                                    <p className="text-xs text-muted-foreground">
+                                      {s.description}
+                                    </p>
+                                  )}
+                                </td>
+                                <td className="p-3 text-right">
+                                  {formatPLN(Number(s.cost))}
+                                </td>
+                              </tr>
+                            ))}
+                          {!collapsed && hasSections && group.items.length > 1 && (
+                            <tr>
+                              <td className="p-3 text-right text-xs text-muted-foreground">
+                                Razem: {group.label ?? "Bez sekcji"}
+                              </td>
+                              <td className="p-3 text-right text-xs font-semibold text-muted-foreground">
+                                {formatPLN(group.subtotal)}
+                              </td>
+                            </tr>
+                          )}
+                        </Fragment>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>
