@@ -16,9 +16,10 @@ import { Input } from "@/components/ui/input";
 type Props = {
   initialConversations: Conversation[];
   initialUnreadCount: number;
+  currentUserId: string | null;
 };
 
-export function MessengerClient({ initialConversations, initialUnreadCount }: Props) {
+export function MessengerClient({ initialConversations, initialUnreadCount, currentUserId }: Props) {
   const [conversations, setConversations] = useState<Conversation[]>(initialConversations);
   const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -179,11 +180,11 @@ export function MessengerClient({ initialConversations, initialUnreadCount }: Pr
                 messages.map((msg) => (
                   <div
                     key={msg.id}
-                    className={`flex ${msg.sender_id === "current" ? "justify-end" : "justify-start"}`}
+                    className={`flex ${msg.sender_id === currentUserId ? "justify-end" : "justify-start"}`}
                   >
                     <div
                       className={`max-w-[70%] rounded-lg p-3 ${
-                        msg.sender_id === "current"
+                        msg.sender_id === currentUserId
                           ? "bg-primary text-primary-foreground"
                           : "bg-muted"
                       }`}
