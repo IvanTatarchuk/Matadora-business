@@ -1,6 +1,8 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { emailAdContactMessage } from "@/lib/email";
 import { revalidatePath } from "next/cache";
 
 export type PublicAd = {
@@ -80,6 +82,14 @@ export type CreateReviewInput = {
   contractor_id: string;
   rating: number;
   review?: string;
+};
+
+export type ContactAdOwnerInput = {
+  ad_id: string;
+  name: string;
+  email: string;
+  phone?: string;
+  message: string;
 };
 
 // Wgrywanie zdjęcia do ogłoszenia
@@ -409,6 +419,51 @@ export async function respondToAd(input: CreateResponseInput) {
 
   // @ts-ignore
   return { ok: true, data: data as AdResponse, id: data.id };
+}
+
+// Wysłanie wiadomości kontaktowej do autora ogłoszenia (formularz "Napisz wiadomość")
+export async function contactAdOwner(input: ContactAdOwnerInput) {
+  const name = input.name.trim();
+  const email = input.email.trim();
+  const message = input.message.trim();
+  const phone = input.phone?.trim() || null;
+
+  if (!name || !email || !message) {
+    return { ok: false, error: "Imię, email i wiadomość są wymagane" };
+  }
+
+  const admin = createAdminClient();
+
+  // @ts-ignore - Supabase types need to be regenerated after migration
+  const { data: ad } = await admin
+    .from("public_ads")
+    .select("id, title, user_id")
+    .eq("id", input.ad_id)
+    .single();
+
+  if (!ad) {
+    return { ok: false, error: "Nie znaleziono ogłoszenia" };
+  }
+
+  const adRow = ad as { id: string; title: string; user_id: string };
+
+  const { data: authData } = await admin.auth.admin.getUserById(adRow.user_id);
+  const ownerEmail = authData?.user?.email;
+
+  if (!ownerEmail) {
+    return { ok: false, error: "Nie udało się ustalić odbiorcy wiadomości" };
+  }
+
+  await emailAdContactMessage({
+    ownerEmail,
+    adTitle: adRow.title,
+    senderName: name,
+    senderEmail: email,
+    senderPhone: phone,
+    message,
+  });
+
+  return { ok: true };
 }
 
 // Pobranie odpowiedzi na ogłoszenie
