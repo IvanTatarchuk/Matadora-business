@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { formatPLN } from "@/lib/utils";
 import {
+  updateEquipment,
   updateEquipmentStatus,
   type Equipment, type EquipmentStatus, type EquipmentAssignment,
 } from "@/lib/actions/equipment";
@@ -51,8 +52,27 @@ export function SprzetDetailClient({ equipment, history }: Props) {
       setError("Nazwa jest wymagana");
       return;
     }
-    // Save logic would go here
-    setIsEditing(false);
+    startTransition(async () => {
+      const result = await updateEquipment(equipment.id, {
+        name: editForm.name.trim(),
+        brand: editForm.brand || undefined,
+        model: editForm.model || undefined,
+        serialNumber: editForm.serialNumber || undefined,
+        year: editForm.year ? Number(editForm.year) : undefined,
+        purchasePrice: editForm.purchasePrice ? Number(editForm.purchasePrice) : undefined,
+        dailyRate: editForm.dailyRate ? Number(editForm.dailyRate) : undefined,
+        location: editForm.location || undefined,
+        nextServiceDate: editForm.nextServiceDate || undefined,
+        insuranceExpiry: editForm.insuranceExpiry || undefined,
+        notes: editForm.notes || undefined,
+      });
+      if (!result.ok) {
+        setError(result.error ?? "Nie udało się zapisać zmian");
+        return;
+      }
+      setIsEditing(false);
+      router.refresh();
+    });
   }
 
   function handleStatus(status: EquipmentStatus) {

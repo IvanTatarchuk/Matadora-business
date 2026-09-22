@@ -137,6 +137,34 @@ export async function returnEquipment(
   return { ok: true };
 }
 
+export async function updateEquipment(
+  id: string,
+  input: {
+    name: string; brand?: string; model?: string; serialNumber?: string;
+    year?: number; purchasePrice?: number; dailyRate?: number;
+    location?: string; nextServiceDate?: string; insuranceExpiry?: string; notes?: string;
+  }
+): Promise<{ ok: boolean; error?: string }> {
+  const supabase = createClient();
+  const { error } = await db(supabase).from("equipment").update({
+    name: input.name,
+    brand: input.brand ?? null,
+    model: input.model ?? null,
+    serial_number: input.serialNumber ?? null,
+    year: input.year ?? null,
+    purchase_price: input.purchasePrice ?? null,
+    daily_rate: input.dailyRate ?? null,
+    location: input.location ?? null,
+    next_service_date: input.nextServiceDate ?? null,
+    insurance_expiry: input.insuranceExpiry ?? null,
+    notes: input.notes ?? null,
+  }).eq("id", id);
+  if (error) return { ok: false, error: error.message };
+  revalidatePath("/dashboard/sprzet");
+  revalidatePath(`/dashboard/sprzet/${id}`);
+  return { ok: true };
+}
+
 export async function updateEquipmentStatus(
   id: string, status: EquipmentStatus
 ): Promise<{ ok: boolean; error?: string }> {
