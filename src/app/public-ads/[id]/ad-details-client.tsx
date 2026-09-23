@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { MapPin, Home, Phone, Mail, Calendar, DollarSign, Send, X, Star, MessageSquare, CheckCircle2, Clock, ThumbsUp, Trash2 } from "lucide-react";
-import { respondToAd, updateResponseStatus, createContractorReview, closePublicAd, deletePublicAd, type PublicAd, type AdResponse } from "@/lib/actions/public-ads";
+import { MapPin, Home, Phone, Mail, Calendar, DollarSign, Send, X, Star, MessageSquare, CheckCircle2, Clock, ThumbsUp, Trash2, Pencil } from "lucide-react";
+import { respondToAd, updateResponseStatus, createContractorReview, closePublicAd, deletePublicAd, updatePublicAd, type PublicAd, type AdResponse } from "@/lib/actions/public-ads";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -38,6 +38,7 @@ export function AdDetailsClient({ ad, responses, contractorRatings = {}, contrac
   const [showResponseForm, setShowResponseForm] = useState(false);
   const [showReviewForm, setShowReviewForm] = useState(false);
   const [showContactForm, setShowContactForm] = useState(false);
+  const [showEditForm, setShowEditForm] = useState(false);
   const [expandedReviews, setExpandedReviews] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
@@ -58,6 +59,18 @@ export function AdDetailsClient({ ad, responses, contractorRatings = {}, contrac
     email: "",
     phone: "",
     message: "",
+  });
+
+  const [editForm, setEditForm] = useState({
+    title: ad?.title ?? "",
+    description: ad?.description ?? "",
+    area_size: ad?.area_size ? String(ad.area_size) : "",
+    city: ad?.city ?? "",
+    address: ad?.address ?? "",
+    budget_min: ad?.budget_min ? String(ad.budget_min) : "",
+    budget_max: ad?.budget_max ? String(ad.budget_max) : "",
+    phone: ad?.phone ?? "",
+    start_date: ad?.start_date ?? "",
   });
 
   if (!ad) {
@@ -156,6 +169,51 @@ export function AdDetailsClient({ ad, responses, contractorRatings = {}, contrac
     });
   }
 
+  function openEditForm() {
+    if (!ad) return;
+    setEditForm({
+      title: ad.title,
+      description: ad.description ?? "",
+      area_size: ad.area_size ? String(ad.area_size) : "",
+      city: ad.city ?? "",
+      address: ad.address ?? "",
+      budget_min: ad.budget_min ? String(ad.budget_min) : "",
+      budget_max: ad.budget_max ? String(ad.budget_max) : "",
+      phone: ad.phone ?? "",
+      start_date: ad.start_date ?? "",
+    });
+    setError(null);
+    setShowEditForm(true);
+  }
+
+  function handleEditSave() {
+    if (!ad) return;
+    if (!editForm.title.trim() || !editForm.city.trim()) {
+      setError("Tytuł i miasto są wymagane");
+      return;
+    }
+    setError(null);
+    startTransition(async () => {
+      const res = await updatePublicAd(ad.id, {
+        title: editForm.title.trim(),
+        description: editForm.description || undefined,
+        area_size: editForm.area_size ? Number(editForm.area_size) : undefined,
+        city: editForm.city.trim(),
+        address: editForm.address || undefined,
+        budget_min: editForm.budget_min ? Number(editForm.budget_min) : undefined,
+        budget_max: editForm.budget_max ? Number(editForm.budget_max) : undefined,
+        phone: editForm.phone || undefined,
+        start_date: editForm.start_date || undefined,
+      });
+      if (!res.ok) {
+        setError(res.error ?? "Błąd zapisywania zmian");
+        return;
+      }
+      setShowEditForm(false);
+      window.location.reload();
+    });
+  }
+
   function handleDeleteAd() {
     if (!ad) return;
     if (!window.confirm("Czy na pewno chcesz usunąć to ogłoszenie? Tej operacji nie można cofnąć.")) {
@@ -213,6 +271,120 @@ export function AdDetailsClient({ ad, responses, contractorRatings = {}, contrac
                       />
                     </div>
                   ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Edit Form */}
+          {isOwner && showEditForm && (
+            <Card className="border-primary">
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <CardTitle>Edytuj ogłoszenie</CardTitle>
+                  <Button variant="ghost" size="sm" onClick={() => setShowEditForm(false)}>
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div className="md:col-span-2">
+                    <Label htmlFor="edit-title">Tytuł *</Label>
+                    <Input
+                      id="edit-title"
+                      value={editForm.title}
+                      onChange={(e) => setEditForm({ ...editForm, title: e.target.value })}
+                      className="mt-1"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="edit-city">Miasto *</Label>
+                    <Input
+                      id="edit-city"
+                      value={editForm.city}
+                      onChange={(e) => setEditForm({ ...editForm, city: e.target.value })}
+                      className="mt-1"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="edit-address">Adres</Label>
+                    <Input
+                      id="edit-address"
+                      value={editForm.address}
+                      onChange={(e) => setEditForm({ ...editForm, address: e.target.value })}
+                      className="mt-1"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="edit-area-size">Powierzchnia (m²)</Label>
+                    <Input
+                      id="edit-area-size"
+                      type="number"
+                      value={editForm.area_size}
+                      onChange={(e) => setEditForm({ ...editForm, area_size: e.target.value })}
+                      className="mt-1"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="edit-start-date">Preferowana data rozpoczęcia</Label>
+                    <Input
+                      id="edit-start-date"
+                      type="date"
+                      value={editForm.start_date}
+                      onChange={(e) => setEditForm({ ...editForm, start_date: e.target.value })}
+                      className="mt-1"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="edit-budget-min">Min. budżet (zł)</Label>
+                    <Input
+                      id="edit-budget-min"
+                      type="number"
+                      value={editForm.budget_min}
+                      onChange={(e) => setEditForm({ ...editForm, budget_min: e.target.value })}
+                      className="mt-1"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="edit-budget-max">Maks. budżet (zł)</Label>
+                    <Input
+                      id="edit-budget-max"
+                      type="number"
+                      value={editForm.budget_max}
+                      onChange={(e) => setEditForm({ ...editForm, budget_max: e.target.value })}
+                      className="mt-1"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="edit-phone">Telefon</Label>
+                    <Input
+                      id="edit-phone"
+                      value={editForm.phone}
+                      onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })}
+                      placeholder="+48 XXX XXX XXX"
+                      className="mt-1"
+                    />
+                  </div>
+                  <div className="md:col-span-2">
+                    <Label htmlFor="edit-description">Opis</Label>
+                    <Textarea
+                      id="edit-description"
+                      value={editForm.description}
+                      onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
+                      rows={4}
+                      className="mt-1"
+                    />
+                  </div>
+                </div>
+                {error && <p className="text-sm text-destructive">{error}</p>}
+                <div className="flex gap-2">
+                  <Button onClick={handleEditSave} disabled={pending}>
+                    {pending ? "Zapisywanie..." : "Zapisz zmiany"}
+                  </Button>
+                  <Button variant="outline" onClick={() => setShowEditForm(false)}>
+                    Anuluj
+                  </Button>
                 </div>
               </CardContent>
             </Card>
@@ -585,6 +757,14 @@ export function AdDetailsClient({ ad, responses, contractorRatings = {}, contrac
                   <p className="text-sm text-muted-foreground">
                     Jesteś właścicielem tego ogłoszenia
                   </p>
+                  <Button
+                    variant="outline"
+                    className="w-full"
+                    onClick={() => (showEditForm ? setShowEditForm(false) : openEditForm())}
+                  >
+                    <Pencil className="h-4 w-4 mr-2" />
+                    {showEditForm ? "Anuluj edycję" : "Edytuj ogłoszenie"}
+                  </Button>
                   <Button
                     variant="outline"
                     className="w-full"
