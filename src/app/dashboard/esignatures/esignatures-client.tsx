@@ -411,9 +411,26 @@ export function EsignaturesClient({ initialSignatures, initialRequests }: Props)
                   </div>
                   <div className="flex gap-2">
                     {req.status === "pending" && (
-                      <Button variant="outline" size="sm" onClick={() => cancelSignatureRequest(req.id)}>
-                        Anuluj
-                      </Button>
+                      <>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="text-destructive"
+                          disabled={pending}
+                          onClick={() => {
+                            startTransition(async () => {
+                              const res = await declineSignatureRequest(req.id);
+                              if (!res.ok) { setError(res.error ?? "Błąd odrzucenia"); return; }
+                              setRequests((prev) => prev.map((r) => (r.id === req.id ? { ...r, status: "declined" } : r)));
+                            });
+                          }}
+                        >
+                          Odrzuć
+                        </Button>
+                        <Button variant="outline" size="sm" onClick={() => cancelSignatureRequest(req.id)}>
+                          Anuluj
+                        </Button>
+                      </>
                     )}
                   </div>
                 </div>
