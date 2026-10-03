@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { MapPin, Home, Phone, Mail, Calendar, DollarSign, Send, X, Star, MessageSquare, CheckCircle2, Clock, ThumbsUp, Trash2 } from "lucide-react";
-import { respondToAd, updateResponseStatus, createContractorReview, closePublicAd, deletePublicAd, type PublicAd, type AdResponse } from "@/lib/actions/public-ads";
+import { respondToAd, updateResponseStatus, createContractorReview, closePublicAd, deletePublicAd, contactAdOwner, type PublicAd, type AdResponse } from "@/lib/actions/public-ads";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -41,6 +41,7 @@ export function AdDetailsClient({ ad, responses, contractorRatings = {}, contrac
   const [expandedReviews, setExpandedReviews] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
+  const [contactSent, setContactSent] = useState(false);
   
   const [responseForm, setResponseForm] = useState({
     message: "",
@@ -177,11 +178,27 @@ export function AdDetailsClient({ ad, responses, contractorRatings = {}, contrac
       setError("Imię, email i wiadomość są wymagane");
       return;
     }
+    if (!ad) {
+      setError("Nie znaleziono ogłoszenia");
+      return;
+    }
     setError(null);
-    // In a real implementation, this would send an email
-    alert("Wiadomość została wysłana! Autor ogłoszenia skontaktuje się z Tobą.");
-    setShowContactForm(false);
-    setContactForm({ name: "", email: "", phone: "", message: "" });
+    startTransition(async () => {
+      const res = await contactAdOwner({
+        ad_id: ad.id,
+        name: contactForm.name,
+        email: contactForm.email,
+        phone: contactForm.phone || undefined,
+        message: contactForm.message,
+      });
+      if (!res.ok) {
+        setError(res.error ?? "Błąd wysyłania wiadomości");
+        return;
+      }
+      setShowContactForm(false);
+      setContactForm({ name: "", email: "", phone: "", message: "" });
+      setContactSent(true);
+    });
   }
 
   return (
@@ -641,7 +658,12 @@ export function AdDetailsClient({ ad, responses, contractorRatings = {}, contrac
                     ? "Preferowany kontakt e-mailowy"
                     : "Preferowany kontakt przez czat"}
                 </p>
-                {!showContactForm ? (
+                {contactSent && !showContactForm ? (
+                  <p className="text-sm text-green-700 dark:text-green-400 flex items-center gap-2">
+                    <CheckCircle2 className="h-4 w-4" />
+                    Wiadomość została wysłana do autora ogłoszenia.
+                  </p>
+                ) : !showContactForm ? (
                   <Button
                     className="w-full"
                     variant="outline"
