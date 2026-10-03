@@ -1,7 +1,8 @@
 "use client";
 
+import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, User, Shield, Settings } from "lucide-react";
+import { ArrowLeft, User, Shield, Settings, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -17,11 +18,23 @@ type Props = {
 
 export function TeamMemberClient({ member, org, myRole }: Props) {
   const router = useRouter();
+  const [pending, startTransition] = useTransition();
+  const [error, setError] = useState<string | null>(null);
   const canManage = myRole === "owner" || myRole === "admin";
+  const canRemove = canManage && member.role !== "owner";
 
   function handleRemove() {
     if (!confirm("Czy na pewno chcesz usunąć tego członka zespołu?")) return;
-    // Remove member logic would go here
+    setError(null);
+    startTransition(async () => {
+      const result = await removeMember(org.id, member.userId);
+      if (!result.ok) {
+        setError(result.error ?? "Nie udało się usunąć członka zespołu.");
+        return;
+      }
+      router.push("/dashboard/team");
+      router.refresh();
+    });
   }
 
   const roleLabels: Record<OrgMemberRole, string> = {
@@ -33,17 +46,35 @@ export function TeamMemberClient({ member, org, myRole }: Props) {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-4">
-        <Button variant="ghost" size="sm" onClick={() => router.back()}>
-          <ArrowLeft className="h-4 w-4" />
-        </Button>
-        <div>
-          <h1 className="text-2xl font-bold">{member.name}</h1>
-          <p className="text-sm text-muted-foreground">
-            {roleLabels[member.role]}
-          </p>
+      <div className="flex items-center justify-between gap-4">
+        <div className="flex items-center gap-4">
+          <Button variant="ghost" size="sm" onClick={() => router.back()}>
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
+          <div>
+            <h1 className="text-2xl font-bold">{member.name}</h1>
+            <p className="text-sm text-muted-foreground">
+              {roleLabels[member.role]}
+            </p>
+          </div>
         </div>
+        {canRemove && (
+          <Button
+            variant="outline"
+            size="sm"
+            className="text-destructive"
+            disabled={pending}
+            onClick={handleRemove}
+          >
+            <Trash2 className="h-4 w-4" />
+            Usuń z zespołu
+          </Button>
+        )}
       </div>
+
+      {error && (
+        <p className="text-sm text-destructive">{error}</p>
+      )}
 
       <div className="grid gap-6 md:grid-cols-2">
         <Card>
