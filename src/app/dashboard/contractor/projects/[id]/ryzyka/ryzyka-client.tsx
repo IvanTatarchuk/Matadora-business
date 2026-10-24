@@ -4,10 +4,10 @@ import { useState, useTransition } from "react";
 import Link from "next/link";
 import {
   ArrowLeft, Plus, ShieldAlert, TrendingUp, X, Trash2,
-  AlertTriangle, CheckCircle2, BarChart3,
+  AlertTriangle, CheckCircle2, BarChart3, Pencil,
 } from "lucide-react";
 import {
-  createRisk, updateRiskStatus, deleteRisk,
+  createRisk, updateRiskStatus, updateRiskMitigation, deleteRisk,
   type ProjectRisk, type RiskCategory, type RiskStatus, type ResponseStrategy,
 } from "@/lib/actions/risks";
 import { RISK_LEVEL } from "@/lib/risk-level";
@@ -110,6 +110,12 @@ export function RyzykaClient({
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [view, setView] = useState<"list" | "matrix">("list");
+  const [editingMitigationId, setEditingMitigationId] = useState<string | null>(null);
+  const [mitError, setMitError] = useState<string | null>(null);
+  const [mitDraft, setMitDraft] = useState({
+    mitigationPlan: "", responseStrategy: "monitor" as ResponseStrategy,
+    residualProbability: "", residualImpact: "",
+  });
 
   const [form, setForm] = useState({
     title: "", description: "", category: "other" as RiskCategory,
@@ -179,6 +185,40 @@ export function RyzykaClient({
     startTransition(async () => {
       await deleteRisk(id, projectId);
       setRisks((prev) => prev.filter((r) => r.id !== id));
+    });
+  }
+
+  function openMitigationEditor(r: ProjectRisk) {
+    setMitError(null);
+    setEditingMitigationId(r.id);
+    setMitDraft({
+      mitigationPlan: r.mitigation_plan ?? "",
+      responseStrategy: r.response_strategy,
+      residualProbability: r.residual_probability != null ? String(r.residual_probability) : "",
+      residualImpact: r.residual_impact != null ? String(r.residual_impact) : "",
+    });
+  }
+
+  function handleSaveMitigation(id: string) {
+    setMitError(null);
+    const residualProbability = mitDraft.residualProbability ? Number(mitDraft.residualProbability) : undefined;
+    const residualImpact = mitDraft.residualImpact ? Number(mitDraft.residualImpact) : undefined;
+    startTransition(async () => {
+      const res = await updateRiskMitigation(id, projectId, {
+        mitigationPlan: mitDraft.mitigationPlan || undefined,
+        responseStrategy: mitDraft.responseStrategy,
+        residualProbability,
+        residualImpact,
+      });
+      if (!res.ok) { setMitError(res.error ?? "Błąd"); return; }
+      setRisks((prev) => prev.map((r) => r.id === id ? {
+        ...r,
+        mitigation_plan: mitDraft.mitigationPlan || null,
+        response_strategy: mitDraft.responseStrategy,
+        residual_probability: residualProbability ?? r.residual_probability,
+        residual_impact: residualImpact ?? r.residual_impact,
+      } : r));
+      setEditingMitigationId(null);
     });
   }
 
@@ -405,8 +445,68 @@ export function RyzykaClient({
                           Wpływ finansowy: {r.cost_impact_min ? `${r.cost_impact_min.toLocaleString("pl-PL")} PLN` : "?"} — {r.cost_impact_max ? `${r.cost_impact_max.toLocaleString("pl-PL")} PLN` : "?"}
                         </p>
                       )}
+                      {r.residual_probability != null && r.residual_impact != null && (
+                        (() => {
+                          const residualScore = r.residual_probability! * r.residual_impact!;
+                          const residualLevel = RISK_LEVEL(residualScore);
+                          return (
+                            <p className="text-xs mt-1">
+                              <span className="text-muted-foreground">Ryzyko rezydualne: </span>
+                              <span className={`font-semibold rounded px-1.5 py-0.5 ${residualLevel.color}`}>{residualScore}/25 — {residualLevel.label}</span>
+                            </p>
+                          );
+                        })()
+                      )}
+                      {editingMitigationId === r.id && (
+                        <div className="mt-3 rounded-md border border-primary/30 bg-primary/5 p-3 space-y-3">
+                          <div>
+                            <label className="text-xs font-medium">Plan mitygacji</label>
+                            <textarea value={mitDraft.mitigationPlan}
+                              onChange={(e) => setMitDraft({ ...mitDraft, mitigationPlan: e.target.value })}
+                              rows={2} className="mt-1 w-full rounded-md border bg-background px-3 py-2 text-sm resize-none" />
+                          </div>
+                          <div className="grid gap-3 sm:grid-cols-3">
+                            <div>
+                              <label className="text-xs font-medium">Strategia odpowiedzi</label>
+                              <select value={mitDraft.responseStrategy}
+                                onChange={(e) => setMitDraft({ ...mitDraft, responseStrategy: e.target.value as ResponseStrategy })}
+                                className="mt-1 w-full rounded-md border bg-background px-2 py-1.5 text-sm">
+                                {Object.entries(RESPONSE_LABELS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+                              </select>
+                            </div>
+                            <div>
+                              <label className="text-xs font-medium">Rezydualne prawdop. (1-5)</label>
+                              <select value={mitDraft.residualProbability}
+                                onChange={(e) => setMitDraft({ ...mitDraft, residualProbability: e.target.value })}
+                                className="mt-1 w-full rounded-md border bg-background px-2 py-1.5 text-sm">
+                                <option value="">—</option>
+                                {[1, 2, 3, 4, 5].map((n) => <option key={n} value={n}>{n}</option>)}
+                              </select>
+                            </div>
+                            <div>
+                              <label className="text-xs font-medium">Rezydualny wpływ (1-5)</label>
+                              <select value={mitDraft.residualImpact}
+                                onChange={(e) => setMitDraft({ ...mitDraft, residualImpact: e.target.value })}
+                                className="mt-1 w-full rounded-md border bg-background px-2 py-1.5 text-sm">
+                                <option value="">—</option>
+                                {[1, 2, 3, 4, 5].map((n) => <option key={n} value={n}>{n}</option>)}
+                              </select>
+                            </div>
+                          </div>
+                          {mitError && <p className="text-xs text-destructive">{mitError}</p>}
+                          <div className="flex gap-2">
+                            <Button size="sm" onClick={() => handleSaveMitigation(r.id)} disabled={pending}>Zapisz</Button>
+                            <Button size="sm" variant="outline" onClick={() => setEditingMitigationId(null)} disabled={pending}>Anuluj</Button>
+                          </div>
+                        </div>
+                      )}
                     </div>
                     <div className="flex flex-col gap-1.5 shrink-0">
+                      <Button size="sm" variant="outline"
+                        onClick={() => editingMitigationId === r.id ? setEditingMitigationId(null) : openMitigationEditor(r)}
+                        disabled={pending}>
+                        <Pencil className="mr-1 h-3 w-3" /> Mitygacja
+                      </Button>
                       {r.status !== "closed" && (
                         <>
                           {r.status === "identified" && (
